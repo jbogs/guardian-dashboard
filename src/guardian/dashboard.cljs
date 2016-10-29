@@ -328,7 +328,7 @@
   :title        "Xotic"
   :route        (cell= [[state]])
   :initiate     initiate!
-  :change-route change-route!
+  :routechanged change-route!
   :ah :mid :c grey :scroll true
   (image :sh (>sm 920 md 1240 lg 1400) :url background-texture
     (image :sh (r 1 1) :sv (b 800 sm :auto) :url page-header :av (b :beg sm :end) ;; note: padding has not yet been applied to media elements
