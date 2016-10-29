@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 20.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 471.79999 130"
+   xml:space="preserve"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="MB fan Graph.svg"
+   width="471.79999"
+   height="130"><metadata
+     id="metadata711"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title></dc:title></cc:Work></rdf:RDF></metadata><defs
+     id="defs709" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="0"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1873"
+     inkscape:window-height="1176"
+     id="namedview707"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:zoom="1.7730375"
+     inkscape:cx="173.22211"
+     inkscape:cy="-62.492496"
+     inkscape:window-x="1327"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g5" /><style
+     type="text/css"
+     id="style3">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#333333;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#292929;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;}
+	.st3{fill:#FFFFFF;}
+	.st4{font-family:'SupriaSans-CondBold';}
+	.st5{font-size:9px;}
+	.st6{fill-rule:evenodd;clip-rule:evenodd;fill:#666666;}
+	.st7{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st8{fill-rule:evenodd;clip-rule:evenodd;fill:#C32026;}
+	.st9{fill-rule:evenodd;clip-rule:evenodd;fill:#FF0000;}
+	.st10{font-size:8.674px;}
+	.st11{letter-spacing:2;}
+	.st12{fill:#C32026;}
+	.st13{font-size:16.6317px;}
+	.st14{font-size:11.6623px;}
+	.st15{fill-rule:evenodd;clip-rule:evenodd;fill:#4D4D4D;}
+	.st16{font-size:22.8849px;}
+	.st17{font-size:11.9897px;}
+	.st18{font-size:12.2579px;}
+	.st19{font-size:4.928px;}
+	.st20{fill-rule:evenodd;clip-rule:evenodd;fill:none;stroke:#FFFFFF;stroke-width:0.5;stroke-miterlimit:2.6131;}
+	.st21{fill-rule:evenodd;clip-rule:evenodd;fill:none;stroke:#FFFFFF;stroke-width:0.9998;stroke-miterlimit:2.6131;}
+</style><g
+     id="g5"
+     transform="translate(-714.6876,-190.74812)"><g
+       id="g373"
+       transform="translate(525.08759,18.048123)"><rect
+         x="189.60001"
+         y="172.7"
+         class="st2"
+         width="471.79999"
+         height="130"
+         id="rect375"
+         style="clip-rule:evenodd;fill-rule:evenodd" /><g
+         id="g377"><text
+           transform="translate(353.1498,188.4316)"
+           class="st3 st4 st18"
+           id="text379"
+           style="font-size:12.25790024px;font-family:SupriaSans-CondBold;fill:#ffffff">MOTHERBOARD FAN GRAPH</text>
+</g><g
+         id="g381"><text
+           transform="translate(196.1076,199.2412)"
+           class="st3 st4 st19"
+           id="text383"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">100</text>
+</g><g
+         id="g385"><text
+           transform="translate(198.3251,221.606)"
+           class="st3 st4 st19"
+           id="text387"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">75</text>
+</g><g
+         id="g389"><text
+           transform="translate(198.0096,245.9522)"
+           class="st3 st4 st19"
+           id="text391"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">50</text>
+</g><g
+         id="g393"><text
+           transform="translate(198.2704,269.1683)"
+           class="st3 st4 st19"
+           id="text395"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">25</text>
+</g><g
+         id="g397"><text
+           transform="translate(200.5673,292.9484)"
+           class="st3 st4 st19"
+           id="text399"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">0</text>
+</g><line
+         class="st20"
+         x1="205.10001"
+         y1="196.39999"
+         x2="652.29999"
+         y2="196.39999"
+         id="line401"
+         style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.5;stroke-miterlimit:2.61310005" /><line
+         class="st20"
+         x1="205.10001"
+         y1="219.89999"
+         x2="652.29999"
+         y2="219.89999"
+         id="line403"
+         style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.5;stroke-miterlimit:2.61310005" /><line
+         class="st20"
+         x1="205.10001"
+         y1="243.39999"
+         x2="652.29999"
+         y2="243.39999"
+         id="line405"
+         style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.5;stroke-miterlimit:2.61310005" /><line
+         class="st20"
+         x1="205.10001"
+         y1="266.89999"
+         x2="652.29999"
+         y2="266.89999"
+         id="line407"
+         style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.5;stroke-miterlimit:2.61310005" /><line
+         class="st20"
+         x1="205.10001"
+         y1="290.39999"
+         x2="652.29999"
+         y2="290.39999"
+         id="line409"
+         style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.5;stroke-miterlimit:2.61310005" /><g
+         id="g411"><text
+           transform="translate(240.6455,296.9809)"
+           class="st3 st4 st19"
+           id="text413"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:05</text>
+</g><g
+         id="g415"><text
+           transform="translate(306.8107,296.9809)"
+           class="st3 st4 st19"
+           id="text417"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:10</text>
+</g><g
+         id="g419"><text
+           transform="translate(372.0444,296.9809)"
+           class="st3 st4 st19"
+           id="text421"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:15</text>
+</g><g
+         id="g423"><text
+           transform="translate(437.1106,296.9809)"
+           class="st3 st4 st19"
+           id="text425"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:20</text>
+</g><g
+         id="g427"><circle
+           class="st7"
+           cx="216.7"
+           cy="266.89999"
+           r="1.7"
+           id="circle429"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="230.3"
+           cy="269"
+           r="1.7"
+           id="circle431"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="243.60001"
+           cy="274.89999"
+           r="1.7"
+           id="circle433"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="257.39999"
+           cy="275.60001"
+           r="1.7"
+           id="circle435"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="270.5"
+           cy="274.70001"
+           r="1.7"
+           id="circle437"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="283.89999"
+           cy="278.10001"
+           r="1.7"
+           id="circle439"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="297.60001"
+           cy="277.39999"
+           r="1.7"
+           id="circle441"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="310.70001"
+           cy="274"
+           r="1.7"
+           id="circle443"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="324.20001"
+           cy="273.89999"
+           r="1.7"
+           id="circle445"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="337.5"
+           cy="274"
+           r="1.7"
+           id="circle447"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="350.89999"
+           cy="277.60001"
+           r="1.7"
+           id="circle449"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="364.39999"
+           cy="277"
+           r="1.7"
+           id="circle451"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="378"
+           cy="271.29999"
+           r="1.7"
+           id="circle453"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="391"
+           cy="267.39999"
+           r="1.7"
+           id="circle455"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="404.60001"
+           cy="268.70001"
+           r="1.7"
+           id="circle457"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="418.10001"
+           cy="270.39999"
+           r="1.7"
+           id="circle459"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="431.20001"
+           cy="263.60001"
+           r="1.7"
+           id="circle461"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="445.10001"
+           cy="264.10001"
+           r="1.7"
+           id="circle463"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="458.39999"
+           cy="262.89999"
+           r="1.7"
+           id="circle465"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+           class="st7"
+           cx="468.10001"
+           cy="259.20001"
+           r="1.7"
+           id="circle467"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><polyline
+           class="st21"
+           points="216.7,266.9 230.3,269 243.6,274.9 257.4,275.6 270.5,274.7 283.9,278.1 297.6,277.4 310.7,274      324.2,273.9 337.5,274 350.9,277.6 364.4,277 378,271.3 391,267.4 404.6,268.7 418.1,270.4 431.2,263.6 445.1,264.1 458.4,262.9      468.1,259.2 478.5,259.2    "
+           id="polyline469"
+           style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.99980003;stroke-miterlimit:2.61310005" /><circle
+           class="st7"
+           cx="478.5"
+           cy="259.20001"
+           r="1.7"
+           id="circle471"
+           style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /></g><circle
+         class="st7"
+         cx="478.5"
+         cy="259.20001"
+         r="1.7"
+         id="circle473"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="492.20001"
+         cy="257.10001"
+         r="1.7"
+         id="circle475"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="505.5"
+         cy="251.2"
+         r="1.7"
+         id="circle477"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="519.29999"
+         cy="250.39999"
+         r="1.7"
+         id="circle479"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="532.29999"
+         cy="251.39999"
+         r="1.7"
+         id="circle481"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="545.70001"
+         cy="248"
+         r="1.7"
+         id="circle483"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="559.5"
+         cy="248.7"
+         r="1.7"
+         id="circle485"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="572.5"
+         cy="252"
+         r="1.7"
+         id="circle487"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="586.09998"
+         cy="252.10001"
+         r="1.7"
+         id="circle489"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="599.29999"
+         cy="252"
+         r="1.7"
+         id="circle491"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="612.79999"
+         cy="248.5"
+         r="1.7"
+         id="circle493"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="626.20001"
+         cy="249"
+         r="1.7"
+         id="circle495"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="639.79999"
+         cy="254.8"
+         r="1.7"
+         id="circle497"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><circle
+         class="st7"
+         cx="652.79999"
+         cy="258.70001"
+         r="1.7"
+         id="circle499"
+         style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><polyline
+         class="st21"
+         points="478.5,259.2 492.2,257.1 505.5,251.2 519.3,250.4 532.3,251.4 545.7,248 559.5,248.7 572.5,252     586.1,252.1 599.3,252 612.8,248.5 626.2,249 639.8,254.8 652.8,258.7   "
+         id="polyline501"
+         style="clip-rule:evenodd;fill:none;fill-rule:evenodd;stroke:#ffffff;stroke-width:0.99980003;stroke-miterlimit:2.61310005" /><g
+         id="g503"><text
+           transform="translate(503.1278,296.9809)"
+           class="st3 st4 st19"
+           id="text505"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:2</text>
+</g><g
+         id="g507"><text
+           transform="translate(517.6998,296.9809)"
+           class="st3 st4 st19"
+           id="text509"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">5</text>
+</g><g
+         id="g511"><text
+           transform="translate(568.9774,296.9809)"
+           class="st3 st4 st19"
+           id="text513"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:</text>
+</g><g
+         id="g515"><text
+           transform="translate(583.6876,296.9809)"
+           class="st3 st4 st19"
+           id="text517"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">0</text>
+</g><g
+         id="g519"><text
+           transform="translate(581.0856,296.9809)"
+           class="st3 st4 st19"
+           id="text521"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">3</text>
+</g><g
+         id="g523"><text
+           transform="translate(635.1333,296.9809)"
+           class="st3 st4 st19"
+           id="text525"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">16:42:</text>
+</g><g
+         id="g527"><text
+           transform="translate(647.2414,296.9809)"
+           class="st3 st4 st19"
+           id="text529"
+           style="font-size:4.92799997px;font-family:SupriaSans-CondBold;fill:#ffffff">35</text>
+</g></g></g></svg>
