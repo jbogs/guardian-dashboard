@@ -4,7 +4,7 @@
   (:refer-clojure
     :exclude [-])
   (:require
-    [cljs.core       :as cc]
+    [cljs.core       :refer [js->clj clj->js]]
     [chart.core      :as c]
     [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
@@ -138,7 +138,7 @@
 
 (defn jbog-map []
   "return map of jbog data"
-  (-> (.parse js/JSON sample-record) (cc/js->clj :keywordize-keys true)))
+  (-> (.parse js/JSON sample-record) (js->clj :keywordize-keys true)))
 
 (println (jbog-map))
 ;;; constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
