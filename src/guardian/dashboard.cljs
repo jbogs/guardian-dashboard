@@ -4,8 +4,8 @@
   (:refer-clojure
     :exclude [-])
   (:require
-    [cljs.core       :refer [js->clj clj->js]]
-    [chart.core :as c]
+    [cljs.core       :as cc]
+    [chart.core      :as c]
     [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
@@ -134,14 +134,13 @@
 
 ;; js functions not in namespace
 
+;#_
+
 (defn jbog-map []
-     "return map of jbog data"
+  "return map of jbog data"
+  (-> (.parse js/JSON sample-record) (cc/js->clj :keywordize-keys true)))
 
-;;     ﻿⁠⁠⁠⁠(js->clj :keywordize-keys true sample-record))
- ﻿⁠⁠⁠⁠(-> (.parse js/JSON sample-record) (js->clj :keywordize-keys true)))
-
-                                        ;
-(println (jbog-map))﻿⁠⁠⁠⁠
+(println (jbog-map))
 ;;; constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; xotic images
