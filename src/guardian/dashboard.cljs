@@ -4,6 +4,7 @@
   (:refer-clojure
     :exclude [-])
   (:require
+    [cljs.core       :refer [js->clj clj->js]]
     [chart.core :as c]
     [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
@@ -23,7 +24,7 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :health})
+(defc session {:state :info})
 (defc loading nil)
 (defc error   nil)
 
@@ -123,6 +124,24 @@
 ;;   )
 
 
+
+
+;;; jbog data import ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; string constant to dummy up data
+
+(def sample-record "\"mb\": {\"name\": \"Gigabyte Technology Co., Ltd. Q77M-D2H\",\"fan_list\": [1151.88],\"temp_list\": [27.8, 29.8, 42.0, 37.0, 37.0] }, \"cpu\": {   \"name\": \"Intel Core i7 3770\",   \"load\": 6.86,   \"temp\": 45.0 }, \"hdd_list\": [{   \"name\": \"INTEL SSDSC2BB240G4                     \",   \"temp\": 31.0 }, {   \"name\": \"WDC WD2000FYYZ-01UL1B0                  \",   \"temp\": 36.0 }], \"gpu_list\": [{   \"name\": \"Intel(R) HD Graphics 4000\",   \"fan\": 0.0,   \"load\": 0.0,   \"temp\": 0.0 }]}")
+
+
+;; js functions not in namespace
+
+(defn jbog-map []
+     "return map of jbog data"
+
+;;     ﻿⁠⁠⁠⁠(js->clj :keywordize-keys true sample-record))
+ ﻿⁠⁠⁠⁠(-> (.parse js/JSON sample-record) (js->clj :keywordize-keys true)))
+
+                                        ;
+(println (jbog-map))﻿⁠⁠⁠⁠
 ;;; constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; xotic images
