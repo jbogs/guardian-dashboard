@@ -138,11 +138,9 @@
   "return map of jbog data"
   (-> (.parse js/JSON sample-record) (js->clj :keywordize-keys true)))
 
+(defc jm (jbog-map))  ; latest record coming in from jbog server
 
-
-(println (:name (:mb (jbog-map))))
-
-
+;;  (println (:name (:mb (jbog-map))))
 
 ;; (.log js/console (.parse js/JSON sample-record))
 
@@ -331,6 +329,58 @@
 (defn fans-view []
   (elem body-font :sh (r 1 1)
     "fan things"))
+
+
+;;; the following maps are for the desc and the function to extract the value
+;;; used by the "info-panel" function below
+
+(def info-proc
+  "info page processor descriptions map"
+  {:prc ("PROCESSOR" #(cell= (:name (:cpu jm))))
+   :cd ("CODE NAME" #(identity))
+   :sKt ("SOCKET TYPE" #(identity))
+   :frq ("STOCK FREQUENCY" #(identity)})
+
+(def info-vid
+  "info page video card descriptions map"
+  {:vid ("VIDEO CARD" #(cell= (:name (:gpu_list))))
+   :max ("MAX TDP" #(identity))
+   :clkd ("DEFAULT CLOCK" #(identity))
+   :CLKT ("TURBO CLOCK" #(identity))
+   :sdrs ("UNIFIED SHADERS" #(identity))})
+
+(def info-mb
+  "info page motherboard descriptions map"
+  {:mb  ("MOTHERBOARD" #(:name (:mb jm)))
+   :mdl ("MODEL" #(indentity))
+   :cs ("CHIPSET" #(identity))
+   :sb ("SOUTHBRIDGE" #(identity))
+   :bv ("BIOS VERSION" #(identity))
+   :bd ("BIOS DATE" #(identity))})
+
+
+(def info-mem
+  "info page memory description map"
+  {:mem ("MEMORY" #(identity))
+   :mfg ("MANUFACTURER" #(identity))
+   :cap ("CAPACITY" #(identity))
+   :df ("DEFAULT FREQUENCY" #(identity))
+   :ty ("TYPE" #(identity))
+   :tm ("TIMINGS" #(identity))})
+
+
+(def info-drv-generic
+  "info-page drive description map"
+  (:dn ":\\]DRIVE" :ty "TYPE" :fr "FREE" :ud "USED" :ph "POWER ON HOURS"))
+
+
+
+
+(defn info-panel [icon desc data & drive]
+  "render an info view with icon, description map, data map and optional drive"
+  (elem :sh (r 1 2) :sv 100 :c :c :black :av :mid
+        (image :url icon) (str " " drive (:))))
+
 
 (defn info-view []
   (elem body-font :sh (r 1 1) :p 42 :g 42
