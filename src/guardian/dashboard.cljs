@@ -5,6 +5,8 @@
     :exclude [-])
   (:require
     [cljs.core       :refer [js->clj clj->js]]
+    [goog.string :as gstring]
+    [goog.string.format]
     [chart.core      :as c]
     [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
@@ -146,6 +148,14 @@
 
 ;;; constants ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; info panel specifics
+
+(def info-panel-item-height 40)  ;; in pixels
+(def info-panel-width 35)        ;; in CHARACTERS
+(def info-panel-heading-color :black)
+(def info-panel-color :white)
+
+
 ;;; xotic images
 
 (def background-texture "background texture.svg")
@@ -230,6 +240,7 @@
 
 (def body-font   {:f 20 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc white})
 (def button-font {:f 14 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc white})
+(def title-font button-font)
 
 
 (def info-icon-ph 10)
@@ -261,7 +272,7 @@
   "display a CPU/GPU status collection"
    (println elems)
   (elem  :ph 10 :ah :mid (dissoc attrs :val)
-          (image body-font  :url title-background
+          (image title-font  :url title-background
                  (image :g ig :ph info-icon-ph :pv info-icon-pv :a :mid  :url info-button)
                  (str "   " (first elems) "  - INFO"))
           (elem :ah :beg :pv 20 :g 10
@@ -274,7 +285,7 @@
   "display the given disk drive's status collection"
   (println val)
   (elem :ah :mid  (dissoc attrs :val) 
-    (image body-font  :url title-background
+    (image title-font  :url title-background
       (image :g ig :ph info-icon-ph :pv info-icon-pv :a :mid :url info-button)
       (str "HDD   " val  "  - INFO"))
     (elem :ah :beg :pv 20 :g 10
@@ -290,7 +301,7 @@
 
 (defn health-view []
   "display a CPU/GPU status collection"
-  (elem body-font :s (r 1 1)  :p g :g g
+  (elem title-font :s (r 1 1)  :p g :g g
     (processor-status :sh (r 1 2) :ah :beg "CPU")
     (processor-status :sh (r 1 2) :ah :end "GPU")
     (elem
@@ -314,20 +325,20 @@
 
 (defelem kb-lighting [{keys [val] :as attrs} elems]
   "display a keyboard lighting unit"
-  (elem body-font :s (r 1 1) :p g :g g ; :ph 10 :ah :mid
+  (elem title-font :s (r 1 1) :p g :g g ; :ph 10 :ah :mid
         (dissoc attrs :val)
-        (image body-font :url title-background
+        (image title-font :url title-background
                (image :g ig :ph info-icon-ph :pv info-icon-pv :a :mid :url info-button)
                (str "KEYBOARD LIGHTING - INFO"))
         (image :url circular-gage-lighting)
         (image :url keyboard-overlay)))
 
 (defn lighting-view []
-  (elem body-font :sh (r 1 1)
+  (elem title-font :sh (r 1 1)
     (kb-lighting)))
 
 (defn fans-view []
-  (elem body-font :sh (r 1 1)
+  (elem title-font :sh (r 1 1)
     "fan things"))
 
 
@@ -336,37 +347,36 @@
 
 (def info-proc
   "info page processor descriptions map"
-  {:prc ("PROCESSOR" #(cell= (:name (:cpu jm))))
-   :cd ("CODE NAME" #(identity))
-   :sKt ("SOCKET TYPE" #(identity))
-   :frq ("STOCK FREQUENCY" #(identity)})
+  (("PROCESSOR" #(cell= (:name (:cpu jm))))
+  ("CODE NAME" #(identity))
+  ("SOCKET TYPE" #(identity))
+  ("STOCK FREQUENCY" #(identity))))
 
 (def info-vid
   "info page video card descriptions map"
-  {:vid ("VIDEO CARD" #(cell= (:name (:gpu_list))))
-   :max ("MAX TDP" #(identity))
-   :clkd ("DEFAULT CLOCK" #(identity))
-   :CLKT ("TURBO CLOCK" #(identity))
-   :sdrs ("UNIFIED SHADERS" #(identity))})
+  (("VIDEO CARD" #(cell= (:name (:gpu_list))))
+   ("MAX TDP" #(identity))
+   ("DEFAULT CLOCK" #(identity))
+   ("TURBO CLOCK" #(identity))
+   ("UNIFIED SHADERS" #(identity))}))
 
 (def info-mb
   "info page motherboard descriptions map"
-  {:mb  ("MOTHERBOARD" #(:name (:mb jm)))
-   :mdl ("MODEL" #(indentity))
-   :cs ("CHIPSET" #(identity))
-   :sb ("SOUTHBRIDGE" #(identity))
-   :bv ("BIOS VERSION" #(identity))
-   :bd ("BIOS DATE" #(identity))})
-
+  (("MOTHERBOARD" #(:name (:mb j)))
+   ("MODEL" #(indentity))
+   ("CHIPSET" #(identity))
+   ("SOUTHBRIDGE" #(identity))
+   ("BIOS VERSION" #(identity))
+   ("BIOS DATE" #(identity))}))
 
 (def info-mem
   "info page memory description map"
-  {:mem ("MEMORY" #(identity))
-   :mfg ("MANUFACTURER" #(identity))
-   :cap ("CAPACITY" #(identity))
-   :df ("DEFAULT FREQUENCY" #(identity))
-   :ty ("TYPE" #(identity))
-   :tm ("TIMINGS" #(identity))})
+  (("MEMORY" #(identity))
+   ("MANUFACTURER" #(identity))
+   ("CAPACITY" #(identity))
+   ("DEFAULT FREQUENCY" #(identity))
+   ("TYPE" #(identity))
+   ("TIMINGS" #(identity))))
 
 
 (def info-drv-generic
@@ -374,16 +384,22 @@
   (:dn ":\\]DRIVE" :ty "TYPE" :fr "FREE" :ud "USED" :ph "POWER ON HOURS"))
 
 
+  (defelem info-panel-item [name func data]
+    "single element of info panel (not the heading)"
+    (elem :sh (r 1 2) :sv info-panel-item-heigth :c info-panel-color :av :mid
+          (gstring.format (str "%-" info-panel-width "s%s") name (func data))))
 
 
-(defn info-panel [icon desc data & drive]
+  ;; note: the desc field has to be a list or vector because the items have to go in the
+  ;; panel in a certain order
+
+(defelem info-panel [:keys [icon desc data drive]] ; [icon desc data & drive]
   "render an info view with icon, description map, data map and optional drive"
   (elem :sh (r 1 2) :sv 100 :c :c :black :av :mid
         (image :url icon) (str " " drive (:))))
 
-
 (defn info-view []
-  (elem body-font :sh (r 1 1) :p 42 :g 42
+  (elem title-font :sh (r 1 1) :p 42 :g 42
         (elem :sh (r 1 2) :sv 100 :c :black :av :mid
               (image :url laptop-icon)
               "PC NAME")
