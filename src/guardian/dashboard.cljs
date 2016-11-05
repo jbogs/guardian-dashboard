@@ -155,7 +155,8 @@
 (def info-panel-width 35)        ;; in CHARACTERS
 (def info-panel-heading-color :black)
 (def info-panel-color :white)
-
+(def info-page-gutter 42)
+(def info-page-padding 42)
 
 ;;; xotic images
 
@@ -247,17 +248,18 @@
 (def info-icon-ph 10)
 (def info-icon-pv 2)
 (def ig 3)  ; info button gutter
+
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defelem panel [attrs elems]
   (elem :p 20 :c black attrs
     (elem :sh (r 1 1) :sv 60 :av :mid
-      (image :s 40 :a :mid 
+      (image :s 40 :a :mid
         "icon")
       (elem :sh (- (r 1 1) 40) :fc white
         "title"))
-    (elem :sh (r 1 1) :sv (- (r 1 1) (+ 60 20)) :c white 
+    (elem :sh (r 1 1) :sv (- (r 1 1) (+ 60 20)) :c white
       elems)))
 
 (defelem tab-button [{:keys [val] :as attrs} elems]
@@ -285,7 +287,7 @@
 (defelem drive-info [{:keys [val] :as attrs} elems]
   "display the given disk drive's status collection"
   (println val)
-  (elem :ah :mid  (dissoc attrs :val) 
+  (elem :ah :mid  (dissoc attrs :val)
     (image title-font  :url title-background
       (image :g ig :ph info-icon-ph :pv info-icon-pv :a :mid :url info-button)
       (str "HDD   " val  "  - INFO"))
@@ -389,15 +391,14 @@
    ("USED"              #(identity))
    ("POWER ON HOURS"    #(identity))))
 
-(def items-field [item1 item2  width]
+(defn items-field [item1 item2  width]
   "place each item on the end of a width length field"
   (format (str "%-" width "s%s") item1 item2))
 
 (defelem info-panel-item [name func data]
   "single element of info panel (not the heading)"
   (elem :sh (r 1 2) :sv info-panel-item-height :c info-panel-color :av :mid
-        (items-field  name (func data)))) 
-
+        (items-field  name (func data))))
 
 
   ;; note: the desc field has to be a list or vector because the items have to go in the
@@ -408,9 +409,27 @@
   (elem :sh (r 1 2) :sv info-panel-heading-height
         :c info-panel-heading-color :av :mid
         (image :url icon)
-        (items-field (str " " (["C" "D"] drive)  ":\\DRIVE") (:name (first (:hdd_list )))
+        (items-field (str " " (["C" "D"] drive)  ":\\DRIVE") (:name (first (:hdd_list ))))))
+
+(defelem info-header [{:keys [icon desc val]}]
+  "render an info-header element with the icon to display,
+the description, and the value/data"
+  (elem title-font :sh (r 1 2) :sv info-panel-heading-height
+        :url icon (items-field desc val info-panel-width)))
 
 (defn info-view []
+  (elem title-font :sh (r 1 1) :p info-page-padding
+        :g info-page-gutter
+        (info-header :icon mb-icon :desc (ffirst info-mb)
+                     :val #(-> (first) (rest) info-mb))))
+;  (elem title-font :sh (r 1 1) :p 42 :g 42
+;        (elem :sh (r 1 2) :sv info-panel-heading-height
+;              :c info-panel-heading-color ))
+;  )
+
+
+
+#_(defn info-view []
   (elem title-font :sh (r 1 1) :p 42 :g 42
         (elem :sh (r 1 2) :sv 100 :c :black :av :mid
               (image :url laptop-icon)
