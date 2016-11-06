@@ -5,8 +5,8 @@
     :exclude [-])
   (:require
     [cljs.core       :refer [js->clj clj->js]]
-    [goog.string :as gstring]
-    [goog.string.format]
+;    [goog.string :as gstring]
+;    [goog.string.format]
     [chart.core      :as c]
     [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
@@ -350,56 +350,55 @@
 
 (def info-proc
   "info page processor descriptions map"
-  (("PROCESSOR"            #(cell= (:name (:cpu jm))))
-  ("CODE NAME"             #(identity))
-  ("SOCKET TYPE"           #(identity))
-  ("STOCK FREQUENCY"       #(identity))))
+  '(("PROCESSOR"            #(cell= (:name (:cpu jm))))
+    ("CODE NAME"             #(identity nil))
+    ("SOCKET TYPE"           #(identity nil))
+    ("STOCK FREQUENCY"       #(identity nil))))
 
 (def info-vid
   "info page video card descriptions map"
-  (("VIDEO CARD"          #(cell= (:name (:gpu_list))))
-   ("MAX TDP"             #(identity))
-   ("DEFAULT CLOCK"       #(identity))
-   ("TURBO CLOCK"         #(identity))
-   ("UNIFIED SHADERS"     #(identity))}))
+  '(("VIDEO CARD"          #(cell= (:name (:gpu_list jm))))
+    ("MAX TDP"             #(identity nil))
+    ("DEFAULT CLOCK"       #(identity nil))
+    ("TURBO CLOCK"         #(identity nil))
+    ("UNIFIED SHADERS"     #(identity nil))))
 
 (def info-mb
   "info page motherboard descriptions map"
-  (("MOTHERBOARD"        #(:name (:mb j)))
-   ("MODEL"              #(identity))
-   ("CHIPSET"            #(identity))
-   ("SOUTHBRIDGE"        #(identity))
-   ("BIOS VERSION"       #(identity))
-   ("BIOS DATE"          #(identity))}))
+  '(("MOTHERBOARD"        #(cell= (:name (:mb jm))))
+    ("MODEL"              #(identity nil))
+    ("CHIPSET"            #(identity nil))
+    ("SOUTHBRIDGE"        #(identity nil))
+    ("BIOS VERSION"       #(identity nil))
+    ("BIOS DATE"          #(identity nil))))
 
 (def info-mem
   "info page memory description map"
-  (("MEMORY"             #(identity))
-   ("MANUFACTURER"       #(identity))
-   ("CAPACITY"           #(identity))
-   ("DEFAULT FREQUENCY"  #(identity))
-   ("TYPE"               #(identity))
-   ("TIMINGS"            #(identity))))
+  '(("MEMORY"             #(identity nil))
+    ("MANUFACTURER"       #(identity nil))
+    ("CAPACITY"           #(identity nil))
+    ("DEFAULT FREQUENCY"  #(identity nil))
+    ("TYPE"               #(identity nil))
+    ("TIMINGS"            #(identity nil))))
 
 (def info-drv-generic
   "info-page drive description map"
   ;; as the drive name is nested an extra level, there's no easy way to extract it with a function fragment
   ;; here so it will be done custom in the header rendering below
-  ((":\\]DRIVE"         #(identity))
-   ("TYPE"              #(identity))
-   ("FREE"              #(identity))
-   ("USED"              #(identity))
-   ("POWER ON HOURS"    #(identity))))
+  '((":\\]DRIVE"         #(identity nil))
+   ("TYPE"              #(identity nil))
+   ("FREE"              #(identity nil))
+   ("USED"              #(identity nil))
+   ("POWER ON HOURS"    #(identity nil))))
 
 (defn items-field [item1 item2  width]
   "place each item on the end of a width length field"
-  (format (str "%-" width "s%s") item1 item2))
+  (goog/string.format (str "%-" width "s%s") item1 item2))
 
 (defelem info-panel-item [name func data]
   "single element of info panel (not the heading)"
   (elem :sh (r 1 2) :sv info-panel-item-height :c info-panel-color :av :mid
-        (items-field  name (func data))))
-
+        (items-field  name func info-panel-width)))
 
   ;; note: the desc field has to be a list or vector because the items have to go in the
   ;; panel in a certain order
@@ -409,7 +408,8 @@
   (elem :sh (r 1 2) :sv info-panel-heading-height
         :c info-panel-heading-color :av :mid
         (image :url icon)
-        (items-field (str " " (["C" "D"] drive)  ":\\DRIVE") (:name (first (:hdd_list ))))))
+        (items-field (str " " (["C" "D"] drive)  ":\\DRIVE") (:name (first (:hdd_list data )))
+                     info-panel-width)))
 
 (defelem info-header [{:keys [icon desc val]}]
   "render an info-header element with the icon to display,
@@ -417,11 +417,11 @@ the description, and the value/data"
   (elem title-font :sh (r 1 2) :sv info-panel-heading-height
         :url icon (items-field desc val info-panel-width)))
 
-(defn info-view []
+#_ (defn info-view []
   (elem title-font :sh (r 1 1) :p info-page-padding
         :g info-page-gutter
         (info-header :icon mb-icon :desc (ffirst info-mb)
-                     :val #(-> (first) (rest) info-mb))))
+                     :val #(-> info-mb first rest))))
 ;  (elem title-font :sh (r 1 1) :p 42 :g 42
 ;        (elem :sh (r 1 2) :sv info-panel-heading-height
 ;              :c info-panel-heading-color ))
@@ -429,7 +429,8 @@ the description, and the value/data"
 
 
 
-#_(defn info-view []
+;#_
+(defn info-view []
   (elem title-font :sh (r 1 1) :p 42 :g 42
         (elem :sh (r 1 2) :sv 100 :c :black :av :mid
               (image :url laptop-icon)

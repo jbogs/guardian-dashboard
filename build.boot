@@ -40,8 +40,7 @@
     (comp (build :optimizations optimizations) #_(spew :bucket b))))
 
 (task-options!
-  serve   {:port 8000}
+  serve   {:port 7000}
   sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
   #_spew    {:access-key (System/getenv "<YOUR_AWS_ACCESS_KEY>")
            :secret-key (System/getenv "<YOUR_AWS_SECRET_KEY")})
-
