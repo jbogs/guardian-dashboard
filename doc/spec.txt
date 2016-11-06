@@ -1,0 +1,108 @@
+
+There are 4 pages
+
+
+System health
+Widgets for CPU/GPU load
+Widgets for rolling history graphs
+Widget for Ram usage
+Widgets for HDD useage
+Display text for  temps/loads/RPM and SMART log data
+
+
+Lighting
+Laptop Keyboards have 4 LED zones, left, center, right, touchpad.
+Each zone has an assignable effect from a pulldown list
+User should be able to assign a color and effect to each zone and should be saved
+Active/Present (saved) Only ONE of these sliders can be in the Active position at a time.
+Effects list presently limited to what Peter has preprogrammed:
+Static color (any selected)
+Change on CPU temp (beginning and end colors present)
+Change on CPU load (beginning and end colors present)
+Change on GPU temp (beginning and end colors present)
+Change on GPU load (beginning and end colors present)
+Listed effects are meaningless (what does a gaming effect look like?)
+
+Fans
+Obvious on it’s face.
+
+
+
+
+Info
+ A lot of information is available from CPUID through JBOG_server. Display what may be listed here, but not more.
+Link to Live chat will be provided here as will the other links in the lower header.
+
+
+Live Chat: http://www.xoticpc.com/contact-us
+Twitter: https://twitter.com/XoticPC
+Facebook: https://www.facebook.com/xoticpc/
+Instagram: https://www.instagram.com/xoticpc/
+YouTube: https://www.youtube.com/channel/UCJ9O0vRPsMFk5UtIDimr6hQ
+
+
+Notes from emails
+
+
+Laura, Sept 30
+Attached are the two additional files I have been needing to send you. The one marked info is to show the way we want the info button to look when clicked on. 
+
+
+I am still working to get the settings button designed as well
+
+
+Here is the copy for the info areas. The lighting area may change based off of how you end up setting that up with what programs you have available but everything else should be set.
+
+
+SYSTEM HEALTH TAB
+“CPU” - In general, your CPU should run idle around 24-35°C and shouldn’t run hotter than 67-72°C for long periods of time.
+
+
+
+
+“GPU” - In general, your GPU should run idle around 32-35°C and shouldn’t run hotter than 90-95°C for long periods of time.
+
+
+
+
+“HDD” - In general, your HDD should run between 25-50°C. Temperature deviations in either direction can diminish the life of your HDD.
+
+
+
+
+“MOTHERBOARD” - In general, your Motherboard should not run higher than 45°C.
+
+
+
+
+“S.M.A.R.T”
+
+
+
+
+
+
+LIGHTING TAB
+Keyboard Lighting Description - Select the section of the keyboard you would like to customize the color on and then select the color you would like it to be. You can switch between several effects and set your favorite color combination and effect as your active preset.
+
+
+
+
+REMOVE INFO BUTTON FROM EACH KEYBOARD LIGHTING SECTION.
+
+
+
+
+
+
+FANS TAB
+“MOTHERBOARD FAN” - Speed of all fans connected to the Motherboard.
+“GPU FAN” - Speed of the fan attached to the GPU.
+
+
+
+
+
+
+INFO TAB
+REMOVE INFO BUTTON FROM EACH OF THE SECTIONS ON THIS TAB.
