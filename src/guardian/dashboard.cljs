@@ -16,22 +16,29 @@
 (enable-console-print!)
 
 (def dev (= js/location.hostname "localhost"))
-(def url (if dev "http://localhost:8000" "/service"))
+(def url (if dev "ws://cov.us.to:8000" "ws://cov.us.to:8000"))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :health})
+(defc session {:state :health :data {}})
 (defc loading nil)
 (defc error   nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defc= state (-> session :state))
+(defc= data  (-> session :data))
 
 ;;; remotes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn connect [endpoint]
+  (let [conn (js/WebSocket. endpoint)]
+    (set! (.-onopen    conn) #(.log js/console "ws opened: "   %))
+    (set! (.-onerror   conn) #(.log js/console "ws errored: "  %))
+    (set! (.-onmessage conn) #(.log js/console "ws messaged: " %))))
 
 (defn remote [endpoint & [opts]]
   (let [opts* {:url url :on-error #(when dev (println (.-serverStack %)))}]
@@ -49,7 +56,7 @@
   (change-state! state))
 
 (defn initiate! [[path qmap] status _]
-  (prn "calling service")
+  (connect url)
   #_(initiate-session))
 
 ;;; from plotSVG ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -327,7 +334,7 @@
 (window
   :title        "Xotic"
   :route        (cell= [[state]])
-  :initiate     initiate!
+  :initiated    initiate!
   :routechanged change-route!
   :ah :mid :c grey :scroll true
   (image :sh (>sm 920 md 1240 lg 1400) :url background-texture
