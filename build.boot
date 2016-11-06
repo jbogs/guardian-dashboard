@@ -7,14 +7,14 @@
                   [adzerk/boot-reload        "0.4.12"         :scope "test"]
                   [hoplon/boot-hoplon        "0.2.4"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
-                #_[tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
+                  [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]
                   [hoplon/castra             "3.0.0-alpha4"]])
 (require
   '[adzerk.boot-cljs          :refer [cljs]]
   '[adzerk.boot-reload        :refer [reload]]
   '[hoplon.boot-hoplon        :refer [hoplon]]
- #_[tailrecursion.boot-bucket :refer [spew]]
+  '[tailrecursion.boot-bucket :refer [spew]]
   '[tailrecursion.boot-static :refer [serve]])
 
 (def buckets
@@ -37,11 +37,11 @@
    o optimizations OPM kw "Optimizations to pass the cljs copmiler."]
   (assert environment "Missing required environment argument.")
   (let [b (buckets environment)]
-    (comp (build :optimizations optimizations) #_(spew :bucket b))))
+    (comp (build :optimizations optimizations) (spew :bucket b))))
 
 (task-options!
   serve   {:port 8000}
   sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
-  #_spew    {:access-key (System/getenv "<YOUR_AWS_ACCESS_KEY>")
+  spew    {:access-key (System/getenv "<YOUR_AWS_ACCESS_KEY>")
            :secret-key (System/getenv "<YOUR_AWS_SECRET_KEY")})
 
