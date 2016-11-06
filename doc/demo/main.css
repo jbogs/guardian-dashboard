@@ -1,0 +1,41 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.box {
+  overflow: auto;
+  float: left;
+  width: 400px;
+  height: 350px;
+  background: #f0f0f0;
+  border: 10px solid white;
+}
+
+.header {
+  text-align: center;
+  font-size: 2em;
+  height: 40px;
+  background: #d0d0d0;
+}
+
+.footer {
+  text-align: center;
+  font-size: 0.8em;
+}
+
+.body {
+  text-align: center;
+  font-size: 3em;
+  line-height: 250px;
+}
+
+select {
+  width: 400px;
+  font-size: 1em;
+}
+
+pre {
+  font-size: 0.25em;
+  line-height: 1.1em;
+}
