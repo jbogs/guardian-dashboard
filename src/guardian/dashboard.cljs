@@ -427,7 +427,7 @@ the description, and the value/data"
         :p info-page-padding
         :g info-page-gutter
         (info-header :icon mb-icon :desc (ffirst info-mb)
-                     :val ((-> info-mb first rest)))))
+                     :val #((-> info-mb first rest)))))
 ;  (elem title-font :sh (r 1 1) :p 42 :g 42
 ;        (elem :sh (r 1 2) :sv info-panel-heading-height
 ;              :c info-panel-heading-color ))
