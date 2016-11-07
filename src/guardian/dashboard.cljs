@@ -6,7 +6,7 @@
   (:require
    [cljs.core       :refer [js->clj clj->js]]
                                         ;   [goog.string :refer [format]]
-   [planck.core :refer [eval]]
+;   [planck.core :refer [eval]]
    [cuerdas.core :as str]
 ;    [goog.string :as gstring]
 ;    [goog.string.format]
@@ -396,7 +396,7 @@
 
 (defn items-field [item1 item2  width]
   "place each item on the end of a width length field"
-  (do (js/alert (str item1 ", "  item2 ", " width))
+  (do (println (str item1 ", "  item2 ", " width))
   (str/format (str "%-" width "s%s") item1 item2)))
 
 (defelem info-panel-item [name func data]
@@ -422,13 +422,26 @@ the description, and the value/data"
         (image :url icon)
         (items-field desc val info-panel-width)))
 
-;#_
+
+(def a `("motherboard" ~#(cell= (:name (:mb jm)))))
+
+(defn info-view []
+  (println ((#(first (rest a))))))
+
+#_
+(defn info-view []
+           (println (js/eval (str #(first (rest (first info-mb)))))))
+
+#_
 (defn info-view []
   (elem title-font :sh (r 1 1)
         :p info-page-padding
         :g info-page-gutter
         (info-header :icon mb-icon :desc (ffirst info-mb)
-                     :val (js/eval #( (-> info-mb first rest))))))
+                     :val (a))))
+
+
+;                     :val (-> info-mb first rest))))
 ;  (elem title-font :sh (r 1 1) :p 42 :g 42
 ;        (elem :sh (r 1 2) :sv info-panel-heading-height
 ;              :c info-panel-heading-color ))
