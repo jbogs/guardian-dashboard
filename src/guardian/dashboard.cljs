@@ -6,6 +6,7 @@
   (:require
    [cljs.core       :refer [js->clj clj->js]]
                                         ;   [goog.string :refer [format]]
+   [planck.core :refer [eval]]
    [cuerdas.core :as str]
 ;    [goog.string :as gstring]
 ;    [goog.string.format]
@@ -367,7 +368,7 @@
 
 (def info-mb
   "info page motherboard descriptions map"
-  '(("MOTHERBOARD"        (cell= (:name (:mb jm))))
+  '(("MOTHERBOARD"        #(cell= (:name (:mb jm))))
     ("MODEL"              #(identity nil))
     ("CHIPSET"            #(identity nil))
     ("SOUTHBRIDGE"        #(identity nil))
@@ -427,7 +428,7 @@ the description, and the value/data"
         :p info-page-padding
         :g info-page-gutter
         (info-header :icon mb-icon :desc (ffirst info-mb)
-                     :val (#(-> info-mb first rest)))))
+                     :val (js/eval #( (-> info-mb first rest))))))
 ;  (elem title-font :sh (r 1 1) :p 42 :g 42
 ;        (elem :sh (r 1 2) :sv info-panel-heading-height
 ;              :c info-panel-heading-color ))
