@@ -6,6 +6,7 @@
                   [adzerk/boot-cljs          "1.7.228-1"      :scope "test"]
                   [adzerk/boot-reload        "0.4.12"         :scope "test"]
                   [hoplon/boot-hoplon        "0.2.4"          :scope "test"]
+                  [funcool/cuerdas "2.0.0"] ; google string library
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                 #_[tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]

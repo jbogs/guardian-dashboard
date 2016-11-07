@@ -4,7 +4,9 @@
   (:refer-clojure
     :exclude [-])
   (:require
-    [cljs.core       :refer [js->clj clj->js]]
+   [cljs.core       :refer [js->clj clj->js]]
+                                        ;   [goog.string :refer [format]]
+   [cuerdas.core :as str]
 ;    [goog.string :as gstring]
 ;    [goog.string.format]
     [chart.core      :as c]
@@ -393,7 +395,8 @@
 
 (defn items-field [item1 item2  width]
   "place each item on the end of a width length field"
-  (goog/string.format (str "%-" width "s%s") item1 item2))
+  (do (js/alert (str item1 ", "  item2 ", " width))
+  (str/format (str "%-" width "s%s") item1 item2)))
 
 (defelem info-panel-item [name func data]
   "single element of info panel (not the heading)"
@@ -414,14 +417,17 @@
 (defelem info-header [{:keys [icon desc val]}]
   "render an info-header element with the icon to display,
 the description, and the value/data"
-  (elem title-font :sh (r 1 2) :sv info-panel-heading-height
-        :url icon (items-field desc val info-panel-width)))
+  (elem :sh (r 1 2) :sv info-panel-heading-height
+        (image :url icon)
+        (items-field desc val info-panel-width)))
 
-#_ (defn info-view []
-  (elem title-font :sh (r 1 1) :p info-page-padding
+;#_
+(defn info-view []
+  (elem title-font :sh (r 1 1)
+        :p info-page-padding
         :g info-page-gutter
         (info-header :icon mb-icon :desc (ffirst info-mb)
-                     :val #(-> info-mb first rest))))
+                     :val ((-> info-mb first rest)))))
 ;  (elem title-font :sh (r 1 1) :p 42 :g 42
 ;        (elem :sh (r 1 2) :sv info-panel-heading-height
 ;              :c info-panel-heading-color ))
@@ -429,7 +435,7 @@ the description, and the value/data"
 
 
 
-;#_
+#_
 (defn info-view []
   (elem title-font :sh (r 1 1) :p 42 :g 42
         (elem :sh (r 1 2) :sv 100 :c :black :av :mid
