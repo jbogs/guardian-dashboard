@@ -353,50 +353,50 @@
 
 (def info-proc
   "info page processor descriptions map"
-  '(("PROCESSOR"            #(cell= (:name (:cpu jm))))
-    ("CODE NAME"             #(identity nil))
-    ("SOCKET TYPE"           #(identity nil))
-    ("STOCK FREQUENCY"       #(identity nil))))
+  `(("PROCESSOR"             ~#(cell= (:name (:cpu jm))))
+    ("CODE NAME"              #(identity nil))
+    ("SOCKET TYPE"            #(identity nil))
+    ("STOCK FREQUENCY"        #(identity nil))))
 
 (def info-vid
   "info page video card descriptions map"
-  '(("VIDEO CARD"          #(cell= (:name (:gpu_list jm))))
-    ("MAX TDP"             #(identity nil))
-    ("DEFAULT CLOCK"       #(identity nil))
-    ("TURBO CLOCK"         #(identity nil))
-    ("UNIFIED SHADERS"     #(identity nil))))
+  `(("VIDEO CARD"          ~#(cell= (:name (:gpu_list jm))))
+    ("MAX TDP"              #(identity nil))
+    ("DEFAULT CLOCK"        #(identity nil))
+    ("TURBO CLOCK"          #(identity nil))
+    ("UNIFIED SHADERS"      #(identity nil))))
 
 (def info-mb
   "info page motherboard descriptions map"
-  '(("MOTHERBOARD"        #(cell= (:name (:mb jm))))
-    ("MODEL"              #(identity nil))
-    ("CHIPSET"            #(identity nil))
-    ("SOUTHBRIDGE"        #(identity nil))
-    ("BIOS VERSION"       #(identity nil))
-    ("BIOS DATE"          #(identity nil))))
+  `(("MOTHERBOARD"     ~#(cell= (:name (:mb jm))))
+    ("MODEL"               #(identity nil))
+    ("CHIPSET"             #(identity nil))
+    ("SOUTHBRIDGE"         #(identity nil))
+    ("BIOS VERSION"        #(identity nil))
+    ("BIOS DATE"           #(identity nil))))
 
 (def info-mem
   "info page memory description map"
-  '(("MEMORY"             #(identity nil))
-    ("MANUFACTURER"       #(identity nil))
-    ("CAPACITY"           #(identity nil))
-    ("DEFAULT FREQUENCY"  #(identity nil))
-    ("TYPE"               #(identity nil))
-    ("TIMINGS"            #(identity nil))))
+  `(("MEMORY"             ~#(identity nil))
+    ("MANUFACTURER"        #(identity nil))
+    ("CAPACITY"            #(identity nil))
+    ("DEFAULT FREQUENCY"   #(identity nil))
+    ("TYPE"                #(identity nil))
+    ("TIMINGS"             #(identity nil))))
 
 (def info-drv-generic
   "info-page drive description map"
   ;; as the drive name is nested an extra level, there's no easy way to extract it with a function fragment
   ;; here so it will be done custom in the header rendering below
-  '((":\\]DRIVE"         #(identity nil))
-   ("TYPE"              #(identity nil))
-   ("FREE"              #(identity nil))
-   ("USED"              #(identity nil))
-   ("POWER ON HOURS"    #(identity nil))))
+  	`((":\\]DRIVE"        ~#(identity nil))
+     ("TYPE"               #(identity nil))
+     ("FREE"               #(identity nil))
+     ("USED"               #(identity nil))
+     ("POWER ON HOURS"     #(identity nil))))
 
-(defn items-field [item1 item2  width]
-  "place each item on the end of a width length field"
-  (do (println (str item1 ", "  item2 ", " width))
+(defn items-field [item1 item2 width]
+  "return a width length string with an item on each end padded with space"
+  (do (println item2)
   (str/format (str "%-" width "s%s") item1 item2)))
 
 (defelem info-panel-item [name func data]
@@ -423,8 +423,9 @@ the description, and the value/data"
         (items-field desc val info-panel-width)))
 
 
-(def a `("motherboard" ~#(cell= (:name (:mb jm)))))
+;(def a `("motherboard" ~#(cell= (:name (:mb jm)))))
 
+#_
 (defn info-view []
   (println ((first (rest a)))))
 
@@ -432,16 +433,14 @@ the description, and the value/data"
 (defn info-view []
            (println (js/eval (str #(first (rest (first info-mb)))))))
 
-#_
+;#_
 (defn info-view []
   (elem title-font :sh (r 1 1)
         :p info-page-padding
         :g info-page-gutter
         (info-header :icon mb-icon :desc (ffirst info-mb)
-                     :val (a))))
-
-
-;                     :val (-> info-mb first rest))))
+                     :val ((first (rest (first info-mb)))))))
+;:val ((#(-> info-mb  first rest))))))
 ;  (elem title-font :sh (r 1 1) :p 42 :g 42
 ;        (elem :sh (r 1 2) :sv info-panel-heading-height
 ;              :c info-panel-heading-color ))
