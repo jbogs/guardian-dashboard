@@ -426,7 +426,7 @@ the description, and the value/data"
 (def a `("motherboard" ~#(cell= (:name (:mb jm)))))
 
 (defn info-view []
-  (println ((#(first (rest a))))))
+  (println ((first (rest a)))))
 
 #_
 (defn info-view []
