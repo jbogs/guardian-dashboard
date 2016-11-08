@@ -1,21 +1,23 @@
 (ns+ guardian.dashboard
-  (:page
-    "index.html")
-  (:refer-clojure
-    :exclude [-])
-  (:require
-   [cljs.core       :refer [js->clj clj->js]]
+     (:page
+      "index.html")
+     (:refer-clojure
+      :exclude [-])
+     (:require
+      [cljs.core       :refer [js->clj clj->js]]
                                         ;   [goog.string :refer [format]]
-;   [planck.core :refer [eval]]
-   [cuerdas.core :as str]
-;    [goog.string :as gstring]
-;    [goog.string.format]
-    [chart.core      :as c]
-    [castra.core     :refer [mkremote]]
-    [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
-    [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
-    [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- c r d]]))
+                                        ;   [planck.core :refer [eval]]
+                                        ;   [cuerdas.core :as str]
+
+      [cljs.pprint :as pprint]
+;      [goog.string :as gstring]
+;      [goog.string.format]
+      [chart.core      :as c]
+      [castra.core     :refer [mkremote]]
+      [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
+      [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
+      [hoplon.ui       :refer [elem image window video s b]]
+      [hoplon.ui.attrs :refer [- c r d]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -394,10 +396,23 @@
      ("USED"               #(identity nil))
      ("POWER ON HOURS"     #(identity nil))))
 
+#_
 (defn items-field [item1 item2 width]
   "return a width length string with an item on each end padded with space"
-  (do (println item2)
-  (str/format (str "%-" width "s%s") item1 item2)))
+  (println (pprint-cl/format nil (str "%-" width "s%s") item1 item2)))
+
+(defn items-field [item1 item2 width]
+  "return a width length string with an item on each end padded with space"
+  (do
+    (js/alert (str "item1=" item1 ",  item2=" item2 ", width=" width))
+    (reduce str  ;trim field to a max of width
+            (take width
+                  (str item1 ": "
+                       (reduce str
+                               (take
+                                (- width (+ (count item1) (count item2)))
+                                (repeat  " "))
+                               item2))))))
 
 (defelem info-panel-item [name func data]
   "single element of info panel (not the heading)"
