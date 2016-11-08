@@ -23,7 +23,7 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :health :data {}})
+(defc session {:state :health :messages []})
 (defc loading nil)
 (defc error   nil)
 
@@ -36,9 +36,9 @@
 
 (defn connect [endpoint]
   (let [conn (js/WebSocket. endpoint)]
-    (set! (.-onopen    conn) #(.log js/console "ws opened: "   %))
-    (set! (.-onerror   conn) #(.log js/console "ws errored: "  %))
-    (set! (.-onmessage conn) #(.log js/console "ws messaged: " %))))
+    (set! (.-onopen    conn) #(prn :opened   (js->clj % :keywordize-keys true)))
+    (set! (.-onerror   conn) #(prn :errored  (js->clj % :keywordize-keys true)))
+    (set! (.-onmessage conn) #(swap! session update :messages conj (js->clj % :keywordize-keys true)))))
 
 (defn remote [endpoint & [opts]]
   (let [opts* {:url url :on-error #(when dev (println (.-serverStack %)))}]
@@ -252,8 +252,8 @@
 (def info-icon-ph 10)
 (def info-icon-pv 2)
 (def ig 3)  ; info button gutter
-;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defelem panel [attrs elems]
   (elem :p 20 :c black attrs
