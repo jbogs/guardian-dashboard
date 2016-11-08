@@ -1,45 +1,44 @@
 (ns+ guardian.dashboard
-     (:page
-      "index.html")
-     (:refer-clojure
-      :exclude [-])
-     (:require
-      [cljs.core       :refer [js->clj clj->js]]
-                                        ;   [goog.string :refer [format]]
-                                        ;   [planck.core :refer [eval]]
-                                        ;   [cuerdas.core :as str]
-
-      [cljs.pprint :as pprint]
-;      [goog.string :as gstring]
-;      [goog.string.format]
-      [chart.core      :as c]
-      [castra.core     :refer [mkremote]]
-      [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
-      [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
-      [hoplon.ui       :refer [elem image window video s b]]
-      [hoplon.ui.attrs :refer [- c r d]]))
+  (:page
+    "index.html")
+  (:refer-clojure
+    :exclude [-])
+  (:require
+    [chart.core :as c]
+    [castra.core     :refer [mkremote]]
+    [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
+    [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
+    [hoplon.ui       :refer [elem image window video s b]]
+    [hoplon.ui.attrs :refer [- c r d]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (enable-console-print!)
 
 (def dev (= js/location.hostname "localhost"))
-(def url (if dev "http://localhost:8000" "/service"))
+(def url (if dev "ws://cov.us.to:8000" "ws://cov.us.to:8000"))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :info})
+(defc session {:state :health :data {}})
 (defc loading nil)
 (defc error   nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defc= state (-> session :state))
+(defc= data  (-> session :data))
 
 ;;; remotes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn connect [endpoint]
+  (let [conn (js/WebSocket. endpoint)]
+    (set! (.-onopen    conn) #(.log js/console "ws opened: "   %))
+    (set! (.-onerror   conn) #(.log js/console "ws errored: "  %))
+    (set! (.-onmessage conn) #(.log js/console "ws messaged: " %))))
 
 (defn remote [endpoint & [opts]]
   (let [opts* {:url url :on-error #(when dev (println (.-serverStack %)))}]
@@ -57,7 +56,7 @@
   (change-state! state))
 
 (defn initiate! [[path qmap] status _]
-  (prn "calling service")
+  (connect url)
   #_(initiate-session))
 
 ;;; from plotSVG ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -253,7 +252,6 @@
 (def info-icon-ph 10)
 (def info-icon-pv 2)
 (def ig 3)  ; info button gutter
-
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -483,8 +481,8 @@ the description, and the value/data"
 (window
   :title        "Xotic"
   :route        (cell= [[state]])
-  :initiate     initiate!
-  :change-route change-route!
+  :initiated    initiate!
+  :routechanged change-route!
   :ah :mid :c grey :scroll true
   (image :sh (>sm 920 md 1240 lg 1400) :url background-texture
     (image :sh (r 1 1) :sv (b 800 sm :auto) :url page-header :av (b :beg sm :end) ;; note: padding has not yet been applied to media elements
