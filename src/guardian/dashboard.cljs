@@ -403,7 +403,6 @@
 
 (defn items-field [item1 item2 width]
   "return a width length string with an item on each end padded with space"
-  (do
     (reduce str  ;trim field to a max of width
             (take width
                   (str item1 ":"
@@ -413,7 +412,7 @@
                                      (- width (+ (count item1) (count item2)))
                                      (repeat  " "))
                                     " "
-                                    item2)))))))
+                                    item2))))))
 
 
 (defelem info-panel-item [name func data]
