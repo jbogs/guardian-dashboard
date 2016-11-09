@@ -408,10 +408,11 @@
             (take width
                   (str item1 ":"
                        (reduce str
-                               (and " "  ; take will return null if field bigger than width
+                               (and  ; take will return null if field bigger than width
                                     (take  ; if so return a single space
                                      (- width (+ (count item1) (count item2)))
                                      (repeat  " "))
+                                    " "
                                     item2)))))))
 
 
