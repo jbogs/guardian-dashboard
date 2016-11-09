@@ -4,6 +4,7 @@
   (:refer-clojure
     :exclude [-])
   (:require
+    [adzerk.env :as env]
     [chart.core :as c]
     [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
@@ -15,8 +16,10 @@
 
 (enable-console-print!)
 
+(env/def JBOGHOST "cov.us.to")
+
 (def dev (= js/location.hostname "localhost"))
-(def url (if dev "ws://cov.us.to:8000" "ws://localhost:8000"))
+(def url (if dev (str "ws://" JBOGHOST ":8000") "ws://localhost:8000"))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -158,7 +161,7 @@
 
 (def info-panel-item-height 40)  ;; in pixels
 (def info-panel-heading-height 40) ;; in pixels
-(def info-panel-width 35)        ;; in CHARACTERS
+(def info-panel-width 33)        ;; in CHARACTERS
 (def info-panel-heading-color :black)
 (def info-panel-color :white)
 (def info-page-gutter 42)
@@ -403,16 +406,16 @@
 
 (defn items-field [item1 item2 width]
   "return a width length string with an item on each end padded with space"
-    (reduce str  ;trim field to a max of width
-            (take width
-                  (str item1 ":"
-                       (reduce str
-                               (and  ; take will return null if field bigger than width
-                                    (take  ; if so return a single space
-                                     (- width (+ (count item1) (count item2)))
-                                     (repeat  " "))
-                                    " "
-                                    item2))))))
+  (reduce str  ;trim field to a max of width
+          (take width
+                (str item1 ":"
+                     (reduce str
+                             (and  ; take will return null if field bigger than width
+                              (take  ; if so return a single space
+                               (- width (+ (count item1) (count item2)))
+                               (repeat  " "))
+                              " "
+                              item2))))))
 
 
 (defelem info-panel-item [name func data]
@@ -422,14 +425,6 @@
 
   ;; note: the desc field has to be a list or vector because the items have to go in the
   ;; panel in a certain order
-
-(defelem info-panel [:keys [icon desc data drive]] ; [icon desc data & drive]
-  "render an info view with icon, description map, data map and optional drive (0 or 1)"
-  (elem :sh (r 1 2) :sv info-panel-heading-height
-        :c info-panel-heading-color :av :mid
-        (image :url icon)
-        (items-field (str " " (["C" "D"] drive)  ":\\DRIVE") (:name (first (:hdd_list data )))
-                     info-panel-width)))
 
 (defelem info-header [{:keys [icon desc val]}]
   "render an info-header element with the icon to display,
@@ -441,28 +436,26 @@ the description, and the value/data"
         (image :url icon)
         (str "    " (items-field desc val info-panel-width))))
 
-
-;(def a `("motherboard" ~#(cell= (:name (:mb jm)))))
-
-#_
-(defn info-view []
-  (println ((first (rest a)))))
-
-#_
-(defn info-view []
-           (println (js/eval (str #(first (rest (first info-mb)))))))
+(defelem info-panel [:keys [icon desc data drive]] ; [icon desc data & drive]
+  "render an info view with icon, description map, data map and optional drive (0 or 1)"
+  (elem :sh (r 1 2) :sv info-panel-heading-height
+        :c info-panel-heading-color :av :mid
+        (image :url icon)
+        (items-field (str " " (["C" "D"] drive)  ":\\DRIVE") (:name (first (:hdd_list data )))
+                     info-panel-width)))
 
 ;#_
 (defn info-view []
   (elem title-font :sh (r 1 1)
         :p info-page-padding
         :g info-page-gutter
-#_        (info-header :icon cpu-icon :desc (ffirst info-proc)
+                                        ;#_
+        (info-header :icon cpu-icon :desc (ffirst info-proc)
                      :val @((-> info-proc first rest first)))
         (info-header :icon gpu-icon :desc (ffirst info-vid)
                      :val @((-> info-vid first rest first) 0))
 
-        ;#_
+#_
         (info-header :icon mb-icon :desc (ffirst info-mb)
                      :val @((-> info-mb first rest first)))))
 ;:val @((first (rest (first info-mb)))))))
