@@ -16,14 +16,16 @@
 (enable-console-print!)
 
 (def dev (= js/location.hostname "localhost"))
-(def url (if dev "ws://cov.us.to:8000" "ws://cov.us.to:8000"))
+(def url (if dev "ws://cov.us.to:8000" "ws://localhost:8000"))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :health :messages []})
+
+(defc session {:state :info :messages []})
+;(defc session {:state :health :messages []})
 (defc loading nil)
 (defc error   nil)
 
@@ -360,7 +362,7 @@
 
 (def info-vid
   "info page video card descriptions map"
-  `(("VIDEO CARD"          ~#(cell= (:name (:gpu_list jm))))
+  `(("VIDEO CARD"          ~#(cell= (:name (nth (:gpu_list jm) %))))
     ("MAX TDP"              #(identity nil))
     ("DEFAULT CLOCK"        #(identity nil))
     ("TURBO CLOCK"          #(identity nil))
@@ -402,15 +404,16 @@
 (defn items-field [item1 item2 width]
   "return a width length string with an item on each end padded with space"
   (do
-    (js/alert (str "item1=" item1 ",  item2=" item2 ", width=" width))
     (reduce str  ;trim field to a max of width
             (take width
-                  (str item1 ": "
+                  (str item1 ":"
                        (reduce str
-                               (take
-                                (- width (+ (count item1) (count item2)))
-                                (repeat  " "))
-                               item2))))))
+                               (and " "  ; take will return null if field bigger than width
+                                    (take  ; if so return a single space
+                                     (- width (+ (count item1) (count item2)))
+                                     (repeat  " "))
+                                    item2)))))))
+
 
 (defelem info-panel-item [name func data]
   "single element of info panel (not the heading)"
@@ -432,8 +435,11 @@
   "render an info-header element with the icon to display,
 the description, and the value/data"
   (elem :sh (r 1 2) :sv info-panel-heading-height
+        :c info-panel-heading-color
+        :ah :beg
+        :av :mid
         (image :url icon)
-        (items-field desc val info-panel-width)))
+        (str "    " (items-field desc val info-panel-width))))
 
 
 ;(def a `("motherboard" ~#(cell= (:name (:mb jm)))))
@@ -451,6 +457,12 @@ the description, and the value/data"
   (elem title-font :sh (r 1 1)
         :p info-page-padding
         :g info-page-gutter
+#_        (info-header :icon cpu-icon :desc (ffirst info-proc)
+                     :val @((-> info-proc first rest first)))
+        (info-header :icon gpu-icon :desc (ffirst info-vid)
+                     :val @((-> info-vid first rest first) 0))
+
+        ;#_
         (info-header :icon mb-icon :desc (ffirst info-mb)
                      :val @((-> info-mb first rest first)))))
 ;:val @((first (rest (first info-mb)))))))
