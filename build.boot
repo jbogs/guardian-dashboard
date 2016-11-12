@@ -1,16 +1,15 @@
 (set-env!
   :asset-paths  #{"rsc"}
   :source-paths #{"src"}
-  :dependencies '[[org.clojure/clojure       "1.7.0"          :scope "test"]
-                  [org.clojure/clojurescript "1.7.228"        :scope "test"]
+  :dependencies '[[org.clojure/clojure       "1.8.0"          :scope "test"]
+                  [org.clojure/clojurescript "1.8.51"        :scope "test"]
                   [adzerk/boot-cljs          "1.7.228-1"      :scope "test"]
                   [adzerk/boot-reload        "0.4.12"         :scope "test"]
-                  [hoplon/boot-hoplon        "0.2.4"          :scope "test"]
-                  [adzerk/env "0.3.0"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
-                  [hoplon/ui                 "0.1.0-SNAPSHOT"]
-                  [hoplon/castra             "3.0.0-alpha4"]])
+                  [adzerk/env                "0.3.0"]
+                  [hoplon/castra             "3.0.0-alpha6"]
+                  [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 (require
   '[adzerk.boot-cljs          :refer [cljs]]
   '[adzerk.boot-reload        :refer [reload]]
