@@ -8,7 +8,6 @@
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
                   [adzerk/env                "0.3.0"]
-                  [hoplon/castra             "3.0.0-alpha6"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 (require
   '[adzerk.boot-cljs          :refer [cljs]]

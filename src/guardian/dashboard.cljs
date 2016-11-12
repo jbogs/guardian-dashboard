@@ -6,7 +6,6 @@
   (:require
     [adzerk.env :as env]
     [chart.core :as c]
-    [castra.core     :refer [mkremote]]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
@@ -26,9 +25,7 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (defc session {:state :info :messages []})
-;(defc session {:state :health :messages []})
 (defc loading nil)
 (defc error   nil)
 
@@ -45,12 +42,9 @@
     (set! (.-onerror   conn) #(prn :errored  (js->clj % :keywordize-keys true)))
     (set! (.-onmessage conn) #(swap! session update :messages conj (js->clj % :keywordize-keys true)))))
 
-(defn remote [endpoint & [opts]]
+#_(defn remote [endpoint & [opts]]
   (let [opts* {:url url :on-error #(when dev (println (.-serverStack %)))}]
     (mkremote endpoint session error loading (merge opts* opts))))
-
-(def initiate-session  (remote 'guardian.service.command/initiate-session))
-(def terminate-session (remote 'guardian.service.command/termminate-session))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
