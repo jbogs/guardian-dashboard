@@ -490,8 +490,8 @@ the description, and the value/data"
   :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
-  :ah :mid :c grey :scroll true
-  (image :sh (>sm 920 md 1240 lg 1400) :url background-texture
+  :c grey :scroll true
+  (image :sh (r 1 1) :ah :mid :url background-texture
     (image :sh (r 1 1) :sv (b 800 sm :auto) :url page-header :av (b :beg sm :end) ;; note: padding has not yet been applied to media elements
       (tab-button :sh (>sm (r 11 50)) :val :health   "SYSTEM HEALTH")
       (tab-button :sh (>sm (r 11 50)) :val :lighting "LIGHTING")
