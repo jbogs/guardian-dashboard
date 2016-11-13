@@ -6,7 +6,7 @@
   (:require
     [adzerk.env :as env]
     [chart.core :as c]
-    [javelin.core    :refer [defc defc= cell= cell cell-doseq]]
+    [javelin.core    :refer [defc defc= cell= cell cell-doseq with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
     [hoplon.ui.attrs :refer [- c r d]]))
@@ -25,8 +25,7 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :info :messages []})
-(defc loading nil)
+(defc session {:state :info :data [] :connected false :error nil})
 (defc error   nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -34,13 +33,18 @@
 (defc= state (-> session :state))
 (defc= data  (-> session :data))
 
+(cell= (prn :session session))
+
 ;;; remotes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connect [endpoint]
-  (let [conn (js/WebSocket. endpoint)]
-    (set! (.-onopen    conn) #(prn :opened   (js->clj % :keywordize-keys true)))
-    (set! (.-onerror   conn) #(prn :errored  (js->clj % :keywordize-keys true)))
-    (set! (.-onmessage conn) #(swap! session update :messages conj (js->clj % :keywordize-keys true)))))
+  (with-let [conn (js/WebSocket. endpoint)]
+    (let [cljs #(js->clj % :keywordize-keys true)
+          data #(-> % .-data js/JSON.parse cljs :data)]
+      (set! (.-onopen    conn) #(swap! session assoc :connected true))
+      (set! (.-onclose   conn) #(swap! session assoc :connected false))
+      (set! (.-onerror   conn) #(swap! session assoc :error (.-error %)))
+      (set! (.-onmessage conn) #(swap! session update :data conj (data %))))))
 
 #_(defn remote [endpoint & [opts]]
   (let [opts* {:url url :on-error #(when dev (println (.-serverStack %)))}]
@@ -387,7 +391,7 @@
   "info-page drive description map"
   ;; as the drive name is nested an extra level, there's no easy way to extract it with a function fragment
   ;; here so it will be done custom in the header rendering below
-  	`((":\\]DRIVE"        ~#(identity nil))
+   `((":\\]DRIVE"        ~#(identity nil))
      ("TYPE"               #(identity nil))
      ("FREE"               #(identity nil))
      ("USED"               #(identity nil))
