@@ -14,12 +14,12 @@
    id="Layer_1"
    x="0px"
    y="0px"
-   viewBox="0 0 138.39999 138.39999"
+   viewBox="0 0 9.8000005 9.8000005"
    xml:space="preserve"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="CPU_GPU_LOAD_ring.svg"
-   width="138.39999"
-   height="138.39999"><metadata
+   sodipodi:docname="Info button.svg"
+   width="9.8000011"
+   height="9.8000011"><metadata
      id="metadata1015"><rdf:RDF><cc:Work
          rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
@@ -40,9 +40,9 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     inkscape:zoom="1.0217327"
-     inkscape:cx="449.01615"
-     inkscape:cy="-309.19615"
+     inkscape:zoom="1.0217326"
+     inkscape:cx="291.8839"
+     inkscape:cy="-10.550001"
      inkscape:window-x="1327"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -77,13 +77,13 @@
 	.st25{font-size:7.0112px;}
 </style><circle
      class="st17"
-     cx="69.200005"
-     cy="69.150032"
+     cx="-93.632286"
+     cy="-249.99997"
      r="57.799999"
      id="circle353"
      style="clip-rule:evenodd;fill:#ffffff;fill-rule:evenodd" /><g
      id="g379"
-     transform="translate(-205.64541,-169.35)"><g
+     transform="translate(-368.4777,-488.5)"><g
        id="g381"><text
          transform="translate(250.5379,253.1045)"
          class="st5 st6 st19"
@@ -95,9 +95,20 @@
          class="st5 st6 st14"
          id="text387"
          style="font-size:12.25790024px;font-family:SupriaSans-CondBold;fill:#ffffff">CPU LOAD</text>
-</g></g><g
+</g></g><circle
+     class="st13"
+     cx="4.9000001"
+     cy="4.9000001"
+     r="4.9000001"
+     id="circle409"
+     style="clip-rule:evenodd;fill:#666666;fill-rule:evenodd" /><path
+     class="st2"
+     d="m 4.0000001,8.4000001 1.8,0 0,-4.9 -1.8,0 0,4.9 0,0 z m 0,-5.7 1.8,0 0,-1.2 -1.8,0 0,1.2 z"
+     id="path411"
+     inkscape:connector-curvature="0"
+     style="clip-rule:evenodd;fill-rule:evenodd" /><g
      id="g675"
-     transform="translate(-130.97515,-169.35)"><defs
+     transform="translate(-293.80744,-488.5)"><defs
        id="defs677"><circle
          id="SVGID_31_"
          cx="270.20001"
@@ -113,21 +124,4 @@
          height="100%" /></clipPath><g
        id="g683"
        clip-path="url(#SVGID_32_)"
-       transform="translate(-70,0)" /></g><g
-     id="g795"
-     transform="translate(-200.95,-169.35)"><path
-       class="st23"
-       d="m 221.2,189.6 c 27,-27 70.9,-27 97.9,0 27,27 27,70.9 0,97.9 -27,27 -70.9,27 -97.9,0 -27,-27 -27,-70.9 0,-97.9 l 0,0 z m 49,-8.3 c -31.6,0 -57.3,25.6 -57.3,57.3 0,31.6 25.6,57.3 57.3,57.3 31.6,0 57.3,-25.6 57.3,-57.3 -0.1,-31.7 -25.7,-57.3 -57.3,-57.3 z"
-       id="path797"
-       inkscape:connector-curvature="0"
-       style="clip-rule:evenodd;fill:#4d4d4d;fill-rule:evenodd" /><path
-       class="st0"
-       d="m 270.2,171.5 c -37,0 -67,30 -67,67 0,37 30,67 67,67 37,0 67,-30 67,-67 0,-37 -30,-67 -67,-67 l 0,0 z m 0,8.5 c 32.3,0 58.5,26.2 58.5,58.5 0,32.3 -26.2,58.5 -58.5,58.5 -32.3,0 -58.5,-26.2 -58.5,-58.5 0,-32.3 26.2,-58.5 58.5,-58.5 z"
-       id="path799"
-       inkscape:connector-curvature="0"
-       style="clip-rule:evenodd;fill:#333333;fill-rule:evenodd" /><path
-       class="st2"
-       d="m 317,191.7 c -25.9,-25.9 -67.8,-25.9 -93.6,0 -25.9,25.9 -25.9,67.8 0,93.6 25.9,25.9 67.8,25.9 93.6,0 25.8,-25.8 25.8,-67.7 0,-93.6 l 0,0 z m -4.9,4.9 c 23.2,23.2 23.2,60.7 0,83.9 -23.2,23.2 -60.7,23.2 -83.9,0 -23.2,-23.2 -23.2,-60.7 0,-83.9 23.2,-23.2 60.7,-23.2 83.9,0 z"
-       id="path801"
-       inkscape:connector-curvature="0"
-       style="clip-rule:evenodd;fill-rule:evenodd" /></g></svg>
+       transform="translate(-70,0)" /></g></svg>
