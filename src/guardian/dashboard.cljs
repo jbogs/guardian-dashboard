@@ -25,42 +25,46 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc session {:state :info :data [] :connected false :error nil})
-(defc error   nil)
+(defc state {:view :info :data {}})
+(defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc= state (-> session :state))
-(defc= data  (-> session :data))
+(defc= data (-> state :data) #(swap! state assoc :data %))
+(defc= view (-> state :view))
 
-(cell= (prn :session session))
+(cell= (prn :state state))
 
-;;; remotes ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn connect [endpoint]
-  (with-let [conn (js/WebSocket. endpoint)]
-    (let [cljs #(js->clj % :keywordize-keys true)
-          data #(-> % .-data js/JSON.parse cljs :data)]
-      (set! (.-onopen    conn) #(swap! session assoc :connected true))
-      (set! (.-onclose   conn) #(swap! session assoc :connected false))
-      (set! (.-onerror   conn) #(swap! session assoc :error (.-error %)))
-      (set! (.-onmessage conn) #(swap! session update :data conj (data %))))))
+(defn connect [url state error]
+  (let [conn (js/WebSocket. url)
+        cljs #(js->clj % :keywordize-keys true)
+        data #(-> % .-data js/JSON.parse cljs)]
+    (-> (fn [resolve reject]
+          (set! (.-onopen    conn) #(resolve conn))
+          (set! (.-onerror   conn) #(->> (.-error %) (reset! error) (reject)))
+          (set! (.-onmessage conn) #(reset! state (data %))))
+        (js/Promise.))))
 
-#_(defn remote [endpoint & [opts]]
-  (let [opts* {:url url :on-error #(when dev (println (.-serverStack %)))}]
-    (mkremote endpoint session error loading (merge opts* opts))))
+(defn send [tag conn data]
+  (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
+
+(def get-hardware-data (partial send "get_hardware_data"))
+(def get-smart-data    (partial send "get_smart_data"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn change-state! [state]
-  (swap! session assoc :state state))
+(defn change-view! [view]
+  (swap! state assoc :view view))
 
-(defn change-route! [[[state] _]]
-  (change-state! state))
+(defn change-route! [[[view] _]]
+  (change-view! view))
 
 (defn initiate! [[path qmap] status _]
-  (connect url)
-  #_(initiate-session))
+  (-> (connect url data error)
+      (.then  #(get-hardware-data %))
+      (.catch #(.log js/console "error: " %))))
 
 ;;; from plotSVG ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -270,9 +274,9 @@
 
 (defelem tab-button [{:keys [val] :as attrs} elems]
   (elem :ph 28 :ah :mid (dissoc attrs :val)
-    (image button-font :s (r 1 1) :a :mid :m :pointer :click #(change-state! val)
-      :fc  (cell= (if (= state val) grey white))
-      :url (cell= (if (= state val) button-selected black-button-red-line))
+    (image button-font :s (r 1 1) :a :mid :m :pointer :click #(change-view! val)
+      :fc  (cell= (if (= view val) grey white))
+      :url (cell= (if (= view val) button-selected black-button-red-line))
       elems)))
 
 ;;; first page
@@ -483,7 +487,7 @@ the description, and the value/data"
 
 (window
   :title        "Xotic"
-  :route        (cell= [[state]])
+  :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
   :ah :mid :c grey :scroll true
@@ -494,7 +498,7 @@ the description, and the value/data"
       (elem       :sh (>sm (r 6  50)))
       (tab-button :sh (>sm (r 11 50)) :val :fans     "FANS")
       (tab-button :sh (>sm (r 11 50)) :val :info     "INFO"))
-    (case-tpl state
+    (case-tpl view
       :health   (health-view)
       :lighting (lighting-view)
       :fans     (fans-view)
