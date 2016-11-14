@@ -22,7 +22,7 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc state {:view :info :data {}})
+(defc state {:view :health :data {}})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -277,22 +277,24 @@
   :initiated    initiate!
   :routechanged change-route!
   :c grey :scroll true
-  (elem :sh (r 1 1) :ah :mid ;:url "background.svg"
-    (elem :sh (r 1 1) :sv (b 800 sm 200) :av (b :beg sm :end) :c black :bb 4 :bc :red
+  (elem :sh (r 1 1) :p 20 :c black :bb 6 :bc :red
+    (elem :sh (r 1 1) :sv 100 :ah (b :mid sm :beg) :av (b :beg sm :mid)
+      (image :sh 200 :url "xotic-pc-logo.svg"))
+    (elem :sh (r 1 1) :av (b :beg sm :end)
       (tab-button :sh (>sm (r 11 50)) :val :health   "SYSTEM HEALTH")
       (tab-button :sh (>sm (r 11 50)) :val :lighting "LIGHTING")
       (elem       :sh (>sm (r 6  50)))
       (tab-button :sh (>sm (r 11 50)) :val :fans     "FANS")
-      (tab-button :sh (>sm (r 11 50)) :val :info     "INFO"))
-    (case-tpl view
-      :health   (health-view)
-      :lighting (lighting-view)
-      :fans     (fans-view)
-      :info     (info-view))
-    (elem :sh (r 1 1) :ah :mid :c black
-      (elem :sh (>sm 920 md 1240 lg 1400) :gh 200 :ah :mid
-        (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.facebook.com/") "F")
-        (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.instagram.com/")"I")
-        (elem :sv 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.xoticpc.com/")  "XOTIC PC")
-        (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.twitter.com/")  "T")
-        (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.youtube.com/")  "Y")))))
+      (tab-button :sh (>sm (r 11 50)) :val :info     "INFO")))
+  (case-tpl view
+    :health   (health-view)
+    :lighting (lighting-view)
+    :fans     (fans-view)
+    :info     (info-view))
+  (elem :sh (r 1 1) :ah :mid :c black
+    (elem :sh (>sm 920 md 1240 lg 1400) :gh 200 :ah :mid
+      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.facebook.com/") "F")
+      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.instagram.com/")"I")
+      (elem :sv 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.xoticpc.com/")  "XOTIC PC")
+      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.twitter.com/")  "T")
+      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.youtube.com/")  "Y"))))
