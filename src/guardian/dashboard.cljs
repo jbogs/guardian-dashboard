@@ -201,12 +201,19 @@
       elems)))
 
 (defn lighting-view []
-  (elem title-font :sh (r 1 1) :p g :g g
+  (elem title-font :sh  (>sm 920 md 1240 lg 1400):p g :g g
     "lighting things"))
 
 (defn fans-view []
-  (elem title-font :sh (r 1 1) :p g :g g
-    "fan things"))
+  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
+    (for-tpl [{:keys [name]} (cell= [{:name "CPU Fan"} {:name "GPU Fan"}])]
+      (elem :sh (r 1 1) :p g :g g
+        (elem :sh (r 1 1) :p g :c black
+          name)
+        (image :sh (r 1 4) :sv 400 :a :mid :url "fan-speed-bg.svg"
+          "1365 RPM")
+        (elem :sh (r 3 4) :sv 400 :p g :ah :mid :c black
+          "Motherboard Fan Graph")))))
 
 (defn health-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
