@@ -158,9 +158,10 @@
 
 ;-- colors --------------------------------------------------------------------;
 
-(def white (c 0xEEEEEE))
-(def grey  (c 0x303030))
+(def white (c 0xffffff))
+(def grey  (c 0x4d4d4d))
 (def black (c 0x111111))
+(def red   (c 0xc32026))
 
 ;-- fonts ---------------------------------------------------------------------;
 
@@ -277,7 +278,7 @@
   :initiated    initiate!
   :routechanged change-route!
   :c grey :scroll true
-  (elem :sh (r 1 1) :p 20 :c black :bb 6 :bc :red
+  (elem :sh (r 1 1) :p g :c black :bb 6 :bc :red
     (elem :sh (r 1 1) :sv 100 :ah (b :mid sm :beg) :av (b :beg sm :mid)
       (image :sh 200 :url "xotic-pc-logo.svg"))
     (elem :sh (r 1 1) :av (b :beg sm :end)
