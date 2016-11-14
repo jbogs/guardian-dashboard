@@ -201,25 +201,54 @@
       elems)))
 
 (defn lighting-view []
-  (elem title-font :sh (r 1 1)
+  (elem title-font :sh (r 1 1) :p g :g g
     "lighting things"))
 
 (defn fans-view []
-  (elem title-font :sh (r 1 1)
+  (elem title-font :sh (r 1 1) :p g :g g
     "fan things"))
 
 (defn health-view []
-  (elem title-font :sh (r 1 1) :p 20 :g 20
-    (for-tpl [{:keys [name temp load cpu]} (cell= [{:name "processor one"} {:name "processor two"}])]
-      (elem :sh (r 1 2) :p 20 :g 20
-        (elem :sh (r 1 1) :p 20 :g 20 :c black
-          name)
-        (elem :sh (r 1 2) :a :mid
-          "temp")
-        (elem :sh (r 1 2) :a :mid
-          "load")
-        (elem :sh (r 1 1) :a :mid
-          "graph")))))
+  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
+    (elem :sh (r 1 1)
+      (for-tpl [{:keys [name temp load cpu]} (cell= [{:name "GPU Info"} {:name "CPU Info"}])]
+        (elem :sh (>sm (r 1 2)) :p g :g g
+          (elem :sh (r 1 1) :p g :c black
+            name)
+          (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+            "44° C")
+          (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
+            "27%")
+          (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
+            "CPU GRAPH"))))
+    (elem :sh (r 1 1) :p g :g g
+      (elem :sh (r 1 1) :p g :c black
+        "Memory Info")
+      (elem :sh (>sm (r 3 4)) :c black :b 2 :bc white
+        (elem :sh (r 2 5) :sv (r 1 1) :c red :p g "9.08GB"))
+      (elem :sh (>sm (r 1 4)) :c black :b 2 :bc white
+        (elem :sh (r 14 50) :sv (r 1 1) :c red :p g "28%")))
+    (elem :sh (>sm (r 2 3))
+      (for-tpl [{:keys [name temp load cpu]} (cell= [{:name "HDD 1 Info"} {:name "HDD 2 Info"}])]
+        (elem :sh (>sm (r 1 2)) :p g :g g
+          (elem :sh (r 1 1) :p g :c black
+            name)
+          (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+            "44° C")
+          (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
+            "27%"))))
+    (elem :sh (>sm (r 1 3)) :p g :g g
+      (elem :sh (r 1 1) :p g :c black
+        "Motherboard Info")
+      (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
+        "44° C")
+      (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
+        "1365 RPM"))
+    (elem :sh (r 1 1) :p g :g g
+      (elem :sh (r 1 1) :p g :c black
+        "S.M.A.R.T. Info")
+      (elem :sh (r 1 1) :sv 600 :a :mid :c black
+        "Smart Info Loadout"))))
 
 #_(def info-proc
   "info page processor descriptions map"
@@ -285,21 +314,22 @@
   :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
-  :c grey :scroll true
-  (elem :sh (r 1 1) :c black :bb 6 :bc red
+  :scroll true
+  (elem :sh (r 1 1) :ah :mid :c black :bb 6 :bc red
     (elem :sh (r 1 1) :p g :ah (b :mid sm :beg) :av (b :beg sm :mid)
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com")))
-    (elem :sh (r 1 1) :p g :av (b :beg sm :end)
+    (elem :sh (>sm 920 md 1240 lg 1400) :p g :av (b :beg sm :end)
       (tab-button :sh (>sm (r 11 50)) :val :health   "SYSTEM HEALTH")
       (tab-button :sh (>sm (r 11 50)) :val :lighting "LIGHTING")
       (elem       :sh (>sm (r 6  50)))
       (tab-button :sh (>sm (r 11 50)) :val :fans     "FANS")
       (tab-button :sh (>sm (r 11 50)) :val :info     "INFO")))
-  (case-tpl view
-    :health   (health-view)
-    :lighting (lighting-view)
-    :fans     (fans-view)
-    :info     (info-view))
+  (elem :sh (r 1 1) :ah :mid :c grey
+    (case-tpl view
+      :health   (health-view)
+      :lighting (lighting-view)
+      :fans     (fans-view)
+      :info     (info-view)))
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (>sm 920 md 1240 lg 1400) :p g :g g
       (for [[logo link] footer-menu-items :let [n (count footer-menu-items)]]
