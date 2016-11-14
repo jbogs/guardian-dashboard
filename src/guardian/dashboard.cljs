@@ -210,7 +210,7 @@
           "1365 RPM")
         (image :sh (r 1 3) :sv 400 :a :mid :url "zone-keyboard.svg"
           "1365 RPM")
-        (elem :sh (r 1 3) :g g :sv 400 :ah :mid 
+        (elem :sh (r 1 3) :g g :sv 400 :ah :mid
           (elem :sh 100 :sv 40 :a :mid :r 6 :c black :b 2 :bc black :fc :green :m :pointer
             "On")
           (elem :sh (r 1 1) :sv 40 :a :mid :r 6 :c red :b 2 :bc black :m :pointer
@@ -314,19 +314,33 @@
      ("POWER ON HOURS"     #(identity nil))))
 
 (defn info-view []
-  (elem title-font :sh (r 1 1) :p 42 :g 42
-    (elem :sh (r 1 2) :sv 100 :c black :av :mid
-      #_(image :url laptop-icon)
-        "PC NAME")
-    (elem :sh (r 1 2) :sv 100 :c black :av :mid
-      #_(image :url display-icon)
+  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p 42 :g 42
+    (elem :sh (r 1 2) :p g :g g :c black :av :mid
+      (image :url "pc-icon.svg")
+      "PC NAME")
+    (elem :sh (r 1 2) :p g :g g :c black :av :mid
+      (image :url "os-icon.svg")
       "OPERATING SYSTEM")
-    (elem :sh (r 1 2) :sv 400 :c black :av :beg
-      #_(image :url cpu-icon)
-      "PROCESSOR")
-    (elem :sh (r 1 2) :sv 400 :c black)
-    (elem :sh (r 1 2) :sv 400 :c black)
-    (elem :sh (r 1 2) :sv 400 :c black)))
+    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+      (image :s 40 :a :mid :url "processor-icon.svg")
+      (elem :sv 40 :a :mid "PROCESSOR"))
+    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+      (image :s 40 :a :mid :url "video-card-icon.svg")
+      (elem :sv 40 :a :mid"VIDEO CARD"))
+    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+      (image :s 40 :a :mid :url "motherboard-icon.svg")
+      (elem :sv 40 :a :mid "MOTHERBOARD"))
+    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+      (image :s 40 :a :mid :url "memory-icon.svg")
+      (elem :sv 40 :a :mid "MEMORY"))
+    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+      (image :s 40 :a :mid :url "drive-icon.svg")
+      (elem :sv 40 :a :mid "HDD 1"))
+    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+      (image :s 40 :a :mid :url "drive-icon.svg")
+      (elem :sv 40 :a :mid "HDD 2"))
+    (elem :sh (r 1 1) :p g :c black :av :mid
+      "Contact & Support")))
 
 (window
   :title        "Xotic"
