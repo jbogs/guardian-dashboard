@@ -20,6 +20,15 @@
 (def dev (= js/location.hostname "localhost"))
 (def url (if dev (str "ws://" JBOGHOST ":8000") "ws://localhost:8000"))
 
+;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def footer-menu-items 
+  [["facebook-icon.svg"  "https://facebook.com"]
+   ["instagram-icon.svg" "https://www.instagram.com/xoticpc/"]
+   ["xotic-pc-logo.svg"  "http://www.xoticpc.com/contact-us"]
+   ["twitter-icon.svg"   "https://twitter.com/XoticPC"]
+   ["youtube-icon.svg"   "https://www.youtube.com/channel/UCJ9O0vRPsMFk5UtIDimr6hQ"]])
+
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defc state {:view :health :data {}})
@@ -151,8 +160,6 @@
 (def info-panel-item-height 40)  ;; in pixels
 (def info-panel-heading-height 40) ;; in pixels
 (def info-panel-width 33)        ;; in CHARACTERS
-(def info-panel-heading-color :black)
-(def info-panel-color :white)
 (def info-page-gutter 42)
 (def info-page-padding 42)
 
@@ -189,7 +196,7 @@
 (defelem tab-button [{:keys [val] :as attrs} elems]
   (elem :ph 28 :ah :mid (dissoc attrs :val)
     (elem button-font :s (r 1 1) :a :mid :m :pointer :click #(change-view! val)
-      :fc  (cell= (if (= view val) :red  white))
+      :fc  (cell= (if (= view val) red  white))
       ;:url (cell= (if (= view val) "selected-buton.svg" "button.svg"))
       elems)))
 
@@ -217,6 +224,7 @@
 #_(def info-proc
   "info page processor descriptions map"
   `(("PROCESSOR"             ~#(cell= (:name (:cpu jm))))
+;     `(("PROCESSOR"             ~#(cell= (:presetOneEffect (first @data))))
     ("CODE NAME"              #(identity nil))
     ("SOCKET TYPE"            #(identity nil))
     ("STOCK FREQUENCY"        #(identity nil))))
@@ -259,18 +267,18 @@
 
 (defn info-view []
   (elem title-font :sh (r 1 1) :p 42 :g 42
-    (elem :sh (r 1 2) :sv 100 :c :black :av :mid
+    (elem :sh (r 1 2) :sv 100 :c black :av :mid
       #_(image :url laptop-icon)
         "PC NAME")
-    (elem :sh (r 1 2) :sv 100 :c :black :av :mid
+    (elem :sh (r 1 2) :sv 100 :c black :av :mid
       #_(image :url display-icon)
       "OPERATING SYSTEM")
-    (elem :sh (r 1 2) :sv 400 :c :black :av :beg
+    (elem :sh (r 1 2) :sv 400 :c black :av :beg
       #_(image :url cpu-icon)
       "PROCESSOR")
-    (elem :sh (r 1 2) :sv 400 :c :black)
-    (elem :sh (r 1 2) :sv 400 :c :black)
-    (elem :sh (r 1 2) :sv 400 :c :black)))
+    (elem :sh (r 1 2) :sv 400 :c black)
+    (elem :sh (r 1 2) :sv 400 :c black)
+    (elem :sh (r 1 2) :sv 400 :c black)))
 
 (window
   :title        "Xotic"
@@ -278,10 +286,10 @@
   :initiated    initiate!
   :routechanged change-route!
   :c grey :scroll true
-  (elem :sh (r 1 1) :p g :c black :bb 6 :bc :red
-    (elem :sh (r 1 1) :sv 100 :ah (b :mid sm :beg) :av (b :beg sm :mid)
+  (elem :sh (r 1 1) :c black :bb 6 :bc red
+    (elem :sh (r 1 1) :p g :ah (b :mid sm :beg) :av (b :beg sm :mid)
       (image :sh 200 :url "xotic-pc-logo.svg"))
-    (elem :sh (r 1 1) :av (b :beg sm :end)
+    (elem :sh (r 1 1) :p g :av (b :beg sm :end)
       (tab-button :sh (>sm (r 11 50)) :val :health   "SYSTEM HEALTH")
       (tab-button :sh (>sm (r 11 50)) :val :lighting "LIGHTING")
       (elem       :sh (>sm (r 6  50)))
@@ -293,9 +301,7 @@
     :fans     (fans-view)
     :info     (info-view))
   (elem :sh (r 1 1) :ah :mid :c black
-    (elem :sh (>sm 920 md 1240 lg 1400) :gh 200 :ah :mid
-      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.facebook.com/") "F")
-      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.instagram.com/")"I")
-      (elem :sv 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.xoticpc.com/")  "XOTIC PC")
-      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.twitter.com/")  "T")
-      (elem :s 40 :a :mid :fc white :m :pointer :click #(.open js/window "https://www.youtube.com/")  "Y"))))
+    (elem :sh (>sm 920 md 1240 lg 1400) :p g :g g
+      (for [[logo link] footer-menu-items :let [n (count footer-menu-items)]]
+        (elem :sh (>sm (r 1 n)) :a :mid
+          (image :m :pointer :url logo :click #(.open js/window link)))))))
