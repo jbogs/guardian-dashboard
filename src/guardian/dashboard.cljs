@@ -22,7 +22,7 @@
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def footer-menu-items 
+(def footer-menu-items
   [["facebook-icon.svg"  "https://facebook.com"]
    ["instagram-icon.svg" "https://www.instagram.com/xoticpc/"]
    ["xotic-pc-logo.svg"  "http://www.xoticpc.com/contact-us"]
@@ -40,7 +40,7 @@
 (defc= view (-> state :view))
 
 (cell= (prn :state state))
-
+(cell= (prn :error error))
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connect [url state error]
@@ -49,7 +49,7 @@
         data #(-> % .-data js/JSON.parse cljs)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
-          (set! (.-onerror   conn) #(->> (.-error %) (reset! error) (reject)))
+          (set! (.-onerror   conn) #(do (reset! error %) (reject conn)))
           (set! (.-onmessage conn) #(reset! state (data %))))
         (js/Promise.))))
 
@@ -288,7 +288,7 @@
   :c grey :scroll true
   (elem :sh (r 1 1) :c black :bb 6 :bc red
     (elem :sh (r 1 1) :p g :ah (b :mid sm :beg) :av (b :beg sm :mid)
-      (image :sh 200 :url "xotic-pc-logo.svg"))
+      (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com")))
     (elem :sh (r 1 1) :p g :av (b :beg sm :end)
       (tab-button :sh (>sm (r 11 50)) :val :health   "SYSTEM HEALTH")
       (tab-button :sh (>sm (r 11 50)) :val :lighting "LIGHTING")
