@@ -201,8 +201,20 @@
       elems)))
 
 (defn lighting-view []
-  (elem title-font :sh  (>sm 920 md 1240 lg 1400):p g :g g
-    "lighting things"))
+  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
+    (for-tpl [{:keys [name]} (cell= [{:name "Keyboard Lighting One"} {:name "Keyboard Lighting Two"} {:name "Keyboard Lighting Three"}])]
+      (elem :sh (r 1 1) :p g :g g
+        (elem :sh (r 1 1) :p g :c black
+          name)
+        (image :sh (r 1 3) :sv 400 :a :mid :url "fan-speed-bg.svg"
+          "1365 RPM")
+        (image :sh (r 1 3) :sv 400 :a :mid :url "zone-keyboard.svg"
+          "1365 RPM")
+        (elem :sh (r 1 3) :g g :sv 400 :ah :mid 
+          (elem :sh 100 :sv 40 :a :mid :r 6 :c black :b 2 :bc black :fc :green :m :pointer
+            "On")
+          (elem :sh (r 1 1) :sv 40 :a :mid :r 6 :c red :b 2 :bc black :m :pointer
+            "Settings"))))))
 
 (defn fans-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
