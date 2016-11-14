@@ -72,77 +72,6 @@
       (.then  #(get-hardware-data %))
       (.catch #(.log js/console "error: " %))))
 
-;;; from plotSVG ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; (defn by-id [id]
-;;   (.getElementById js/document (name id)))
-
-;; (defn val-id [id]
-;;   (do! (by-id id) :value))
-
-;; ;; colors
-;; (def   c1      "#006666")
-;; (def   c2      "#660066")
-
-;; ;; returns a seq of random [x y] pairs, 0 <= y <= 9
-;; (defn data! []
-;;   (vec (for [x (range 0 11)] [x (rand-int 11)])))
-
-;; ;; push a random value onto the end of a data series
-;; (defn add! [data]
-;;   (conj data [(-> data last first inc) (rand-int 11)]))
-
-;; ;; two data series
-;; (defc  data1   (data!))
-;; (defc  data2   (data!))
-;; ;; user configurations "knobs"
-;; (defc  pwidth  400)
-;; (defc  paused? false)
-
-;; ;; "clipped" data (moving strip-chart)
-;; (defc= series1 (take-last 10 data1))
-;; (defc= series2 (take-last 10 data2))
-
-;; ;; configure the plotting envelope (linear scale)
-;; (defc= chart1
-;;   (let [min-x (max (ffirst series1) (ffirst series2))
-;;         max-x (min (first (last series1)) (first (last series2)))]
-;;     (c/config
-;;       :width pwidth :height   200
-;;       :min-x  min-x :max-x  max-x
-;;       :min-y      0 :max-y     10)))
-
-
-;; ;; add data random data points every 1000ms
-;; (with-init!
-;;   (with-interval 1000
-;;     (when-not @paused?
-;;       (swap! data1 add!)
-;;       (swap! data2 add!))))
-
-
-;; (defelem chart-object [attribs elems]
-
-;;       (c/container
-;;         :chart    chart1
-;;         :css      (cell= {:border      "1px solid black"
-;;                           :margin-left (str "-" (- (/ (:width chart1) 2) 200) "px")})
-;;         :click #(swap! paused? not)
-
-;;         ;; draw shading first so it doesn't cover lines or points
-;;         (c/polygon :chart chart1 :data series1 :css {:fill c1 :stroke "none" :fill-opacity 0.5})
-;;         (c/polygon :chart chart1 :data series2 :css {:fill c2 :stroke "none" :fill-opacity 0.5})
-
-;;         ;; draw lines
-;;         (c/polyline :chart chart1 :data series1 :css {:fill "none" :stroke c1 :stroke-width 2})
-;;         (c/polyline :chart chart1 :data series2 :css {:fill "none" :stroke c2 :stroke-width 2})
-
-;;         ;; draw points last so they're not covered by lines or shading
-;;         (c/points-circle :chart chart1 :data series1 :r 3 :css {:stroke c1 :fill c1})
-;;         (c/points-rect :chart chart1 :data series2 :width 6 :height 6 :css {:stroke c2 :fill c2}))
-;;   )
-
-
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;-- breakpoints ---------------------------------------------------------------;
@@ -157,12 +86,6 @@
 
 (def g 20)
 
-(def info-panel-item-height 40)  ;; in pixels
-(def info-panel-heading-height 40) ;; in pixels
-(def info-panel-width 33)        ;; in CHARACTERS
-(def info-page-gutter 42)
-(def info-page-padding 42)
-
 ;-- colors --------------------------------------------------------------------;
 
 (def white (c 0xffffff))
@@ -175,11 +98,6 @@
 (def body-font   {:f 20 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc white})
 (def button-font {:f 14 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc white})
 (def title-font button-font)
-
-
-(def info-icon-ph 10)
-(def info-icon-pv 2)
-(def ig 3)  ; info button gutter
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -268,50 +186,6 @@
         "S.M.A.R.T. Info")
       (elem :sh (r 1 1) :sv 600 :a :mid :c black
         "Smart Info Loadout"))))
-
-#_(def info-proc
-  "info page processor descriptions map"
-  `(("PROCESSOR"             ~#(cell= (:name (:cpu jm))))
-;     `(("PROCESSOR"             ~#(cell= (:presetOneEffect (first @data))))
-    ("CODE NAME"              #(identity nil))
-    ("SOCKET TYPE"            #(identity nil))
-    ("STOCK FREQUENCY"        #(identity nil))))
-
-#_(def info-vid
-  "info page video card descriptions map"
-  `(("VIDEO CARD"          ~#(cell= (:name (nth (:gpu_list jm) %))))
-    ("MAX TDP"              #(identity nil))
-    ("DEFAULT CLOCK"        #(identity nil))
-    ("TURBO CLOCK"          #(identity nil))
-    ("UNIFIED SHADERS"      #(identity nil))))
-
-#_(def info-mb
-  "info page motherboard descriptions map"
-  `(("MOTHERBOARD"     ~#(cell= (:name (:mb jm))))
-    ("MODEL"               #(identity nil))
-    ("CHIPSET"             #(identity nil))
-    ("SOUTHBRIDGE"         #(identity nil))
-    ("BIOS VERSION"        #(identity nil))
-    ("BIOS DATE"           #(identity nil))))
-
-#_(def info-mem
-  "info page memory description map"
-  `(("MEMORY"             ~#(identity nil))
-    ("MANUFACTURER"        #(identity nil))
-    ("CAPACITY"            #(identity nil))
-    ("DEFAULT FREQUENCY"   #(identity nil))
-    ("TYPE"                #(identity nil))
-    ("TIMINGS"             #(identity nil))))
-
-#_(def info-drv-generic
-  "info-page drive description map"
-  ;; as the drive name is nested an extra level, there's no easy way to extract it with a function fragment
-  ;; here so it will be done custom in the header rendering below
-   `((":\\]DRIVE"        ~#(identity nil))
-     ("TYPE"               #(identity nil))
-     ("FREE"               #(identity nil))
-     ("USED"               #(identity nil))
-     ("POWER ON HOURS"     #(identity nil))))
 
 (defn info-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p 42 :g 42
