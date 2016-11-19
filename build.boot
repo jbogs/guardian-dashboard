@@ -41,5 +41,5 @@
 (task-options!
   serve   {:port 7000}
   sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
-  spew    {:access-key (System/getenv "<YOUR_AWS_ACCESS_KEY>")
-           :secret-key (System/getenv "<YOUR_AWS_SECRET_KEY")})
+  spew    {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
+           :secret-key (System/getenv "ROOT_JBOG_AWS_SECRET_KEY")})
