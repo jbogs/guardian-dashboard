@@ -174,10 +174,14 @@
     (elem :sh (>sm (r 1 3)) :p g :g g
       (elem :sh (r 1 1) :p g :c black
         (cell= (-> data :mb :name)))
-      (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
-        "44° C")
-      (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
-        "1365 RPM"))))
+        (elem :sh (r 1 2) 
+          (for-tpl [{:keys [rpm]} (cell= (-> data :mb :fan_list))]
+            (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
+              (cell= (str rpm " RPM")))))
+        (elem :sh (r 1 2)
+          (for-tpl [{:keys [temp]} (cell= (-> data :mb :temp_list))]
+            (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
+              (cell= (str temp "° C"))))))))
 
 (defn info-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p 42 :g 42
