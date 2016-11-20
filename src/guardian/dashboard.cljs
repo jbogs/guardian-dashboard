@@ -15,10 +15,7 @@
 
 (enable-console-print!)
 
-(env/def JBOGHOST "cov.us.to")
-
-(def dev (= js/location.hostname "localhost"))
-(def url (if dev (str "ws://" JBOGHOST ":8000") "ws://localhost:8000"))
+(def url "ws://jbog.pagekite.me:8000")
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
