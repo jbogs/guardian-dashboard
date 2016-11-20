@@ -177,12 +177,7 @@
       (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
         "44° C")
       (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
-        "1365 RPM"))
-    (elem :sh (r 1 1) :p g :g g
-      (elem :sh (r 1 1) :p g :c black
-        "S.M.A.R.T. Info")
-      (elem :sh (r 1 1) :sv 600 :a :mid :c black
-        "Smart Info Loadout"))))
+        "1365 RPM"))))
 
 (defn info-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p 42 :g 42
