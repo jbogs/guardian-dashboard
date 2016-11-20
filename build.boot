@@ -17,8 +17,7 @@
   '[tailrecursion.boot-static :refer [serve]])
 
 (def buckets
-  {:production "guardian-production-application"
-   :staging    "guardian-staging-application"})
+  {:staging "xoticpcgui"})
 
 (deftask develop
   [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
@@ -27,8 +26,8 @@
 
 (deftask build
   [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
-  (let [o (or optimizations :simple)] ; default to advanced when fixed
-    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true}) (sift))))
+  (let [o (or optimizations :advanced)]
+    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true :language-in :ecmascript5-strict}) (sift))))
 
 (deftask deploy
   "Build the application with advanced optimizations then deploy it to s3."
