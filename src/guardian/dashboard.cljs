@@ -43,7 +43,7 @@
 (defn connect [url state error]
   (let [conn (js/WebSocket. url)
         cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs)]
+        data #(-> % .-data js/JSON.parse cljs :data)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
           (set! (.-onerror   conn) #(do (reset! error %) (reject conn)))
@@ -145,14 +145,14 @@
 (defn health-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
     (elem :sh (r 1 1)
-      (for-tpl [{:keys [name temp load cpu]} (cell= [{:name "GPU Info"} {:name "CPU Info"}])]
+      (for-tpl [{:keys [name load fan temp]} (cell= (cons (:cpu data) (:gpu_list data)))]
         (elem :sh (>sm (r 1 2)) :p g :g g
           (elem :sh (r 1 1) :p g :c black
             name)
           (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-            "44° C")
+            (cell= (str temp "° C")))
           (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
-            "27%")
+            (cell= (str load "%")))
           (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
             "CPU GRAPH"))))
     (elem :sh (r 1 1) :p g :g g
@@ -163,17 +163,17 @@
       (elem :sh (>sm (r 1 4)) :c black :b 2 :bc white
         (elem :sh (r 14 50) :sv (r 1 1) :c red :p g "28%")))
     (elem :sh (>sm (r 2 3))
-      (for-tpl [{:keys [name temp load cpu]} (cell= [{:name "HDD 1 Info"} {:name "HDD 2 Info"}])]
+      (for-tpl [{:keys [name temp]} (cell= (:hdd_list data))]
         (elem :sh (>sm (r 1 2)) :p g :g g
           (elem :sh (r 1 1) :p g :c black
             name)
           (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-            "44° C")
+            (cell= (str temp "° C")))
           (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
             "27%"))))
     (elem :sh (>sm (r 1 3)) :p g :g g
       (elem :sh (r 1 1) :p g :c black
-        "Motherboard Info")
+        (cell= (-> data :mb :name)))
       (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
         "44° C")
       (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
