@@ -1,37 +1,35 @@
 # Guardian Dashboard
 
-A [Hoplon][3] Guardian dashboard.
+The Guardian dashboard, written with [Hoplon][3].
 
 ## Dependencies
 
 - java 1.7+
 - [boot][1]
 
-## Usage
-### Development
-1. Start the `dev` task. In a terminal run:
-    ```bash
-    $ boot dev
-    ```
-    This will give you a  Hoplon development setup with:
-    - auto compilation on file changes
-    - audible warning for compilation success or failures
-    - auto reload the html page on changes
-    - Clojurescript REPL
+## Development
 
-2. Go to [http://localhost:8000][2] in your browser.
+to start a local development server that rebuilds as you make changes and provides an audible notification when each build is complete, from the project root:
+```
+boot develop
+```
 
-3. If you edit and save a file, the task will recompile the code and reload the
-   browser to show the updated version.
+then navigate your browser to
+```
+http://localhost:7000
+```
 
-### Production
-1. Run the `prod` task. In a terminal run:
-    ```bash
-    $ boot prod
-    ```
+## Deployment
 
-2. The compiled files will be on the `target/` directory. This will use
-   advanced compilation and prerender the html.
+to deploy the application to the staging environment in a aws bucket, from the project root:
+```
+boot deploy -e xoticpc
+```
+
+then navigate the browser to:
+```
+ http://xoticpcgui.s3-website.us-east-2.amazonaws.com/
+```
 
 ## License
 

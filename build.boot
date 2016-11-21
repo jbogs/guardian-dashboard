@@ -17,7 +17,7 @@
   '[tailrecursion.boot-static :refer [serve]])
 
 (def buckets
-  {:staging "xoticpcgui"})
+  {:xotic "xoticpcgui"})
 
 (deftask develop
   [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
