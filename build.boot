@@ -42,3 +42,25 @@
   sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
   spew    {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
            :secret-key (System/getenv "ROOT_JBOG_AWS_SECRET_KEY")})
+
+(deftask cordova
+  [p platform OPT str  "target operating system"
+   r run          bool "run after building"]
+  (comp (target :dir ["bld/www"])
+        (with-pre-wrap fileset
+          (binding [*sh-dir* "bld"]
+            (dosh "cordova" "requirements")
+            (dosh "cordova" (if run "run" "build") platform))
+          fileset)))
+
+(deftask develop
+  [o optimizations OPT kw  "Optimizations to pass the cljs compiler."
+   p platform      OPT str "Platform to use during development"]
+  (let [opt (or optimizations :none)
+        run (if (and platform (not= platform "browser")) #(cordova :platform platform :run true) serve)]
+    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations opt) (run))))
+
+(deftask build
+  [p platform OPT str "target operating system"]
+  (comp (speak) (hoplon) (cljs :optimizations :whitespace) (cordova :platform platform)))
+
