@@ -19,15 +19,20 @@
 (def buckets
   {:xotic "xoticpcgui"})
 
+(deftask build*
+  [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
+  (let [o (or optimizations :advanced)]
+    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true :language-in :ecmascript5-strict}) (sift))))
+
 (deftask develop
   [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :none)]
     (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o) (serve))))
 
 (deftask build
-  [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
-  (let [o (or optimizations :advanced)]
-    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true :language-in :ecmascript5-strict}) (sift))))
+  "Build the application with advanced optimizations then dump it into the tgt folder."
+  [o optimizations OPM kw "Optimizations to pass the cljs copmiler."]
+  (comp (build* :optimizations optimizations) (target :dir #{"tgt"})))
 
 (deftask deploy
   "Build the application with advanced optimizations then deploy it to s3."
@@ -35,7 +40,8 @@
    o optimizations OPM kw "Optimizations to pass the cljs copmiler."]
   (assert environment "Missing required environment argument.")
   (let [b (buckets environment)]
-    (comp (build :optimizations optimizations) (spew :bucket b))))
+    (comp (build* :optimizations optimizations) (spew :bucket b))))
+
 
 (task-options!
   serve   {:port 7000}
