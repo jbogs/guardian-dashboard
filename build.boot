@@ -2,7 +2,7 @@
   :asset-paths  #{"rsc"}
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure       "1.8.0"          :scope "test"]
-                  [org.clojure/clojurescript "1.8.51"        :scope "test"]
+                  [org.clojure/clojurescript "1.8.51"         :scope "test"]
                   [adzerk/boot-cljs          "1.7.228-1"      :scope "test"]
                   [adzerk/boot-reload        "0.4.12"         :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
@@ -22,28 +22,30 @@
 (deftask build*
   [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :advanced)]
-    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true :language-in :ecmascript5-strict}) (sift))))
+    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true}) (sift))))
 
 (deftask develop
-  [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
+  [e elide-asserts bool   "Exclude validations from build"
+   o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :none)]
-    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o) (serve))))
+    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:elide-asserts elide-asserts}) (serve))))
 
 (deftask build
   "Build the application with advanced optimizations then dump it into the tgt folder."
-  [o optimizations OPM kw "Optimizations to pass the cljs copmiler."]
+  [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (comp (build* :optimizations optimizations) (target :dir #{"tgt"})))
 
 (deftask deploy
   "Build the application with advanced optimizations then deploy it to s3."
   [e environment   ENV kw "The application environment to be utilized by the service."
-   o optimizations OPM kw "Optimizations to pass the cljs copmiler."]
+   o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (assert environment "Missing required environment argument.")
   (let [b (buckets environment)]
     (comp (build* :optimizations optimizations) (spew :bucket b))))
 
 
 (task-options!
+  cljs   #(assoc-in % [:compiler-options :language-in] :ecmascript5-strict)
   serve   {:port 7000}
   sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
   spew    {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
