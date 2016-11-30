@@ -23,7 +23,7 @@ http://localhost:7000
 
 to deploy the application to the staging environment in a aws bucket, from the project root:
 ```
-boot deploy -e xoticpc
+boot deploy -e xotic
 ```
 
 then navigate the browser to:

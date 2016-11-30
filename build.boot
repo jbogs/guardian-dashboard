@@ -3,12 +3,12 @@
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure       "1.8.0"          :scope "test"]
                   [org.clojure/clojurescript "1.8.51"         :scope "test"]
-                  [adzerk/boot-cljs          "1.7.228-1"      :scope "test"]
-                  [adzerk/boot-reload        "0.4.12"         :scope "test"]
+                  [adzerk/boot-cljs          "1.7.228-2"      :scope "test"]
+                  [adzerk/boot-reload        "0.4.13"         :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
-                  [adzerk/env                "0.3.0"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
+
 (require
   '[adzerk.boot-cljs          :refer [cljs]]
   '[adzerk.boot-reload        :refer [reload]]
@@ -45,7 +45,7 @@
 
 
 (task-options!
-  cljs   #(assoc-in % [:compiler-options :language-in] :ecmascript5-strict)
+  cljs   #(update % :compiler-options merge {:language-in :ecmascript5-strict :externs ["rtc.ext.js"]})
   serve   {:port 7000}
   sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
   spew    {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
