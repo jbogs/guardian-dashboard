@@ -36,8 +36,9 @@
 (defc= data (-> state :data) #(swap! state assoc :data %))
 (defc= view (-> state :view))
 
-(cell= (prn :state state))
-(cell= (prn :error error))
+#_(cell= (prn :state state))
+#_(cell= (prn :error error))
+
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connect [url state error]
@@ -53,7 +54,10 @@
 (defn send [tag conn data]
   (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
 
-(def get-hardware-data (partial send "get_hardware_data"))
+(defn poll [tag conn data & [interval]]
+  (.setInterval js/window send (or interval 1000) tag conn data))
+
+(def get-hardware-data (partial poll "get_hardware_data"))
 (def get-smart-data    (partial send "get_smart_data"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -174,7 +178,7 @@
     (elem :sh (>sm (r 1 3)) :p g :g g
       (elem :sh (r 1 1) :p g :c black
         (cell= (-> data :mb :name)))
-        (elem :sh (r 1 2) 
+        (elem :sh (r 1 2)
           (for-tpl [{:keys [rpm]} (cell= (-> data :mb :fan_list))]
             (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
               (cell= (str rpm " RPM")))))
