@@ -22,13 +22,13 @@
 (deftask build*
   [o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :advanced)]
-    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true}) (sift))))
+    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts true}) (sift))))
 
 (deftask develop
   [e elide-asserts bool   "Exclude validations from build"
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :none)]
-    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:elide-asserts elide-asserts}) (serve))))
+    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts elide-asserts}) (serve))))
 
 (deftask build
   "Build the application with advanced optimizations then dump it into the tgt folder."
@@ -43,10 +43,8 @@
   (let [b (buckets environment)]
     (comp (build* :optimizations optimizations) (spew :bucket b))))
 
-
 (task-options!
-  cljs   #(update % :compiler-options merge {:language-in :ecmascript5-strict :externs ["rtc.ext.js"]})
-  serve   {:port 7000}
-  sift    {:include #{#"index.html.out/" #"guardian/"} :invert true}
-  spew    {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
-           :secret-key (System/getenv "ROOT_JBOG_AWS_SECRET_KEY")})
+  serve {:port 7000}
+  sift  {:include #{#"index.html.out/" #"guardian/"} :invert true}
+  spew  {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
+         :secret-key (System/getenv "ROOT_JBOG_AWS_SECRET_KEY")})
