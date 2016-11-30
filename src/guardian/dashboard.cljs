@@ -35,7 +35,7 @@
 (defc= data (-> state :data) #(swap! state assoc :data %))
 (defc= view (-> state :view))
 
-#_(cell= (prn :state state))
+(cell= (prn :state state))
 #_(cell= (prn :error error))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -58,6 +58,7 @@
 
 (def sub-hardware-data (partial poll "get_hardware_data"))
 (def get-smart-data    (partial call "get_smart_data"))
+(def set-client-data   (partial call "set_client_data"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -145,9 +146,15 @@
         (elem :sh (r 3 4) :sv 400 :p g :ah :mid :c black
           "Motherboard Fan Graph")))))
 
+#_(defn processor-viz []
+  (elem :s (r 1 1) :g 10 
+    (for-tpl [core cores]
+       (elem :w 6 :h (r 1 1))      )))
+
+
 (defn health-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
-    (for-tpl [{name :name {load :UC} :load {temp :Package} :temp} (cell= (:cpus data))]
+    (for-tpl [{name :name {load :UC :as loads} :load {temp :Package} :temp} (cell= (:cpus data))]
       (elem :sh (>sm (r 1 2)) :p g :g g
         (elem :sh (r 1 1) :p g :c black
           (cell= (str name " CPU")))
