@@ -4,7 +4,6 @@
   (:refer-clojure
     :exclude [-])
   (:require
-    [adzerk.env :as env]
     [chart.core :as c]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
@@ -55,9 +54,9 @@
   (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
-  (.setInterval js/window send (or interval 1000) tag conn data))
+  (.setInterval js/window send (or interval 3000) tag conn data))
 
-(def get-hardware-data (partial poll "get_hardware_data"))
+(def sub-hardware-data (partial poll "get_hardware_data"))
 (def get-smart-data    (partial send "get_smart_data"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -70,7 +69,7 @@
 
 (defn initiate! [[path qmap] status _]
   (-> (connect url data error)
-      (.then  #(get-hardware-data %))
+      (.then  #(sub-hardware-data %))
       (.catch #(.log js/console "error: " %))))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -148,17 +147,26 @@
 
 (defn health-view []
   (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
-    (elem :sh (r 1 1)
-      (for-tpl [{:keys [name load fan temp]} (cell= (cons (:cpu data) (:gpu_list data)))]
-        (elem :sh (>sm (r 1 2)) :p g :g g
-          (elem :sh (r 1 1) :p g :c black
-            name)
-          (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-            (cell= (str temp "° C")))
-          (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
-            (cell= (str load "%")))
-          (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
-            "CPU GRAPH"))))
+    (for-tpl [{name :name {load :UC} :load {temp :Package} :temp} (cell= (:cpus data))]
+      (elem :sh (>sm (r 1 2)) :p g :g g
+        (elem :sh (r 1 1) :p g :c black
+          (cell= (str name " CPU")))
+        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+          (cell= (str temp "° C")))
+        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+          (cell= (str load "%")))
+        (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
+          "CPU GRAPH")))
+    (for-tpl [{name :name {load :UC} :load {temp :Package} :temp} (cell= (:gpus data))]
+      (elem :sh (>sm (r 1 2)) :p g :g g
+        (elem :sh (r 1 1) :p g :c black
+          (cell= (str name " GPU")))
+        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+          (cell= (str temp "° C")))
+        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+          (cell= (str load "%")))
+        (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
+          "CPU GRAPH")))
     (elem :sh (r 1 1) :p g :g g
       (elem :sh (r 1 1) :p g :c black
         "Memory Info")
@@ -166,15 +174,14 @@
         (elem :sh (r 2 5) :sv (r 1 1) :c red :p g "9.08GB"))
       (elem :sh (>sm (r 1 4)) :c black :b 2 :bc white
         (elem :sh (r 14 50) :sv (r 1 1) :c red :p g "28%")))
-    (elem :sh (>sm (r 2 3))
-      (for-tpl [{:keys [name temp]} (cell= (:hdd_list data))]
-        (elem :sh (>sm (r 1 2)) :p g :g g
-          (elem :sh (r 1 1) :p g :c black
-            name)
-          (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-            (cell= (str temp "° C")))
-          (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
-            "27%"))))
+    (for-tpl [{name :name {temp :Assembly} :temp} (cell= (:hdds data))]
+      (elem :sh (>sm (r 1 2)) :p g :g g
+        (elem :sh (r 1 1) :p g :c black
+          (cell= (str name " HDD")))
+        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
+          (cell= (str temp "° C")))
+        (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
+          "27%")))
     (elem :sh (>sm (r 1 3)) :p g :g g
       (elem :sh (r 1 1) :p g :c black
         (cell= (-> data :mb :name)))
