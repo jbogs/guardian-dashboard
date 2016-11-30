@@ -46,18 +46,18 @@
         data #(-> % .-data js/JSON.parse cljs :data)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
-          (set! (.-onerror   conn) #(do (reset! error %) (reject conn)))
+          (set! (.-onerror   conn) #(reject (reset! error %)))
           (set! (.-onmessage conn) #(reset! state (data %))))
         (js/Promise.))))
 
-(defn send [tag conn data]
+(defn call [tag conn data]
   (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
-  (.setInterval js/window send (or interval 3000) tag conn data))
+  (.setInterval js/window call (or interval 3000) tag conn data))
 
 (def sub-hardware-data (partial poll "get_hardware_data"))
-(def get-smart-data    (partial send "get_smart_data"))
+(def get-smart-data    (partial call "get_smart_data"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
