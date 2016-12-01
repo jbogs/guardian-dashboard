@@ -105,7 +105,7 @@
 (defelem panel [{:keys [icon name] :as attrs} elems]
   (elem :gv 1 (dissoc attrs :icon :name)
     (elem :sh (r 1 1) :c black :p g :gh g
-      (image :s 40 :a :mid :url icon)
+      (image :sv 40 :a :mid :url icon)
       (elem :sv 40 :a :mid :fc grey
         name))
     (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :gv l
@@ -197,7 +197,7 @@
           (for-tpl [{:keys [name value]} fans]
             (panel-row :sh (r 1 1) :name name 
                (cell= (str value "RPM")))))))
-    (panel :sh (r 1 4) :sv (r 1 1) :title "CPUS" :icon "processor-icon.svg"
+    (panel :sh (r 1 4) :sv (r 1 1) :name "CPUS" :icon "processor-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
@@ -206,7 +206,7 @@
           (for-tpl [{:keys [name value]} loads]
             (panel-row :sh (r 1 1) :name name
               (cell= (str value "%")))))))
-    (panel :sh (r 1 4) :sv (r 1 1) :title "GPUS" :icon "video-card-icon.svg"
+    (panel :sh (r 1 4) :sv (r 1 1) :name "GPUS" :icon "video-card-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
@@ -215,7 +215,7 @@
           (for-tpl [{:keys [name value]} loads]
             (panel-row :sh (r 1 1) :name name
               (cell= (str value "%")))))))
-    (panel :sh (r 1 4) :sv (r 1 1) :title "HDDS" :icon "drive-icon.svg"
+    (panel :sh (r 1 4) :sv (r 1 1) :name "HDDS" :icon "drive-icon.svg"
       (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
