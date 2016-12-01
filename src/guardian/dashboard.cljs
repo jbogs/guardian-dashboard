@@ -21,7 +21,6 @@
 (def footer-menu-items
   [["facebook-icon.svg"  "https://facebook.com"]
    ["instagram-icon.svg" "https://www.instagram.com/xoticpc/"]
-   ["xotic-pc-logo.svg"  "http://www.xoticpc.com/contact-us"]
    ["twitter-icon.svg"   "https://twitter.com/XoticPC"]
    ["youtube-icon.svg"   "https://www.youtube.com/channel/UCJ9O0vRPsMFk5UtIDimr6hQ"]])
 
@@ -85,6 +84,7 @@
 
 ;-- sizes ---------------------------------------------------------------------;
 
+(def l 2)
 (def g 20)
 
 ;-- colors --------------------------------------------------------------------;
@@ -96,163 +96,130 @@
 
 ;-- fonts ---------------------------------------------------------------------;
 
-(def body-font   {:f 20 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc white})
-(def button-font {:f 14 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc white})
+(def body-font   {:f 20 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc grey})
+(def button-font {:f 14 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc grey})
 (def title-font button-font)
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem panel [attrs elems]
-  (elem :p 20 :c black attrs
-    (elem :sh (r 1 1) :sv 60 :av :mid
-      (image :s 40 :a :mid
-        "icon")
-      (elem :sh (- (r 1 1) 40) :fc white
-        "title"))
-    (elem :sh (r 1 1) :sv (- (r 1 1) (+ 60 20)) :c white
-      elems)))
-
-(defelem tab-button [{:keys [val] :as attrs} elems]
-  (elem :ph 28 :ah :mid (dissoc attrs :val)
-    (elem button-font :s (r 1 1) :a :mid :m :pointer :click #(change-view! val)
-      :fc  (cell= (if (= view val) red  white))
-      ;:url (cell= (if (= view val) "selected-buton.svg" "button.svg"))
-      elems)))
-
 (defn lighting-view []
-  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
-    (for-tpl [{:keys [name]} (cell= [{:name "Keyboard Lighting One"} {:name "Keyboard Lighting Two"} {:name "Keyboard Lighting Three"}])]
-      (elem :sh (r 1 1) :p g :g g
-        (elem :sh (r 1 1) :p g :c black
-          name)
-        (image :sh (r 1 3) :sv 400 :a :mid :url "fan-speed-bg.svg"
-          "1365 RPM")
-        (image :sh (r 1 3) :sv 400 :a :mid :url "zone-keyboard.svg"
-          "1365 RPM")
-        (elem :sh (r 1 3) :g g :sv 400 :ah :mid
-          (elem :sh 100 :sv 40 :a :mid :r 6 :c black :b 2 :bc black :fc :green :m :pointer
-            "On")
-          (elem :sh (r 1 1) :sv 40 :a :mid :r 6 :c red :b 2 :bc black :m :pointer
-            "Settings"))))))
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g :g g :c black
+    (elem "LIGHTING VIEW")))
 
 (defn fans-view []
-  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
-    (for-tpl [{:keys [name]} (cell= [{:name "CPU Fan"} {:name "GPU Fan"}])]
-      (elem :sh (r 1 1) :p g :g g
-        (elem :sh (r 1 1) :p g :c black
-          name)
-        (image :sh (r 1 4) :sv 400 :a :mid :url "fan-speed-bg.svg"
-          "1365 RPM")
-        (elem :sh (r 3 4) :sv 400 :p g :ah :mid :c black
-          "Motherboard Fan Graph")))))
-
-#_(defn processor-viz []
-  (elem :s (r 1 1) :g 10 
-    (for-tpl [core cores]
-       (elem :w 6 :h (r 1 1))      )))
-
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g :g g :c black
+    (elem "FANS VIEW")))
 
 (defn health-view []
-  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p g :g g
-    (for-tpl [{name :name {load :UC :as loads} :load {temp :Package} :temp} (cell= (:cpus data))]
-      (elem :sh (>sm (r 1 2)) :p g :g g
-        (elem :sh (r 1 1) :p g :c black
-          (cell= (str name " CPU")))
-        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-          (cell= (str temp "° C")))
-        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-          (cell= (str load "%")))
-        (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
-          "CPU GRAPH")))
-    (for-tpl [{name :name {load :UC} :load {temp :Package} :temp} (cell= (:gpus data))]
-      (elem :sh (>sm (r 1 2)) :p g :g g
-        (elem :sh (r 1 1) :p g :c black
-          (cell= (str name " GPU")))
-        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-          (cell= (str temp "° C")))
-        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-          (cell= (str load "%")))
-        (elem :sh (r 1 1) :sv 400 :p g :ah :mid :c black
-          "CPU GRAPH")))
-    (elem :sh (r 1 1) :p g :g g
-      (elem :sh (r 1 1) :p g :c black
-        "Memory Info")
-      (elem :sh (>sm (r 3 4)) :c black :b 2 :bc white
-        (elem :sh (r 2 5) :sv (r 1 1) :c red :p g "9.08GB"))
-      (elem :sh (>sm (r 1 4)) :c black :b 2 :bc white
-        (elem :sh (r 14 50) :sv (r 1 1) :c red :p g "28%")))
-    (for-tpl [{name :name {temp :Assembly} :temp} (cell= (:hdds data))]
-      (elem :sh (>sm (r 1 2)) :p g :g g
-        (elem :sh (r 1 1) :p g :c black
-          (cell= (str name " HDD")))
-        (image :sh (r 1 2) :a :mid :url "processor-temp-bg.svg"
-          (cell= (str temp "° C")))
-        (image :sh (r 1 2) :a :mid :url "processor-load-bg.svg"
-          "27%")))
-    (elem :sh (>sm (r 1 3)) :p g :g g
-      (elem :sh (r 1 1) :p g :c black
-        (cell= (-> data :mb :name)))
-        (elem :sh (r 1 2)
-          (for-tpl [{:keys [rpm]} (cell= (-> data :mb :fan_list))]
-            (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
-              (cell= (str rpm " RPM")))))
-        (elem :sh (r 1 2)
-          (for-tpl [{:keys [temp]} (cell= (-> data :mb :temp_list))]
-            (image :sh (r 1 2) :a :mid :url "fan-speed-bg.svg"
-              (cell= (str temp "° C"))))))))
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g :g g :c black
+    (elem "HEALTH VIEW")))
 
 (defn info-view []
-  (elem title-font :sh (>sm 920 md 1240 lg 1400) :p 42 :g 42
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g :g g :c black
     (elem :sh (r 1 2) :p g :g g :c black :av :mid
       (image :url "pc-icon.svg")
       "PC NAME")
     (elem :sh (r 1 2) :p g :g g :c black :av :mid
       (image :url "os-icon.svg")
       "OPERATING SYSTEM")
-    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+    (elem :sh (r 1 2) :p g :g g :c black :av :beg
       (image :s 40 :a :mid :url "processor-icon.svg")
       (elem :sv 40 :a :mid "PROCESSOR"))
-    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+    (elem :sh (r 1 2) :p g :g g :c black :av :beg
       (image :s 40 :a :mid :url "video-card-icon.svg")
       (elem :sv 40 :a :mid"VIDEO CARD"))
-    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+    (elem :sh (r 1 2) :p g :g g :c black :av :beg
       (image :s 40 :a :mid :url "motherboard-icon.svg")
       (elem :sv 40 :a :mid "MOTHERBOARD"))
-    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+    (elem :sh (r 1 2) :p g :g g :c black :av :beg
       (image :s 40 :a :mid :url "memory-icon.svg")
       (elem :sv 40 :a :mid "MEMORY"))
-    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+    (elem :sh (r 1 2) :p g :g g :c black :av :beg
       (image :s 40 :a :mid :url "drive-icon.svg")
       (elem :sv 40 :a :mid "HDD 1"))
-    (elem :sh (r 1 2) :sv 400 :p g :g g :c black :av :beg
+    (elem :sh (r 1 2) :p g :g g :c black :av :beg
       (image :s 40 :a :mid :url "drive-icon.svg")
-      (elem :sv 40 :a :mid "HDD 2"))
-    (elem :sh (r 1 1) :p g :c black :av :mid
-      "Contact & Support")))
+      (elem :sv 40 :a :mid "HDD 2"))))
 
 (window
   :title        "Xotic"
   :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
-  :scroll true
-  (elem :sh (r 1 1) :ah :mid :c black :bb 6 :bc red
-    (elem :sh (r 1 1) :p g :ah (b :mid sm :beg) :av (b :beg sm :mid)
-      (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com")))
-    (elem :sh (>sm 920 md 1240 lg 1400) :p g :av (b :beg sm :end)
-      (tab-button :sh (>sm (r 11 50)) :val :health   "SYSTEM HEALTH")
-      (tab-button :sh (>sm (r 11 50)) :val :lighting "LIGHTING")
-      (elem       :sh (>sm (r 6  50)))
-      (tab-button :sh (>sm (r 11 50)) :val :fans     "FANS")
-      (tab-button :sh (>sm (r 11 50)) :val :info     "INFO")))
-  (elem :sh (r 1 1) :ah :mid :c grey
+  :scroll true :c grey :g l
+  (elem :sh (r 1 1) :ah :mid :c black
+    (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g :gv g
+      (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
+      (elem :sh (>sm (- (r 1 1) 200)) :ah (b :mid sm :end) :gh (* 2 g)
+        (for [[logo link] footer-menu-items]
+          (image :m :pointer :url logo :click #(.open js/window link))))))
+  (elem :sh (r 1 1) :sv (- (r 1 1) 86 300 (* l 2)) :gh l
+    (elem :sh (>sm 60) :ah :mid :gv l
+      (elem :s 60 :a :mid :fc grey :c black :m :pointer :click #(change-view! :health)   "S")
+      (elem :s 60 :a :mid :fc grey :c black :m :pointer :click #(change-view! :lighting) "L")
+      (elem :s 60 :a :mid :fc grey :c black :m :pointer :click #(change-view! :fans)     "F")
+      (elem :s 60 :a :mid :fc grey :c black :m :pointer :click #(change-view! :info)     "I")
+      (elem :sh 60 :sv (- (r 1 1) (* 60 4)) :c black))
     (case-tpl view
       :health   (health-view)
       :lighting (lighting-view)
       :fans     (fans-view)
       :info     (info-view)))
-  (elem :sh (r 1 1) :ah :mid :c black
-    (elem :sh (>sm 920 md 1240 lg 1400) :p g :g g
-      (for [[logo link] footer-menu-items :let [n (count footer-menu-items)]]
-        (elem :sh (>sm (r 1 n)) :a :mid
-          (image :m :pointer :url logo :click #(.open js/window link)))))))
+  (elem :sh (r 1 1) :sv 300 :gh l
+    (elem :sh (r 1 4) :sv (r 1 1) :gv l
+      (elem :sh (r 1 1) :c black :p g :gh g
+        (image :s 40 :a :mid :url "motherboard-icon.svg")
+        (elem :sv 40 :a :mid :fc grey "MBS"))
+      (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :c black
+        (for-tpl [{:keys [name temps fans]} (cell= (:mbs data))]
+          (elem :sh (r 1 1) :p g :g g
+            (elem :sh (r 1 1) :fc grey
+              name)
+            (for-tpl [{:keys [name value]} temps]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "° C"))))
+            (for-tpl [{:keys [name value]} fans]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "RPM"))))))))
+    (elem :sh (r 1 4) :sv (r 1 1) :gv l
+      (elem :sh (r 1 1) :c black :p g :gh g
+        (image :s 40 :a :mid :url "processor-icon.svg")
+        (elem :sv 40 :a :mid :fc grey "CPUS"))
+      (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :c black
+        (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
+          (elem :sh (r 1 1) :p g :g g
+            (elem :sh (r 1 1) :fc grey
+              name)
+            (for-tpl [{:keys [name value]} temps]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "° C"))))
+            (for-tpl [{:keys [name value]} loads]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "%"))))))))
+    (elem :sh (r 1 4) :sv (r 1 1) :gv l
+      (elem :sh (r 1 1) :c black :p g :gh g
+        (image :s 40 :a :mid :url "video-card-icon.svg")
+        (elem :sv 40 :a :mid :fc grey "GPUS"))
+      (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :c black
+        (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
+          (elem :sh (r 1 1) :p g :g g
+            (elem :sh (r 1 1) :fc grey
+              name)
+            (for-tpl [{:keys [name value]} temps]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "° C"))))
+            (for-tpl [{:keys [name value]} loads]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "%"))))))))
+    (elem :sh (r 1 4) :sv (r 1 1) :gv l
+      (elem :sh (r 1 1) :c black :p g :gh g
+        (image :s 40 :a :mid :url "drive-icon.svg")
+        (elem :sv 40 :a :mid :fc grey "HDDS"))
+      (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :c black
+        (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
+          (elem :sh (r 1 1) :p g :g g
+            (elem :sh (r 1 1) :fc grey
+              name)
+            (for-tpl [{:keys [name value]} temps]
+              (elem :sh (r 1 1) :fc grey
+                (cell= (str name " " value "° C"))))))))))
