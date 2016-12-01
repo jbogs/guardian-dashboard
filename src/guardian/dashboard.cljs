@@ -102,12 +102,26 @@
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem panel [{:keys [icon title] :as attrs} elems]
-  (elem :gv 1 (dissoc attrs :icon :title)
+(defelem panel [{:keys [icon name] :as attrs} elems]
+  (elem :gv 1 (dissoc attrs :icon :name)
     (elem :sh (r 1 1) :c black :p g :gh g
       (image :s 40 :a :mid :url icon)
-      (elem :sv 40 :a :mid :fc grey title))
-    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :c black
+      (elem :sv 40 :a :mid :fc grey
+        name))
+    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g) :gv l
+      elems)))
+
+(defelem panel-table [{:keys [name] :as attrs} elems]
+  (elem :g l (dissoc attrs :name)
+    (elem :sh (r 1 1) :p g :c black :fc grey
+      name)
+    elems))
+
+(defelem panel-row [{:keys [name] :as attrs} elems]
+  (elem :gh l :fc grey (dissoc attrs :name)
+    (elem :sh (r 1 2) :p g :c black
+      name)
+    (elem :sh (r 1 2) :p g :c black 
       elems)))
 
 (defn lighting-view []
@@ -174,44 +188,36 @@
       :fans     (fans-view)
       :info     (info-view)))
   (elem :sh (r 1 1) :sv 300 :gh l
-    (panel :sh (r 1 4) :sv (r 1 1) :title "MBS" :icon "motherboard-icon.svg"
+    (panel :sh (r 1 4) :sv (r 1 1) :name "MBS" :icon "motherboard-icon.svg"
       (for-tpl [{:keys [name temps fans]} (cell= (:mbs data))]
-        (elem :sh (r 1 1) :p g :g g
-          (elem :sh (r 1 1) :fc grey
-            name)
+        (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "° C"))))
+            (panel-row :sh (r 1 1) :name name 
+               (cell= (str value "° C"))))
           (for-tpl [{:keys [name value]} fans]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "RPM")))))))
+            (panel-row :sh (r 1 1) :name name 
+               (cell= (str value "RPM")))))))
     (panel :sh (r 1 4) :sv (r 1 1) :title "CPUS" :icon "processor-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
-        (elem :sh (r 1 1) :p g :g g
-          (elem :sh (r 1 1) :fc grey
-            name)
+        (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "° C"))))
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "° C"))))
           (for-tpl [{:keys [name value]} loads]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "%")))))))
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))
     (panel :sh (r 1 4) :sv (r 1 1) :title "GPUS" :icon "video-card-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
-        (elem :sh (r 1 1) :p g :g g
-          (elem :sh (r 1 1) :fc grey
-            name)
+        (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "° C"))))
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "° C"))))
           (for-tpl [{:keys [name value]} loads]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "%")))))))
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))
     (panel :sh (r 1 4) :sv (r 1 1) :title "HDDS" :icon "drive-icon.svg"
       (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
-        (elem :sh (r 1 1) :p g :g g
-          (elem :sh (r 1 1) :fc grey
-            name)
+        (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
-            (elem :sh (r 1 1) :fc grey
-              (cell= (str name " " value "° C")))))))))
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))))
