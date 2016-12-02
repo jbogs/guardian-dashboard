@@ -19,16 +19,28 @@ then navigate your browser to
 http://localhost:7000
 ```
 
+compiler optimizations, validation elision, and the service to connect to during development may be specificed with:
+```
+boot develop -v -e <remote|local> -o <none|whitespace|simple|advanced>
+```
+
 ## Deployment
 
 to deploy the application to the staging environment in a aws bucket, from the project root:
 ```
-boot deploy -e xotic
+boot deploy -e remote
 ```
 
 then navigate the browser to:
 ```
  http://xoticpcgui.s3-website.us-east-2.amazonaws.com/
+```
+
+## Packaging
+
+to build the application as part of the larger product:
+```
+boot package
 ```
 
 ## License

@@ -4,7 +4,7 @@
   (:refer-clojure
     :exclude [-])
   (:require
-    [chart.core :as c]
+    [adzerk.env :as env]
     [javelin.core    :refer [defc defc= cell= cell cell-doseq with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
@@ -14,7 +14,7 @@
 
 (enable-console-print!)
 
-(def url "ws://jbog.pagekite.me:8000")
+(env/def URL "ws://localhost:8000")
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -34,7 +34,7 @@
 (defc= data (-> state :data) #(swap! state assoc :data %))
 (defc= view (-> state :view))
 
-(cell= (prn :state state))
+#_(cell= (prn :state state))
 #_(cell= (prn :error error))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,7 +53,7 @@
   (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
-  (.setInterval js/window call (or interval 3000) tag conn data))
+  (.setInterval js/window call (or interval 100) tag conn data))
 
 (def sub-hardware-data (partial poll "get_hardware_data"))
 (def get-smart-data    (partial call "get_smart_data"))
@@ -68,7 +68,7 @@
   (change-view! view))
 
 (defn initiate! [[path qmap] status _]
-  (-> (connect url data error)
+  (-> (connect URL data error)
       (.then  #(sub-hardware-data %))
       (.catch #(.log js/console "error: " %))))
 
@@ -84,7 +84,7 @@
 
 ;-- sizes ---------------------------------------------------------------------;
 
-(def l 2)
+(def l    2)
 (def g-sm 6)
 (def g-lg 20)
 
