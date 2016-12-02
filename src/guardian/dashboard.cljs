@@ -177,7 +177,7 @@
       (elem :sh (>sm (- (r 1 1) 200)) :ah (b :mid sm :end) :gh (* 2 g-lg)
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
-  (elem :sh (r 1 1) :sv (- (r 1 1) 86 300 (* l 2)) :gh l
+  (elem :sh (r 1 1) :sv (- (r 1 1) 86 300 (* l 2)) :g l
     (elem :sh (>sm 60) :ah :mid :gv l
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :health)   "S")
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :lighting) "L")
@@ -190,7 +190,7 @@
       :fans     (fans-view)
       :info     (info-view)))
   (elem :sh (r 1 1) :sv 544 :gh l
-    (panel :sh (r 1 4) :sv (r 1 1) :name "MBS" :icon "motherboard-icon.svg"
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "MBS" :icon "motherboard-icon.svg"
       (for-tpl [{:keys [name temps fans]} (cell= (:mbs data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
@@ -199,7 +199,7 @@
           (for-tpl [{:keys [name value]} fans]
             (panel-row :sh (r 1 1) :name name 
                (cell= (str value "RPM")))))))
-    (panel :sh (r 1 4) :sv (r 1 1) :name "CPUS" :icon "processor-icon.svg"
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "CPUS" :icon "processor-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
@@ -208,7 +208,7 @@
           (for-tpl [{:keys [name value]} loads]
             (panel-row :sh (r 1 1) :name name
               (cell= (str value "%")))))))
-    (panel :sh (r 1 4) :sv (r 1 1) :name "GPUS" :icon "video-card-icon.svg"
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "GPUS" :icon "video-card-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
@@ -217,7 +217,7 @@
           (for-tpl [{:keys [name value]} loads]
             (panel-row :sh (r 1 1) :name name
               (cell= (str value "%")))))))
-    (panel :sh (r 1 4) :sv (r 1 1) :name "HDDS" :icon "drive-icon.svg"
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "HDDS" :icon "drive-icon.svg"
       (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
