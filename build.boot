@@ -50,7 +50,8 @@
   [e environment   ENV kw "The application environment to be utilized by the service."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (assert environment "Missing required environment argument.")
-  (let [b (buckets environment)]
+  (let [b (buckets environment)
+        e (or environment :remote)]
     (comp (build :optimizations optimizations :environment environment) (spew :bucket b))))
 
 (deftask package
