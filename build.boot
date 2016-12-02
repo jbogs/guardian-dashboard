@@ -33,7 +33,7 @@
    o optimizations OPM kw   "Optimizations to pass the cljs compiler."
    v no-validate       bool "Exclude validations from build"]
   (let [o (or optimizations :none)
-        e (or environment   :remote)]
+        e (or environment   :local)]
     (System/setProperty "URL" (services e))
     (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts no-validate}) (serve))))
 
