@@ -1,6 +1,4 @@
-(ns+ guardian.dashboard
-  (:page
-    "index.html")
+(ns ^{:hoplon/page "index.html"} guardian.dashboard 
   (:refer-clojure
     :exclude [-])
   (:require
@@ -14,7 +12,7 @@
 
 (enable-console-print!)
 
-(env/def URL "ws://localhost:8000")
+(def URL "ws://localhost:8000")
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -34,7 +32,7 @@
 (defc= data (-> state :data) #(swap! state assoc :data %))
 (defc= view (-> state :view))
 
-#_(cell= (prn :state state))
+(cell= (prn :state state))
 #_(cell= (prn :error error))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -151,7 +149,7 @@
       (elem :sv 40 :a :mid "PROCESSOR"))
     (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
       (image :s 40 :a :mid :url "video-card-icon.svg")
-      (elem :sv 40 :a :mid"VIDEO CARD"))
+      (elem :sv 40 :a :mid "VIDEO CARD"))
     (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
       (image :s 40 :a :mid :url "motherboard-icon.svg")
       (elem :sv 40 :a :mid "MOTHERBOARD"))
@@ -178,12 +176,12 @@
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
   (elem :sh (r 1 1) :sv (- (r 1 1) 86 300 (* l 2)) :g l
-    (elem :sh (>sm 60) :ah :mid :gv l
+    (elem :sh (>sm 60) :sv (r 1 1) :ah :mid :gv l
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :health)   "S")
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :lighting) "L")
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :fans)     "F")
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :info)     "I")
-      (elem :sh 60 :sv (- (r 1 1) (* 60 4)) :c black))
+      (elem :sh 60 :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black))
     (case-tpl view
       :health   (health-view)
       :lighting (lighting-view)
@@ -194,10 +192,10 @@
       (for-tpl [{:keys [name temps fans]} (cell= (:mbs data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name 
+            (panel-row :sh (r 1 1) :name name
                (cell= (str value "° C"))))
           (for-tpl [{:keys [name value]} fans]
-            (panel-row :sh (r 1 1) :name name 
+            (panel-row :sh (r 1 1) :name name
                (cell= (str value "RPM")))))))
     (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "CPUS" :icon "processor-icon.svg"
       (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]

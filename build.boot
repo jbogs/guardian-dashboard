@@ -2,10 +2,10 @@
   :asset-paths  #{"rsc"}
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure       "1.8.0"          :scope "test"]
-                  [org.clojure/clojurescript "1.8.51"         :scope "test"]
+                  [org.clojure/clojurescript "1.9.293"        :scope "test"]
                   [adzerk/boot-cljs          "1.7.228-2"      :scope "test"]
                   [adzerk/boot-reload        "0.4.13"         :scope "test"]
-                  [adzerk/env                "0.3.0"          :scope "test"]
+                  [adzerk/env                "0.3.1"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
@@ -35,7 +35,7 @@
   (let [o (or optimizations :none)
         e (or environment   :local)]
     (System/setProperty "URL" (services e))
-    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts no-validate}) (serve))))
+    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:elide-asserts no-validate}) (serve))))
 
 (deftask build
   [e environment   ENV kv "The application environment to be utilized by the service."
@@ -43,15 +43,14 @@
   (let [o (or optimizations :advanced)
         e (or environment   :local)]
     (System/setProperty "URL" (services e))
-    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts true}) (sift))))
+    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true}) (sift))))
 
 (deftask deploy
   "Build the application with advanced optimizations then deploy it to s3."
   [e environment   ENV kw "The application environment to be utilized by the service."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (assert environment "Missing required environment argument.")
-  (let [b (buckets environment)
-        e (or environment :remote)]
+  (let [b (buckets environment)]
     (comp (build :optimizations optimizations :environment environment) (spew :bucket b))))
 
 (deftask package
