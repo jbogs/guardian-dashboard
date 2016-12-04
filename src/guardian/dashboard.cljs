@@ -181,14 +181,14 @@
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :lighting) "L")
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :fans)     "F")
       (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :info)     "I")
-      (elem :sh 60 :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black))
+      (b nil sm (elem :sh 60 :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black)))
     (case-tpl view
       :health   (health-view)
       :lighting (lighting-view)
       :fans     (fans-view)
       :info     (info-view)))
   (elem :sh (r 1 1) :sv 544 :gh l
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "MBS" :icon "motherboard-icon.svg"
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "MOTHERBOARD" :icon "motherboard-icon.svg"
       (cell-let [{:keys [name temps fans]} (cell= (:mb data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
@@ -215,7 +215,7 @@
           (for-tpl [{:keys [name value]} loads]
             (panel-row :sh (r 1 1) :name name
               (cell= (str value "%")))))))
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "HDDS" :icon "drive-icon.svg"
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "DRIVES" :icon "drive-icon.svg"
       (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
