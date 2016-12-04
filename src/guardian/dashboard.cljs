@@ -3,7 +3,7 @@
     :exclude [-])
   (:require
     [adzerk.env :as env]
-    [javelin.core    :refer [defc defc= cell= cell cell-doseq with-let]]
+    [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
     [hoplon.ui.attrs :refer [- c r d]]))
@@ -12,7 +12,7 @@
 
 (enable-console-print!)
 
-(def URL "ws://localhost:8000")
+(env/def URL "ws://localhost:8000")
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -32,7 +32,7 @@
 (defc= data (-> state :data) #(swap! state assoc :data %))
 (defc= view (-> state :view))
 
-(cell= (prn :state state))
+#_(cell= (prn :state state))
 #_(cell= (prn :error error))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -53,7 +53,7 @@
 (defn poll [tag conn data & [interval]]
   (.setInterval js/window call (or interval 100) tag conn data))
 
-(def sub-hardware-data (partial poll "get_hardware_data"))
+(def sub-hardware-data (partial poll "get_monitor_data"))
 (def get-smart-data    (partial call "get_smart_data"))
 (def set-client-data   (partial call "set_client_data"))
 
@@ -189,7 +189,7 @@
       :info     (info-view)))
   (elem :sh (r 1 1) :sv 544 :gh l
     (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "MBS" :icon "motherboard-icon.svg"
-      (for-tpl [{:keys [name temps fans]} (cell= (:mbs data))]
+      (cell-let [{:keys [name temps fans]} (cell= (:mb data))]
         (panel-table :sh (r 1 1) :name name
           (for-tpl [{:keys [name value]} temps]
             (panel-row :sh (r 1 1) :name name
