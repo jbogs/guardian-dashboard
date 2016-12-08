@@ -1,8 +1,10 @@
-(ns ^{:hoplon/page "index.html"} guardian.dashboard 
+(ns ^{:hoplon/page "index.html"} guardian.dashboard
   (:refer-clojure
     :exclude [-])
   (:require
-    [adzerk.env :as env]
+    [adzerk.env       :as env]
+    [guardian.visuals :as viz]
+    [clojure.set     :refer [rename-keys]]
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
@@ -24,7 +26,7 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc state {:view :health :data {}})
+(defc state {:view :mb :data {}})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -32,7 +34,7 @@
 (defc= data (-> state :data) #(swap! state assoc :data %))
 (defc= view (-> state :view))
 
-#_(cell= (prn :state state))
+(cell= (prn :state state))
 #_(cell= (prn :error error))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -102,6 +104,17 @@
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn xform-cpu [{:keys [name temps loads] :as cpu}]
+  (when cpu
+  (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) "Package") temps))
+        threads (mapv (fn [l] (rename-keys l {:value :load})) (remove #(= (:name %) "UC"     ) loads))]
+    {:name  name
+     :temp  (some #(when (= "Package" (:name %)) %) temps)
+     :load  (some #(when (= "UC"      (:name %)) %) loads)
+     :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))})))
+
+(defc= cpu (-> data :cpus first xform-cpu))
+
 (defelem panel [{:keys [icon name] :as attrs} elems]
   (elem (dissoc attrs :icon :name) :fc bgrey
     (elem :sh (r 1 1) :c black :p g-lg :gh g-lg
@@ -124,20 +137,65 @@
     (elem :sh (r 1 2) :ah :end
       elems)))
 
-(defn lighting-view []
+(defn mb-view []
   (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    (elem "LIGHTING VIEW")))
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "MOTHERBOARD" :icon "motherboard-icon.svg"
+      (cell-let [{:keys [name temps fans]} (cell= (:mb data))]
+        (panel-table :sh (r 1 1) :name name
+          (for-tpl [{:keys [name value]} temps]
+            (panel-row :sh (r 1 1) :name name
+               (cell= (str value "° C"))))
+          (for-tpl [{:keys [name value]} fans]
+            (panel-row :sh (r 1 1) :name name
+               (cell= (str value "RPM")))))))))
 
-(defn fans-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    (elem "FANS VIEW")))
+(defn cpus-view []
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :ah :mid :c cgrey
+    (elem :sh (r 1 1)
+      (cell= (:name cpu)))
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "CPUS" :icon "processor-icon.svg"
+      (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
+        (panel-table :sh (r 1 1) :name name
+          (for-tpl [{:keys [name value]} temps]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "° C"))))
+          (for-tpl [{:keys [name value]} loads]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))
+    (viz/line-chart :sh (r 1 1) :sv (- (r 1 1) 30)
+      :labels (->> (range) (take 11) (mapv #(str (* 10 %) "%")))
+      :series [[0 5 8 10 8 10 8 10]]
+      :styles {:line "stroke: red"})
+    #_(elem :sh 400 :sv (- (r 1 1) 30)
+      (for-tpl [{:keys [name temp threads]} (cell= (:cores cpu))]
+        (elem :sh (r 1 (count (:cores @cpu))) :sv (r 1 1) :gh 10 :ah :mid :av :end
+          (for-tpl [{:keys [name load]} threads]
+            (elem :sh 10 :sv (cell= (+ (* load 6) 20)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red))))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
 
-(defn health-view []
+(defn gpus-view []
   (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    (elem "HEALTH VIEW")))
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
+      (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
+        (panel-table :sh (r 1 1) :name name
+          (for-tpl [{:keys [name value]} temps]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "° C"))))
+          (for-tpl [{:keys [name value]} loads]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))))
 
-(defn info-view []
+(defn memory-view []
   (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
+    "memory view"))
+
+(defn hdds-view []
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
+      (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
+        (panel-table :sh (r 1 1) :name name
+          (for-tpl [{:keys [name value]} temps]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))
     (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :mid
       (image :url "pc-icon.svg")
       "PC NAME")
@@ -163,61 +221,35 @@
       (image :s 40 :a :mid :url "drive-icon.svg")
       (elem :sv 40 :a :mid "HDD 2"))))
 
+(defn os-view []
+  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
+    "os view"))
+
 (window
   :title        "Xotic"
   :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
-  :scroll true :c bgrey :g l
+  :c bgrey :g l
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
       (elem :sh (>sm (- (r 1 1) 200)) :ah (b :mid sm :end) :gh (* 2 g-lg)
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
-  (elem :sh (r 1 1) :sv (- (r 1 1) 86 300 (* l 2)) :g l
+  (elem :sh (r 1 1) :sv (- (r 1 1) 88) :g l
     (elem :sh (>sm 60) :sv (r 1 1) :ah :mid :gv l
-      (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :health)   "S")
-      (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :lighting) "L")
-      (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :fans)     "F")
-      (elem :s 60 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :info)     "I")
+      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :mb)     :url "motherboard-icon.svg")
+      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :cpus)   :url "processor-icon.svg")
+      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :gpus)   :url "video-card-icon.svg")
+      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :memory) :url "memory-icon.svg")
+      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :hdds)   :url "drive-icon.svg")
+      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :os)     :url "os-icon.svg")
       (b nil sm (elem :sh 60 :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black)))
     (case-tpl view
-      :health   (health-view)
-      :lighting (lighting-view)
-      :fans     (fans-view)
-      :info     (info-view)))
-  (elem :sh (r 1 1) :sv 544 :gh l
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "MOTHERBOARD" :icon "motherboard-icon.svg"
-      (cell-let [{:keys [name temps fans]} (cell= (:mb data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-               (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} fans]
-            (panel-row :sh (r 1 1) :name name
-               (cell= (str value "RPM")))))))
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "CPUS" :icon "processor-icon.svg"
-      (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} loads]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "GPUS" :icon "video-card-icon.svg"
-      (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} loads]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (r 1 1) :name "DRIVES" :icon "drive-icon.svg"
-      (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))))
+      :mb     (mb-view)
+      :cpus   (cpus-view)
+      :gpus   (gpus-view)
+      :memory (memory-view)
+      :hdds   (hdds-view)
+      :os     (os-view))))
