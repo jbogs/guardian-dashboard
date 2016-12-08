@@ -8,11 +8,11 @@
                   [adzerk/env                "0.3.1"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
+                  [cljsjs/chartist           "0.9.4-4"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 
 (require
   '[clojure.string :as s]
-  '[adzerk.boot-cljs          :refer [cljs]]
   '[adzerk.boot-cljs          :refer [cljs]]
   '[adzerk.boot-reload        :refer [reload]]
   '[hoplon.boot-hoplon        :refer [hoplon]]
@@ -35,15 +35,15 @@
   (let [o (or optimizations :none)
         e (or environment   :local)]
     (System/setProperty "URL" (services e))
-    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:elide-asserts no-validate}) (serve))))
+    (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts no-validate}) (serve))))
 
 (deftask build
-  [e environment   ENV kv "The application environment to be utilized by the service."
+  [e environment   ENV kw "The application environment to be utilized by the service."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :advanced)
         e (or environment   :local)]
     (System/setProperty "URL" (services e))
-    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:elide-asserts true}) (sift))))
+    (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts true}) (sift))))
 
 (deftask deploy
   "Build the application with advanced optimizations then deploy it to s3."
