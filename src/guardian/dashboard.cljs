@@ -117,7 +117,7 @@
       (image :sv 40 :av :mid :url icon)
       (elem :sv 40 :av :mid
         name))
-    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c cgrey
+    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c black
       elems)))
 
 (defelem panel-table [{:keys [name] :as attrs} elems]
@@ -144,7 +144,7 @@
             (cell= (str value "RPM"))))))])
 
 (defn cpu-view []
-  [ (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :b 2 :bc bgrey
+  [ (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
       (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
         (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 10 :ah :mid :av :end
           (for-tpl [{:keys [name load]} threads]
@@ -197,7 +197,7 @@
             (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
               name))))
       (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black)))
-    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
+    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c black
       (case-tpl view
         :mb     (mb-view)
         :cpu    (cpu-view)
