@@ -19,6 +19,7 @@
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn ->GB [bytes] (str (.toFixed (/ bytes 1000000000) 2) "GB"))
 (defn safe-name [keyword] (try (name keyword) (catch js/Error _)))
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -162,9 +163,16 @@
             (cell= (str value "%"))))))))
 
 (defn memory-view []
-  (elem :sh 400
-    (elem :sh (r 1 1)
-      (cell= (str (:free model) " / " (:total model))))))
+  [ (elem :sh (r 1 1) :gv g-lg
+      (elem :sh (r 1 1)
+        "Memory Use")
+      (elem :sh (r 1 1) :ah :mid
+        (cell= (->GB (:total model))))
+      (elem :sh (r 1 1) :sv 80 :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
+        (elem :sh (cell= (r (clojure.core/- (:total model) (:free model)) (:total model))) :sv (r 1 1) :a :mid :c :green
+          (cell= (->GB (clojure.core/- (:total model) (:free  model)))))
+        (elem :sh (cell= (r (:free model) (:total model))) :sv (r 1 1) :a :mid
+          (cell= (->GB (:free model))))))])
 
 (defn hdd-view []
   [ (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
