@@ -2,9 +2,10 @@
   (:refer-clojure
     :exclude [-])
   (:require
-    [adzerk.env       :as env]
-    [guardian.visuals :as viz]
-    [clojure.set     :refer [rename-keys]]
+    [adzerk.env                         :as e]
+    [guardian.dashboard.visualizations  :as v]
+    [guardian.dashboard.transformations :as x]
+    [cljs.pprint     :refer [pprint]]
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
@@ -14,7 +15,11 @@
 
 (enable-console-print!)
 
-(env/def URL "ws://localhost:8000")
+(e/def URL "ws://localhost:8000")
+
+;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn safe-name [keyword] (try (name keyword) (catch js/Error _)))
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -26,23 +31,25 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc state {:view :mb :data {}})
+(defc state {:view :mb :index 0 :data {}})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc= data (-> state :data) #(swap! state assoc :data %))
-(defc= view (-> state :view))
+(defc= data  (-> state :data) #(swap! state assoc :data %))
+(defc= view  (-> state :view))
+(defc= model (get-in state [:data :components (:index state)]))
 
-(cell= (prn :state state))
-#_(cell= (prn :error error))
+#_(cell= (pprint state))
+#_(cell= (pprint model))
+#_(cell= (pprint error))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connect [url state error]
   (let [conn (js/WebSocket. url)
         cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data)]
+        data #(-> % .-data js/JSON.parse cljs :data x/xform)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
           (set! (.-onerror   conn) #(reject (reset! error %)))
@@ -61,11 +68,11 @@
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn change-view! [view]
-  (swap! state assoc :view view))
+(defn change-state! [view & [index]]
+  (swap! state assoc :view view :index index))
 
-(defn change-route! [[[view] _]]
-  (change-view! view))
+(defn change-route! [[[view {:keys [index]}] _]]
+  (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
   (-> (connect URL data error)
@@ -86,7 +93,7 @@
 
 (def l    2)
 (def g-sm 6)
-(def g-lg 20)
+(def g-lg 16)
 
 ;-- colors --------------------------------------------------------------------;
 
@@ -103,17 +110,6 @@
 (def title-font button-font)
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn xform-cpu [{:keys [name temps loads] :as cpu}]
-  (when cpu
-  (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) "Package") temps))
-        threads (mapv (fn [l] (rename-keys l {:value :load})) (remove #(= (:name %) "UC"     ) loads))]
-    {:name  name
-     :temp  (some #(when (= "Package" (:name %)) %) temps)
-     :load  (some #(when (= "UC"      (:name %)) %) loads)
-     :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))})))
-
-(defc= cpu (-> data :cpus first xform-cpu))
 
 (defelem panel [{:keys [icon name] :as attrs} elems]
   (elem (dissoc attrs :icon :name) :fc bgrey
@@ -138,92 +134,47 @@
       elems)))
 
 (defn mb-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "MOTHERBOARD" :icon "motherboard-icon.svg"
-      (cell-let [{:keys [name temps fans]} (cell= (:mb data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-               (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} fans]
-            (panel-row :sh (r 1 1) :name name
-               (cell= (str value "RPM")))))))))
+  [ (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "MOTHERBOARD" :icon "mb-icon.svg"
+      (panel-table :sh (r 1 1)
+        (for-tpl [{:keys [name value]} (cell= (:temps model))]
+          (panel-row :sh (r 1 1) :name  name
+            (cell= (str value "° C"))))
+        (for-tpl [{:keys [name value]} (cell= (:fans model))]
+          (panel-row :sh (r 1 1) :name name
+            (cell= (str value "RPM"))))))])
 
-(defn cpus-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :ah :mid :c cgrey
-    (elem :sh (r 1 1)
-      (cell= (:name cpu)))
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "CPUS" :icon "processor-icon.svg"
-      (for-tpl [{:keys [name temps loads]} (cell= (:cpus data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} loads]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))
-    (viz/line-chart :sh (r 1 1) :sv (- (r 1 1) 30)
-      :labels (->> (range) (take 11) (mapv #(str (* 10 %) "%")))
-      :series [[0 5 8 10 8 10 8 10]]
-      :styles {:line "stroke: red"})
-    #_(elem :sh 400 :sv (- (r 1 1) 30)
-      (for-tpl [{:keys [name temp threads]} (cell= (:cores cpu))]
-        (elem :sh (r 1 (count (:cores @cpu))) :sv (r 1 1) :gh 10 :ah :mid :av :end
+(defn cpu-view []
+  [ (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :b 2 :bc bgrey
+      (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
+        (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 10 :ah :mid :av :end
           (for-tpl [{:keys [name load]} threads]
-            (elem :sh 10 :sv (cell= (+ (* load 6) 20)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red))))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
+            (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red)))))))]);; can't use ratio because of https://github.com/hoplon/ui/issues/25
 
-(defn gpus-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
-      (for-tpl [{:keys [name temps loads]} (cell= (:gpus data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} loads]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))))
+(defn gpu-view []
+  (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
+    (cell-let [{:keys [name temps loads]} model]
+      (panel-table :sh (r 1 1) :name name
+        (for-tpl [{:keys [name value]} temps]
+          (panel-row :sh (r 1 1) :name name
+            (cell= (str value "° C"))))
+        (for-tpl [{:keys [name value]} loads]
+          (panel-row :sh (r 1 1) :name name
+            (cell= (str value "%"))))))))
 
 (defn memory-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    "memory view"))
+  (elem :sh 400
+    (elem :sh (r 1 1)
+      (cell= (str (:free model) " / " (:total model))))))
 
-(defn hdds-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
-      (for-tpl [{:keys [name temps]} (cell= (:hdds data))]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :mid
-      (image :url "pc-icon.svg")
-      "PC NAME")
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :mid
-      (image :url "os-icon.svg")
-      "OPERATING SYSTEM")
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
-      (image :s 40 :a :mid :url "processor-icon.svg")
-      (elem :sv 40 :a :mid "PROCESSOR"))
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
-      (image :s 40 :a :mid :url "video-card-icon.svg")
-      (elem :sv 40 :a :mid "VIDEO CARD"))
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
-      (image :s 40 :a :mid :url "motherboard-icon.svg")
-      (elem :sv 40 :a :mid "MOTHERBOARD"))
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
-      (image :s 40 :a :mid :url "memory-icon.svg")
-      (elem :sv 40 :a :mid "MEMORY"))
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
-      (image :s 40 :a :mid :url "drive-icon.svg")
-      (elem :sv 40 :a :mid "HDD 1"))
-    (elem :sh (r 1 2) :p g-lg :g g-lg :c black :av :beg
-      (image :s 40 :a :mid :url "drive-icon.svg")
-      (elem :sv 40 :a :mid "HDD 2"))))
-
-(defn os-view []
-  (elem title-font :sh (>sm (- (r 1 1) 60 2)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
-    "os view"))
+(defn hdd-view []
+  [ (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
+      (panel-table :sh (r 1 1)
+        (for-tpl [{:keys [name value]} (cell= (:loads model))]
+          (panel-row :sh (r 1 1) :name name
+            (cell= (str value "%"))))
+        (for-tpl [{:keys [name value]} (cell= (:temps model))]
+          (panel-row :sh (r 1 1) :name name
+            (cell= (str value "%"))))))])
 
 (window
   :title        "Xotic"
@@ -238,18 +189,18 @@
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
   (elem :sh (r 1 1) :sv (- (r 1 1) 88) :g l
-    (elem :sh (>sm 60) :sv (r 1 1) :ah :mid :gv l
-      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :mb)     :url "motherboard-icon.svg")
-      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :cpus)   :url "processor-icon.svg")
-      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :gpus)   :url "video-card-icon.svg")
-      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :memory) :url "memory-icon.svg")
-      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :hdds)   :url "drive-icon.svg")
-      (image :s 60 :p 10 :a :mid :fc bgrey :c black :m :pointer :click #(change-view! :os)     :url "os-icon.svg")
-      (b nil sm (elem :sh 60 :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black)))
-    (case-tpl view
-      :mb     (mb-view)
-      :cpus   (cpus-view)
-      :gpus   (gpus-view)
-      :memory (memory-view)
-      :hdds   (hdds-view)
-      :os     (os-view))))
+    (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
+      (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
+        (elem :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c black :fc bgrey :bl 2 :bc (cell= (if (= idx (:index state)) red cgrey)) :m :pointer :click #(change-state! @type @idx)
+          (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
+          (when-tpl (b true sm false md true)
+            (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
+              name))))
+      (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black)))
+    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 1 1) :p g-lg :g g-lg :c cgrey
+      (case-tpl view
+        :mb     (mb-view)
+        :cpu    (cpu-view)
+        :gpu    (gpu-view)
+        :memory (memory-view)
+        :hdd    (hdd-view)))))

@@ -21,7 +21,7 @@
                    {:name "Package" :value 42}]
            :volts [{:name "VID"                 :value 1.08}
                    {:name "IA Offset"           :value 0}
-                   {:name "GT Offset",          :value 0}
+                   {:name "GT Offset"           :value 0}
                    {:name "LLC/Ring Offset"     :value 0}
                    {:name "System Agent Offset" :value 0}]}]
  :hdds   [{:name  "HGST HTS721010A9E630"
