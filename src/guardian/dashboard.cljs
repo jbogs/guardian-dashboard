@@ -98,11 +98,21 @@
 
 ;-- colors --------------------------------------------------------------------;
 
-(def white (c 0xffffff))
-(def bgrey (c 0x4d4d4d))
+(def bgrey (c 0x333333))
 (def cgrey (c 0x161616))
-(def black (c 0x111111))
-(def red   (c 0xc32026))
+(def black (c 0x000000))
+(def red   (c 0xCC1813))
+
+
+(def txt-white    (c 0xEEEEEE))
+(def bgd-grey (c 0x161616))
+(def sep-grey (c 0x242424))
+(def btn-grey (c 0x242424))
+(def sel-grey (c 0x333333))
+(def pan-grey (c 0x202020))
+(def txt-grey (c 0x777777))
+(def brd-grey (c 0x292929))
+(def viz-grey (c 0x1A1A1A))
 
 ;-- fonts ---------------------------------------------------------------------;
 
@@ -113,12 +123,12 @@
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defelem panel [{:keys [icon name] :as attrs} elems]
-  (elem (dissoc attrs :icon :name) :fc bgrey
-    (elem :sh (r 1 1) :c black :p g-lg :gh g-lg
+  (elem (dissoc attrs :icon :name) :fc txt-grey
+    (elem :sh (r 1 1) :c sel-grey :p g-lg :gh g-lg
       (image :sv 40 :av :mid :url icon)
       (elem :sv 40 :av :mid
         name))
-    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c black
+    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c pan-grey
       elems)))
 
 (defelem panel-table [{:keys [name] :as attrs} elems]
@@ -147,7 +157,7 @@
 (defn cpu-view []
   [ (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
       (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
-        (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 10 :ah :mid :av :end
+        (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
           (for-tpl [{:keys [name load]} threads]
             (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red)))))))]);; can't use ratio because of https://github.com/hoplon/ui/issues/25
 
@@ -163,16 +173,17 @@
             (cell= (str value "%"))))))))
 
 (defn memory-view []
-  [ (elem :sh (r 1 1) :gv g-lg
-      (elem :sh (r 1 1)
+  [ (elem :sh (r 1 1)
+      (elem :sh (r 1 1) :p g-sm :fc txt-white
         "Memory Use")
-      (elem :sh (r 1 1) :ah :mid
-        (cell= (->GB (:total model))))
-      (elem :sh (r 1 1) :sv 80 :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
-        (elem :sh (cell= (r (clojure.core/- (:total model) (:free model)) (:total model))) :sv (r 1 1) :a :mid :c :green
-          (cell= (->GB (clojure.core/- (:total model) (:free  model)))))
-        (elem :sh (cell= (r (:free model) (:total model))) :sv (r 1 1) :a :mid
-          (cell= (->GB (:free model))))))])
+      (elem :sh (r 1 1) :p 10 :g 10 :c brd-grey
+        (elem :sh (r 1 1) :sv 80 :c viz-grey
+          (elem :sh (cell= (r (clojure.core/- (:total model) (:free model)) (:total model))) :sv (r 1 1) :a :mid :c :green
+            (cell= (->GB (clojure.core/- (:total model) (:free  model)))))
+          (elem :sh (cell= (r (:free model) (:total model))) :sv (r 1 1) :a :mid
+            (cell= (->GB (:free model)))))
+        (elem :sh (r 1 1) :a :mid
+          (cell= (->GB (:total model))))))])
 
 (defn hdd-view []
   [ (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
@@ -199,13 +210,14 @@
   (elem :sh (r 1 1) :sv (- (r 1 1) 88) :g l
     (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
-        (elem :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c black :fc bgrey :bl 2 :bc (cell= (if (= idx (:index state)) red cgrey)) :m :pointer :click #(change-state! @type @idx)
+        (let [selected (cell= (= idx (:index state)))]
+        (elem :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected sel-grey btn-grey)) :fc (cell= (if selected txt-white txt-grey)) :bl 2 :bc (cell= (if selected red btn-grey)) :m :pointer :click #(change-state! @type @idx)
           (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
           (when-tpl (b true sm false md true)
             (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
-              name))))
-      (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c black)))
-    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c black
+              name)))))
+      (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c bgd-grey)))
+    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c bgd-grey
       (case-tpl view
         :mb     (mb-view)
         :cpu    (cpu-view)
