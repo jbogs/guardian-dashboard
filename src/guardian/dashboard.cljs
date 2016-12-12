@@ -111,12 +111,12 @@
 
 ;-- typography ----------------------------------------------------------------;
 
-(def font-1     {:f 28 :ff ["MagistralC Bold" :sans-serif] :fc black})
-(def font-2     {:f 26 :ff ["MagistralC Bold" :sans-serif] :fc black})
-(def font-3     {:f 24 :ff ["MagistralC Bold" :sans-serif] :fc black})
-(def font-4     {:f 22 :ff ["MagistralC Bold" :sans-serif] :fc black})
-(def font-label {:f 18 :ff ["Lato Semibold"   :sans-serif] :fc black})
-(def font-body  {:f 16 :ff ["Lato Medium"     :sans-serif] :fc black})
+(def font-1     {:f 21 :ff ["MagistralC Bold" :sans-serif] :fc white})
+(def font-2     {:f 18 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-3     {:f 16 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-4     {:f 14 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-label {:f 14 :ff ["Lato Semibold"   :sans-serif] :fc black})
+(def font-body  {:f 12 :ff ["Lato Medium"     :sans-serif] :fc black})
 
 ;-- controls - ----------------------------------------------------------------;
 
@@ -153,36 +153,48 @@
       elems)))
 
 (defn mb-view []
-  [ (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "MOTHERBOARD" :icon "mb-icon.svg"
+  (list
+    (elem font-1 :sh (r 1 1)
+      "Motherboard")
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "MOTHERBOARD" :icon "mb-icon.svg"
       (panel-table :sh (r 1 1)
         (for-tpl [{:keys [name value]} (cell= (:temps model))]
           (panel-row :sh (r 1 1) :name  name
             (cell= (str value "° C"))))
         (for-tpl [{:keys [name value]} (cell= (:fans model))]
           (panel-row :sh (r 1 1) :name name
-            (cell= (str value "RPM"))))))])
+            (cell= (str value "RPM"))))))))
 
 (defn cpu-view []
-  [ (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
-      (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
-        (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
-          (for-tpl [{:keys [name load]} threads]
-            (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red)))))))]);; can't use ratio because of https://github.com/hoplon/ui/issues/25
+  (list
+    (elem font-1 :sh (r 1 1)
+      "CPU") 
+     (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
+       (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
+         (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
+           (for-tpl [{:keys [name load]} threads]
+             (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red)))))))));; can't use ratio because of https://github.com/hoplon/ui/issues/25
 
 (defn gpu-view []
-  (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
-    (cell-let [{:keys [name temps loads]} model]
-      (panel-table :sh (r 1 1) :name name
-        (for-tpl [{:keys [name value]} temps]
-          (panel-row :sh (r 1 1) :name name
-            (cell= (str value "° C"))))
-        (for-tpl [{:keys [name value]} loads]
-          (panel-row :sh (r 1 1) :name name
-            (cell= (str value "%"))))))))
+  (list
+    (elem font-1 :sh (r 1 1)
+      "GPU")
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
+      (cell-let [{:keys [name temps loads]} model]
+        (panel-table :sh (r 1 1) :name name
+          (for-tpl [{:keys [name value]} temps]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "° C"))))
+          (for-tpl [{:keys [name value]} loads]
+            (panel-row :sh (r 1 1) :name name
+              (cell= (str value "%")))))))))
 
 (defn memory-view []
-  [ (elem :sh (r 1 1)
-      (elem :sh (r 1 1) :p g-sm :fc white
+  (list
+    (elem font-1 :sh (r 1 1)
+      "Memory")
+    (elem :sh (r 1 1)
+      (elem font-1 :sh (r 1 1) :p g-sm
         "Memory Use")
       (elem :sh (r 1 1) :p 10 :g 10 :c grey-4
         (elem :sh (r 1 1) :sv 80 :c grey-3
@@ -191,17 +203,20 @@
           (elem :sh (cell= (r (:free model) (:total model))) :sv (r 1 1) :a :mid
             (cell= (->GB (:free model)))))
         (elem :sh (r 1 1) :a :mid
-          (cell= (->GB (:total model))))))])
+          (cell= (->GB (:total model))))))))
 
 (defn hdd-view []
-  [ (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
+  (list
+    (elem font-1 :sh (r 1 1)
+      "Hard Drive")
+    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
       (panel-table :sh (r 1 1)
         (for-tpl [{:keys [name value]} (cell= (:loads model))]
           (panel-row :sh (r 1 1) :name name
             (cell= (str value "%"))))
         (for-tpl [{:keys [name value]} (cell= (:temps model))]
           (panel-row :sh (r 1 1) :name name
-            (cell= (str value "%"))))))])
+            (cell= (str value "%"))))))))
 
 (window
   :title        "Xotic"
@@ -219,7 +234,7 @@
     (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
         (let [selected (cell= (= idx (:index state)))]
-        (elem :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
+        (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
           (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
           (when-tpl (b true sm false md true)
             (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
