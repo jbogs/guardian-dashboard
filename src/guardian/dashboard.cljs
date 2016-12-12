@@ -61,7 +61,7 @@
   (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
-  (.setInterval js/window call (or interval 100) tag conn data))
+  (.setInterval js/window call (or interval 1000) tag conn data))
 
 (def sub-hardware-data (partial poll "get_monitor_data"))
 (def get-smart-data    (partial call "get_smart_data"))
@@ -104,7 +104,7 @@
 (def red   (c 0xCC1813))
 
 
-(def txt-white    (c 0xEEEEEE))
+(def txt-white(c 0xEEEEEE))
 (def bgd-grey (c 0x161616))
 (def sep-grey (c 0x242424))
 (def btn-grey (c 0x242424))
@@ -207,7 +207,7 @@
       (elem :sh (>sm (- (r 1 1) 200)) :ah (b :mid sm :end) :gh (* 2 g-lg)
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
-  (elem :sh (r 1 1) :sv (- (r 1 1) 88) :g l
+  (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
     (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
         (let [selected (cell= (= idx (:index state)))]
@@ -217,7 +217,7 @@
             (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
               name)))))
       (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c bgd-grey)))
-    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c bgd-grey
+    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 1 1) :p g-lg :g g-lg :c bgd-grey
       (case-tpl view
         :mb     (mb-view)
         :cpu    (cpu-view)
