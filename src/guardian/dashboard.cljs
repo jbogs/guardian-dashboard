@@ -98,37 +98,45 @@
 
 ;-- colors --------------------------------------------------------------------;
 
-(def bgrey (c 0x333333))
-(def cgrey (c 0x161616))
-(def black (c 0x000000))
-(def red   (c 0xCC1813))
+(def white  (c 0xFAFAFA))
+(def red    (c 0xCC181E))
+(def yellow (c 0xFFD200))
+(def grey-1 (c 0x777777))
+(def grey-2 (c 0x555555))
+(def grey-3 (c 0x414141))
+(def grey-4 (c 0x333333))
+(def grey-5 (c 0x202020))
+(def grey-6 (c 0x161616))
+(def black  (c 0x181818))
 
+;-- typography ----------------------------------------------------------------;
 
-(def txt-white(c 0xEEEEEE))
-(def bgd-grey (c 0x161616))
-(def sep-grey (c 0x242424))
-(def btn-grey (c 0x242424))
-(def sel-grey (c 0x333333))
-(def pan-grey (c 0x202020))
-(def txt-grey (c 0x777777))
-(def brd-grey (c 0x292929))
-(def viz-grey (c 0x1A1A1A))
+(def font-1     {:f 28 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-2     {:f 26 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-3     {:f 24 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-4     {:f 22 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-label {:f 18 :ff ["Lato Semibold"   :sans-serif] :fc black})
+(def font-body  {:f 16 :ff ["Lato Medium"     :sans-serif] :fc black})
 
-;-- fonts ---------------------------------------------------------------------;
+;-- controls - ----------------------------------------------------------------;
 
-(def body-font   {:f 20 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc bgrey})
-(def button-font {:f 14 :ff ["Helvetica Neue" "Lucida Grande" :sans-serif] :fc bgrey})
-(def title-font button-font)
+(defelem primary-button [attrs elems]
+  (elem font-label :pv 6 :ph 12 :c red :r 6
+    attrs elems))
+
+(defelem secondary-button [attrs elems]
+  (elem font-label :pv 4 :ph 10 :c grey-5 :r 6
+    attrs elems))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defelem panel [{:keys [icon name] :as attrs} elems]
-  (elem (dissoc attrs :icon :name) :fc txt-grey
-    (elem :sh (r 1 1) :c sel-grey :p g-lg :gh g-lg
+  (elem (dissoc attrs :icon :name) :fc grey-1
+    (elem :sh (r 1 1) :c grey-4 :p g-lg :gh g-lg
       (image :sv 40 :av :mid :url icon)
       (elem :sv 40 :av :mid
         name))
-    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c pan-grey
+    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c grey-5
       elems)))
 
 (defelem panel-table [{:keys [name] :as attrs} elems]
@@ -138,7 +146,7 @@
     elems))
 
 (defelem panel-row [{:keys [name] :as attrs} elems]
-  (elem :fc bgrey :pv g-sm (dissoc attrs :name)
+  (elem :fc grey-4 :pv g-sm (dissoc attrs :name)
     (elem :sh (r 1 2)
       name)
     (elem :sh (r 1 2) :ah :end
@@ -174,10 +182,10 @@
 
 (defn memory-view []
   [ (elem :sh (r 1 1)
-      (elem :sh (r 1 1) :p g-sm :fc txt-white
+      (elem :sh (r 1 1) :p g-sm :fc white
         "Memory Use")
-      (elem :sh (r 1 1) :p 10 :g 10 :c brd-grey
-        (elem :sh (r 1 1) :sv 80 :c viz-grey
+      (elem :sh (r 1 1) :p 10 :g 10 :c grey-4
+        (elem :sh (r 1 1) :sv 80 :c grey-3
           (elem :sh (cell= (r (clojure.core/- (:total model) (:free model)) (:total model))) :sv (r 1 1) :a :mid :c :green
             (cell= (->GB (clojure.core/- (:total model) (:free  model)))))
           (elem :sh (cell= (r (:free model) (:total model))) :sv (r 1 1) :a :mid
@@ -200,7 +208,7 @@
   :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
-  :c bgrey :g l
+  :c grey-4 :g l
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
@@ -211,13 +219,13 @@
     (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
         (let [selected (cell= (= idx (:index state)))]
-        (elem :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected sel-grey btn-grey)) :fc (cell= (if selected txt-white txt-grey)) :bl 2 :bc (cell= (if selected red btn-grey)) :m :pointer :click #(change-state! @type @idx)
+        (elem :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
           (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
           (when-tpl (b true sm false md true)
             (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
               name)))))
-      (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c bgd-grey)))
-    (elem title-font :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 1 1) :p g-lg :g g-lg :c bgd-grey
+      (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c grey-6)))
+    (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 1 1) :p g-lg :g g-lg :c grey-6
       (case-tpl view
         :mb     (mb-view)
         :cpu    (cpu-view)
