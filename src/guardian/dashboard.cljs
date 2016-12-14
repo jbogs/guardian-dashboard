@@ -207,32 +207,43 @@
     (elem font-3 :p 6 :sh (r 1 1) :sv (r 1 5) :a :mid :c grey-3 :fc (white :a 0.5)
       elems)))
 
+(defelem title [{:keys [name] :as attrs} elems]
+  (elem font-1 :sh (r 1 1) :g g-sm :av :end
+      (elem font-1
+        name)
+      (elem font-4 :fc red
+        elems)))
+
 (defn mb-view []
   (list
-    (elem font-1 :sh (r 1 1)
+    (title :name (cell= (:name model))
       "Motherboard")
-    (elem :g g-lg
+    (elem :g g-lg ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:temps model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "° C")))))
-    (elem :g g-lg
+    (elem :g g-lg ;; remove after merging apts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:fans model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "RPM")))))))
 
 (defn cpu-view []
   (list
-    (elem font-1 :sh (r 1 1)
+    (title :name (cell= (:name model))
       "CPU")
-     (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
+    (elem :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5)
+    (elem :s 300 :c grey-4 :b 10 :bc grey-5
        (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
          (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
            (for-tpl [{:keys [name load]} threads]
-             (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red)))))))));; can't use ratio because of https://github.com/hoplon/ui/issues/25
-
+             (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
+    (elem :g g-lg ;; remove after merging opts with vflatten
+      (for-tpl [{:keys [name value]} (cell= (:volts model))]
+        (card :sh 100 :name name :icon "mb-icon.svg"
+          (cell= (str value "V")))))))
 (defn gpu-view []
   (list
-    (elem font-1 :sh (r 1 1)
+    (title :name (cell= (:name model))
       "GPU")
     (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
       (cell-let [{:keys [name temps loads]} model]
@@ -246,7 +257,7 @@
 
 (defn memory-view []
   (list
-    (elem font-1 :sh (r 1 1)
+    (title :name (cell= (:name model))
       "Memory")
     (elem :sh (r 1 1)
       (elem font-3 :sh (r 1 1) :p g-sm
@@ -262,7 +273,7 @@
 
 (defn hdd-view []
   (list
-    (elem font-1 :sh (r 1 1)
+    (title :name (cell= (:name model))
       "Hard Drive")
     (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
       (panel-table :sh (r 1 1)
