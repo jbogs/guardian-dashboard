@@ -17,6 +17,10 @@
              :used   (-> loads first :value))
              :temp   (some #(when (= "Assembly" (:name %)) %) temps))
 
+(defn xform-memory [{:keys [name free total] :as memory}] ;; no name available
+  (-> (dissoc memory :total)
+      (assoc :used (- total free))))
+
 (defn monitor-data [data]
   (let [init     #(subs % 0 (dec (count %)))
         type-seq (comp keyword init name)
@@ -24,6 +28,7 @@
         conj-map #(conj % (assoc %3 :type %2))]
   (->> (update data :cpus (partial mapv xform-cpu))
        (update data :hdds (partial mapv xform-hdd))
+       (update data :hdds (partial mapv xform-memory))
        (reduce-kv #(if (sequential? %3) (into-seq %1 %2 %3) (conj-map %1 %2 %3)) [])
        (assoc {} :components))))
 
