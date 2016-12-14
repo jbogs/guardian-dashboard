@@ -32,7 +32,54 @@
 
 ;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc state {:view :mb :index 0 :data {}})
+(def resp {:mb     {:name   "Micro-Star International Co., Ltd. MS-16H8"
+          :fans   []
+          :temps  [{:name "THRM" :value 45}
+                   {:name "TZ00" :value 27.8}
+                   {:name "TZ01" :value 29.8}]
+          :volts  []}
+ :cpus   [{:name  "Intel Core i7 6700HQ"
+           :loads [{:name "UC"     :value 2.34}
+                   {:name "CPU #0" :value 15.62}
+                   {:name "CPU #1" :value 0}
+                   {:name "CPU #2" :value 1.56}
+                   {:name "CPU #3" :value 0}
+                   {:name "CPU #4" :value 0}
+                   {:name "CPU #5" :value 0}
+                   {:name "CPU #6" :value 0}
+                   {:name "CPU #7" :value 1.54}]
+           :temps [{:name "Core #0" :value 42}
+                   {:name "Core #1" :value 41}
+                   {:name "Core #2" :value 39}
+                   {:name "Core #3" :value 40}
+                   {:name "Package" :value 42}]
+           :volts [{:name "VID"                 :value 1.08}
+                   {:name "IA Offset"           :value 0}
+                   {:name "GT Offset",          :value 0}
+                   {:name "LLC/Ring Offset"     :value 0}
+                   {:name "System Agent Offset" :value 0}]}]
+ :hdds   [{:name  "HGST HTS721010A9E630"
+           :loads [{:name "Space (e:)" :value 0.02}]
+           :temps [{:name "Assembly"   :value 33}]}
+          {:name  "SAMSUNG MZVPV128HDGM-00000"
+           :loads [{:name "Space (c:)" :value 18.23}]
+           :temps [{:name "Assembly"   :value 40}]}]
+ :gpus   [{:name  "Intel(R) HD Graphics 530"
+           :fans  []
+           :loads []
+           :temps []}
+          {:name  "NVIDIA GeForce GTX 965M"
+           :fans  []
+           :loads [{:name "Memory"        :value 1.42}
+                   {:name "GPU"           :value 0}
+                   {:name "Frame Buffer"  :value 0}
+                   {:name "Video Engine"  :value 0}
+                   {:name "Bus Interface" :value 0}]
+           :temps [{:name "TMPIN0" :value 49}]}]
+ :memory {:free  6559485952
+          :total 8496087040}})
+
+(defc state {:view :mb :index 0 :data (x/xform resp)})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -76,7 +123,7 @@
   (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
-  (-> (connect URL data error)
+  #_(-> (connect URL data error)
       (.then  #(sub-hardware-data %))
       (.catch #(.log js/console "error: " %))))
 
@@ -98,23 +145,23 @@
 
 ;-- colors --------------------------------------------------------------------;
 
-(def white  (c 0xFAFAFA))
-(def red    (c 0xCC181E))
-(def yellow (c 0xFFD200))
-(def grey-1 (c 0x777777))
-(def grey-2 (c 0x555555))
-(def grey-3 (c 0x414141))
-(def grey-4 (c 0x333333))
-(def grey-5 (c 0x202020))
-(def grey-6 (c 0x161616))
-(def black  (c 0x181818))
+(def white   (c 0xFAFAFA))
+(def red     (c 0xCC181E))
+(def yellow  (c 0xFFD200))
+(def grey-1  (c 0x777777))
+(def grey-2  (c 0x555555))
+(def grey-3  (c 0x414141))
+(def grey-4  (c 0x333333))
+(def grey-5  (c 0x202020))
+(def grey-6  (c 0x161616))
+(def black   (c 0x181818))
 
 ;-- typography ----------------------------------------------------------------;
 
 (def font-1     {:f 21 :ff ["MagistralC Bold" :sans-serif] :fc white})
-(def font-2     {:f 18 :ff ["MagistralC Bold" :sans-serif] :fc black})
-(def font-3     {:f 16 :ff ["MagistralC Bold" :sans-serif] :fc black})
-(def font-4     {:f 14 :ff ["MagistralC Bold" :sans-serif] :fc black})
+(def font-2     {:f 18 :ff ["MagistralC Bold" :sans-serif] :fc white})
+(def font-3     {:f 16 :ff ["MagistralC Bold" :sans-serif] :fc white})
+(def font-4     {:f 14 :ff ["MagistralC Bold" :sans-serif] :fc white})
 (def font-label {:f 14 :ff ["Lato Semibold"   :sans-serif] :fc black})
 (def font-body  {:f 12 :ff ["Lato Medium"     :sans-serif] :fc black})
 
@@ -152,23 +199,31 @@
     (elem :sh (r 1 2) :ah :end
       elems)))
 
+(defelem card [{:keys [name icon] :as attrs} elems]
+  (elem (dissoc attrs :icon)
+    (elem font-3 :sh (r 1 1) :p 8
+      name)
+    (image :p 28 :sh (r 1 1) :a :mid :c grey-5 :url icon)
+    (elem font-3 :p 6 :sh (r 1 1) :sv (r 1 5) :a :mid :c grey-3 :fc (white :a 0.5)
+      elems)))
+
 (defn mb-view []
   (list
     (elem font-1 :sh (r 1 1)
       "Motherboard")
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "MOTHERBOARD" :icon "mb-icon.svg"
-      (panel-table :sh (r 1 1)
-        (for-tpl [{:keys [name value]} (cell= (:temps model))]
-          (panel-row :sh (r 1 1) :name  name
-            (cell= (str value "° C"))))
-        (for-tpl [{:keys [name value]} (cell= (:fans model))]
-          (panel-row :sh (r 1 1) :name name
-            (cell= (str value "RPM"))))))))
+    (elem :g g-lg
+      (for-tpl [{:keys [name value]} (cell= (:temps model))]
+        (card :sh 100 :name name :icon "mb-icon.svg"
+          (cell= (str value "° C")))))
+    (elem :g g-lg
+      (for-tpl [{:keys [name value]} (cell= (:fans model))]
+        (card :sh 100 :name name :icon "mb-icon.svg"
+          (cell= (str value "RPM")))))))
 
 (defn cpu-view []
   (list
     (elem font-1 :sh (r 1 1)
-      "CPU") 
+      "CPU")
      (elem :sh 300 :sv 300 #_(- (r 1 1) 30) :c (c 0x292929) :b 10 :bc (c 0x1a1a1a)
        (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
          (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
@@ -194,8 +249,8 @@
     (elem font-1 :sh (r 1 1)
       "Memory")
     (elem :sh (r 1 1)
-      (elem font-1 :sh (r 1 1) :p g-sm
-        "Memory Use")
+      (elem font-3 :sh (r 1 1) :p g-sm
+        "Memory")
       (elem :sh (r 1 1) :p 10 :g 10 :c grey-4
         (elem :sh (r 1 1) :sv 80 :c grey-3
           (elem :sh (cell= (r (clojure.core/- (:total model) (:free model)) (:total model))) :sv (r 1 1) :a :mid :c :green
