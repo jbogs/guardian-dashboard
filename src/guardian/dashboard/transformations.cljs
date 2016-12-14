@@ -2,14 +2,14 @@
   (:require
     [clojure.set :refer [rename-keys]]))
 
-(defn xform-cpu [{:keys [name temps loads] :as cpu}]
+(defn xform-cpu [{:keys [name temps loads volts] :as cpu}]
   (when cpu
     (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) "Package") temps))
           threads (mapv (fn [l] (rename-keys l {:value :load})) (remove #(= (:name %) "UC"     ) loads))]
-      {:name  name
-       :temp  (some #(when (= "Package" (:name %)) %) temps)
-       :load  (some #(when (= "UC"      (:name %)) %) loads)
-       :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))})))
+      (-> (dissoc cpu :temps :loads)
+          (assoc :temp  (some #(when (= "Package" (:name %)) %) temps)
+                 :load  (some #(when (= "UC"      (:name %)) %) loads)
+                 :cores (mapv #(assoc % :threads %2) cores (partition 2 threads)))))))
 
 (defn monitor-data [data]
   (let [init     #(subs % 0 (dec (count %)))
