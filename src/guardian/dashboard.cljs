@@ -19,7 +19,8 @@
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn ->GB [bytes] (str (.toFixed (/ bytes 1000000000) 2) "GB"))
+(defn ->GB [bytes] (when bytes (str (.toFixed (/ bytes 1000000000) 2) "GB")))
+(defn ->% [num]    (when num (str (.toFixed num) "%")))
 (defn safe-name [keyword] (try (name keyword) (catch js/Error _)))
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -88,7 +89,7 @@
 (defc= view  (-> state :view))
 (defc= model (get-in state [:data :components (:index state)]))
 
-#_(cell= (pprint state))
+(cell= (pprint state))
 #_(cell= (pprint model))
 #_(cell= (pprint error))
 
@@ -237,52 +238,39 @@
          (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
            (for-tpl [{:keys [name load]} threads]
              (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
-    (elem :g g-lg ;; remove after merging opts with vflatten
+    (elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:volts model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "V")))))))
+
 (defn gpu-view []
   (list
     (title :name (cell= (:name model))
       "GPU")
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "GPUS" :icon "video-card-icon.svg"
-      (cell-let [{:keys [name temps loads]} model]
-        (panel-table :sh (r 1 1) :name name
-          (for-tpl [{:keys [name value]} temps]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "° C"))))
-          (for-tpl [{:keys [name value]} loads]
-            (panel-row :sh (r 1 1) :name name
-              (cell= (str value "%")))))))))
+    (elem :g g-lg :av :end ;; remove after merging opts with vflatten
+      (for-tpl [{:keys [name value]} (cell= (:loads model))]
+        (card :sh 100 :name name :icon "mb-icon.svg"
+          (cell= (str value "%")))))))
 
 (defn memory-view []
   (list
     (title :name (cell= (:name model))
       "Memory")
-    (elem :sh (r 1 1)
-      (elem font-3 :sh (r 1 1) :p g-sm
-        "Memory")
-      (elem :sh (r 1 1) :p 10 :g 10 :c grey-4
-        (elem :sh (r 1 1) :sv 80 :c grey-3
-          (elem :sh (cell= (r (clojure.core/- (:total model) (:free model)) (:total model))) :sv (r 1 1) :a :mid :c :green
-            (cell= (->GB (clojure.core/- (:total model) (:free  model)))))
-          (elem :sh (cell= (r (:free model) (:total model))) :sv (r 1 1) :a :mid
-            (cell= (->GB (:free model)))))
-        (elem :sh (r 1 1) :a :mid
-          (cell= (->GB (:total model))))))))
+    (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
+      :domain (cell= [{:label (->GB (:used model)) :value (:used model)} {:label (->GB (:free model)) :value (:free model)}])
+      :range  [{:color :green} {:color grey-4}])
+    (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)))
 
 (defn hdd-view []
   (list
     (title :name (cell= (:name model))
       "Hard Drive")
-    (panel :sh (>sm (r 1 2) md (r 1 4)) :sv (b (r 1 2) md (r 1 1)) :name "DRIVES" :icon "drive-icon.svg"
-      (panel-table :sh (r 1 1)
-        (for-tpl [{:keys [name value]} (cell= (:loads model))]
-          (panel-row :sh (r 1 1) :name name
-            (cell= (str value "%"))))
-        (for-tpl [{:keys [name value]} (cell= (:temps model))]
-          (panel-row :sh (r 1 1) :name name
-            (cell= (str value "%"))))))))
+    (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
+      :domain (cell= [{:label (->% (:used model)) :value (:used model)} {:label (->% (:free model)) :value (:free model)}])
+      :range  [{:color :green} {:color grey-4}])
+    (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)
+    (card :sh 100 :name (cell= (-> model :temp :name)) :icon "mb-icon.svg"
+      (cell= (-> model :temp :value (str "° C"))))))
 
 (window
   :title        "Xotic"

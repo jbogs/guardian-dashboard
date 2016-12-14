@@ -13,9 +13,10 @@
 
 (defn xform-hdd [{:keys [name loads temps] :as hdd}]
   (-> (dissoc hdd :loads :temps)
-      (assoc :volume (-> loads first :name)) ;; can't even use textual name here, will break relying on index
-             :used   (-> loads first :value))
-             :temp   (some #(when (= "Assembly" (:name %)) %) temps))
+      (assoc :volume (-> loads first :name) ;; can't even use textual name here, will break relying on index
+             :used   (-> loads first :value)
+             :free   (- 100 (-> loads first :value))
+             :temp   (some #(when (= "Assembly" (:name %)) %) temps))))
 
 (defn xform-memory [{:keys [name free total] :as memory}] ;; no name available
   (-> (dissoc memory :total)
@@ -26,11 +27,12 @@
         type-seq (comp keyword init name)
         into-seq #(into % (mapv (fn [x] (assoc x :type (type-seq %2))) %3))
         conj-map #(conj % (assoc %3 :type %2))]
-  (->> (update data :cpus (partial mapv xform-cpu))
-       (update data :hdds (partial mapv xform-hdd))
-       (update data :hdds (partial mapv xform-memory))
-       (reduce-kv #(if (sequential? %3) (into-seq %1 %2 %3) (conj-map %1 %2 %3)) [])
-       (assoc {} :components))))
+  (as-> data $
+        (update $ :cpus   (partial mapv xform-cpu))
+        (update $ :hdds   (partial mapv xform-hdd))
+        (update $ :memory (partial xform-memory))
+        (reduce-kv #(if (sequential? %3) (into-seq %1 %2 %3) (conj-map %1 %2 %3)) [] $)
+        (assoc {} :components $))))
 
 (defn xform [data]
   (cond
