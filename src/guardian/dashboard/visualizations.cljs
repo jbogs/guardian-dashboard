@@ -14,6 +14,14 @@
         (elem :sh (cell= (r value total)) :sv (r 1 1) :a :mid :c color
           (cell= (when (> value 5) label)))))))
 
+(defelem hist-chart [{:keys [domain range] :as attrs} _]
+  (prn :domain domain)
+  (let [total (cell= (apply + (mapv :value domain)))]
+    (elem :p 10 :ah :end (dissoc attrs :domain :range)
+      (for-tpl [[{:keys [label value]} {:keys [color]}] (cell= (mapv vector domain range))]
+        (elem :sv (cell= (r value total)) :sh 4 :a :mid :c color
+          (cell= (when (> value 5) label)))))))
+
 #_(defelem line-chart [{:keys [labels series styles] :as attrs} _]
   (with-let [e (elem (dissoc attrs :labels :series))]
     (doto (js/Chartist.Line. (in e) (clj->js {:labels labels :series series :pointSmooth false :lineSmooth false}))
