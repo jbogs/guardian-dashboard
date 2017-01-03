@@ -9,7 +9,7 @@
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- c r d]]))
+    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -17,11 +17,17 @@
 
 (e/def URL "ws://localhost:8000")
 
+(def hist-max 80)
+
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ->GB [bytes] (when bytes (str (.toFixed (/ bytes 1000000000) 2) "GB")))
 (defn ->% [num]    (when num (str (.toFixed num) "%")))
 (defn safe-name [keyword] (try (name keyword) (catch js/Error _)))
+
+(defn rect    [e] (.getBoundingClientRect (.-currentTarget e)))
+(defn mouse-x [e] (- (.-pageX e) (.-left (rect e))))
+(defn mouse-y [e] (- (.-pageY e) (.-top  (rect e))))
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -31,67 +37,22 @@
    ["twitter-icon.svg"   "https://twitter.com/XoticPC"]
    ["youtube-icon.svg"   "https://www.youtube.com/channel/UCJ9O0vRPsMFk5UtIDimr6hQ"]])
 
-;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; data-models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def resp {:mb     {:name   "Micro-Star International Co., Ltd. MS-16H8"
-          :fans   []
-          :temps  [{:name "THRM" :value 45}
-                   {:name "TZ00" :value 27.8}
-                   {:name "TZ01" :value 29.8}]
-          :volts  []}
- :cpus   [{:name  "Intel Core i7 6700HQ"
-           :loads [{:name "UC"     :value 2.34}
-                   {:name "CPU #0" :value 15.62}
-                   {:name "CPU #1" :value 0}
-                   {:name "CPU #2" :value 1.56}
-                   {:name "CPU #3" :value 0}
-                   {:name "CPU #4" :value 0}
-                   {:name "CPU #5" :value 0}
-                   {:name "CPU #6" :value 0}
-                   {:name "CPU #7" :value 1.54}]
-           :temps [{:name "Core #0" :value 42}
-                   {:name "Core #1" :value 41}
-                   {:name "Core #2" :value 39}
-                   {:name "Core #3" :value 40}
-                   {:name "Package" :value 42}]
-           :volts [{:name "VID"                 :value 1.08}
-                   {:name "IA Offset"           :value 0}
-                   {:name "GT Offset",          :value 0}
-                   {:name "LLC/Ring Offset"     :value 0}
-                   {:name "System Agent Offset" :value 0}]}]
- :hdds   [{:name  "HGST HTS721010A9E630"
-           :loads [{:name "Space (e:)" :value 0.02}]
-           :temps [{:name "Assembly"   :value 33}]}
-          {:name  "SAMSUNG MZVPV128HDGM-00000"
-           :loads [{:name "Space (c:)" :value 18.23}]
-           :temps [{:name "Assembly"   :value 40}]}]
- :gpus   [{:name  "Intel(R) HD Graphics 530"
-           :fans  []
-           :loads []
-           :temps []}
-          {:name  "NVIDIA GeForce GTX 965M"
-           :fans  []
-           :loads [{:name "Memory"        :value 1.42}
-                   {:name "GPU"           :value 0}
-                   {:name "Frame Buffer"  :value 0}
-                   {:name "Video Engine"  :value 0}
-                   {:name "Bus Interface" :value 0}]
-           :temps [{:name "TMPIN0" :value 49}]}]
- :memory {:free  6559485952
-          :total 8496087040}})
-
-(defc state {:view :mb :index 0 :data (x/xform resp)})
+(defc state {:view :mb :index 0 :hist #queue[]})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc= data  (-> state :data) #(swap! state assoc :data %))
+(defc= hist  (-> state :hist))
+(defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
 (defc= view  (-> state :view))
-(defc= model (get-in state [:data :components (:index state)]))
 
-(cell= (pprint state))
-#_(cell= (pprint model))
-#_(cell= (pprint error))
+(defc= hist-model (mapv #(get-in % [:components (:index state 0)]) hist))
+(defc= data-model (-> hist-model last))
+
+#_(cell= (prn :hist-model hist-model))
+#_(cell= (prn :data-model data-model))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -117,6 +78,10 @@
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn set-kb-color! [zone color]
+  (prn :changing-color color)
+  #_(set-client-data zone color))
+
 (defn change-state! [view & [index]]
   (swap! state assoc :view view :index index))
 
@@ -124,7 +89,7 @@
   (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
-  #_(-> (connect URL data error)
+  (-> (connect URL data error)
       (.then  #(sub-hardware-data %))
       (.catch #(.log js/console "error: " %))))
 
@@ -146,16 +111,20 @@
 
 ;-- colors --------------------------------------------------------------------;
 
-(def white   (c 0xFAFAFA))
-(def red     (c 0xCC181E))
-(def yellow  (c 0xFFD200))
-(def grey-1  (c 0x777777))
-(def grey-2  (c 0x555555))
-(def grey-3  (c 0x414141))
-(def grey-4  (c 0x333333))
-(def grey-5  (c 0x202020))
-(def grey-6  (c 0x161616))
-(def black   (c 0x181818))
+(def white   (rgb 0xFAFAFA))
+(def red     (rgb 0xCC181E))
+(def yellow  (rgb 0xFFD200))
+(def grey-1  (rgb 0x777777))
+(def grey-2  (rgb 0x555555))
+(def grey-3  (rgb 0x414141))
+(def grey-4  (rgb 0x333333))
+(def grey-5  (rgb 0x202020))
+(def grey-6  (rgb 0x161616))
+(def black   (rgb 0x181818))
+
+(defn temp->color [t]
+  (let [h (-> (+ 20 t) (* 240) (/ 60) (- 20))]
+    (hsl h (r 7 10) (r 1 2))))
 
 ;-- typography ----------------------------------------------------------------;
 
@@ -166,7 +135,7 @@
 (def font-label {:f 14 :ff ["Lato Semibold"   :sans-serif] :fc black})
 (def font-body  {:f 12 :ff ["Lato Medium"     :sans-serif] :fc black})
 
-;-- controls - ----------------------------------------------------------------;
+;-- controls ------------------------------------------------------------------;
 
 (defelem primary-button [attrs elems]
   (elem font-label :pv 6 :ph 12 :c red :r 6
@@ -175,6 +144,15 @@
 (defelem secondary-button [attrs elems]
   (elem font-label :pv 4 :ph 10 :c grey-5 :r 6
     attrs elems))
+
+(defelem color-picker [{:keys [sh sv s angle changed] :as attrs} elems]
+  (let [size  (cell= (case angle 90 (or sh s) 180 (or sv s) 270 (or sh s) (or sv s)))
+        pos   (cell  (/ @size 2))
+        color (cell= (hsl (* (/ pos size) 360) (r 1 1) (r 1 2)))]
+    (cell= (when changed (changed color)))
+    (elem :pt pos :c (apply lgr angle (map #(hsl % (r 1 1) (r 1 2)) (range 0 360 10))) :click #(reset! pos (mouse-y %))
+      (elem :s 20 :r 10 :c color :b 2 :bc white :m :pointer)
+      (dissoc attrs :angle :changed) elems)))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -217,60 +195,75 @@
 
 (defn mb-view []
   (list
-    (title :name (cell= (:name model))
+    (title :name (cell= (:name data-model))
       "Motherboard")
     (elem :g g-lg ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:temps model))]
+      (for-tpl [{:keys [name value]} (cell= (:temps data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "° C")))))
     (elem :g g-lg ;; remove after merging apts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:fans model))]
+      (for-tpl [{:keys [name value]} (cell= (:fans data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "RPM")))))))
 
 (defn cpu-view []
   (list
-    (title :name (cell= (:name model))
+    (title :name (cell= (:name data-model))
       "CPU")
-    (elem :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5)
+    (v/hist-chart font-4 :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.5)
+      :domain (cell= (mapv #(hash-map :value (* (/ (-> % :load :value) 100) 300) :color (-> % :temp :value temp->color)) hist-model))
+      :range  [{:color :blue}])
     (elem :s 300 :c grey-4 :b 10 :bc grey-5
-       (for-tpl [{:keys [name temp threads]} (cell= (:cores model))]
-         (elem :sh (cell= (r 1 (count (:cores model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
+       (for-tpl [{:keys [name temp threads]} (cell= (:cores data-model))]
+         (elem :sh (cell= (r 1 (count (:cores data-model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
            (for-tpl [{:keys [name load]} threads]
-             (elem :sh 4 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
+             (elem :sh 4 :sv (cell= (+ (* load 3) 6)) :r 6 :c (cell= (temp->color temp))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:volts model))]
+      (for-tpl [{:keys [name value]} (cell= (:volts data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "V")))))))
 
 (defn gpu-view []
   (list
-    (title :name (cell= (:name model))
+    (title :name (cell= (:name data-model))
       "GPU")
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:loads model))]
+      (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "%")))))))
 
 (defn memory-view []
   (list
-    (title :name (cell= (:name model))
+    (title :name (cell= (:name data-model))
       "Memory")
     (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
-      :domain (cell= [{:label (->GB (:used model)) :value (:used model)} {:label (->GB (:free model)) :value (:free model)}])
+      :domain (cell= [{:label (->GB (:used data-model)) :value (:used data-model)} {:label (->GB (:free data-model)) :value (:free data-model)}])
       :range  [{:color :green} {:color grey-4}])
-    (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)))
+    (v/hist-chart font-4 :sh (r 1 1) :sv 400 :c grey-5 :fc (white :a 0.5)
+      :domain (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model))
+      :range  [{:color :green}])))
 
 (defn hdd-view []
   (list
-    (title :name (cell= (:name model))
+    (title :name (cell= (:name data-model))
       "Hard Drive")
     (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
-      :domain (cell= [{:label (->% (:used model)) :value (:used model)} {:label (->% (:free model)) :value (:free model)}])
+      :domain (cell= [{:label (->% (:used data-model)) :value (:used data-model)} {:label (->% (:free data-model)) :value (:free data-model)}])
       :range  [{:color :green} {:color grey-4}])
     (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)
-    (card :sh 100 :name (cell= (-> model :temp :name)) :icon "mb-icon.svg"
-      (cell= (-> model :temp :value (str "° C"))))))
+    (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
+      (cell= (-> data-model :temp :value (str "° C"))))))
+
+(defn keyboard-view []
+  (list
+    (title :name (cell= (:name data-model))
+      "Keyboard")
+    (elem :sh (r 1 1) :p 50 :g 50
+      (for-tpl [{:keys [id name]} (cell= (:zones data-model))]
+       (elem :ah :mid :gv 20
+         (color-picker :sh 20 :sv 300 :r 10 :angle 180 :changed #(set-kb-color! id %))
+         (elem font-4 :sh (r 1 1) :ah :mid
+           name))))))
 
 (window
   :title        "Xotic"
@@ -288,16 +281,17 @@
     (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
         (let [selected (cell= (= idx (:index state)))]
-        (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
-          (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
-          (when-tpl (b true sm false md true)
-            (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
-              name)))))
+          (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
+            (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
+            (when-tpl (b true sm false md true)
+              (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
+                name)))))
       (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c grey-6)))
-    (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 1 1) :p g-lg :g g-lg :c grey-6
+    (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c grey-6
       (case-tpl view
-        :mb     (mb-view)
-        :cpu    (cpu-view)
-        :gpu    (gpu-view)
-        :memory (memory-view)
-        :hdd    (hdd-view)))))
+        :mb       (mb-view)
+        :cpu      (cpu-view)
+        :gpu      (gpu-view)
+        :memory   (memory-view)
+        :hdd      (hdd-view)
+        :keyboard (keyboard-view)))))

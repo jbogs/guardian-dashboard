@@ -2,6 +2,13 @@
   (:require
     [clojure.set :refer [rename-keys]]))
 
+(def keyboard
+  {:name  "Keyboard"
+   :zones [{:id 1 :name "Zone 1"}
+           {:id 2 :name "Zone 2"}
+           {:id 3 :name "Zone 3"}
+           {:id 4 :name "Zone 4"}]})
+
 (defn xform-cpu [{:keys [name temps loads volts] :as cpu}]
   (when cpu
     (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) "Package") temps))
@@ -20,7 +27,7 @@
 
 (defn xform-memory [{:keys [name free total] :as memory}] ;; no name available
   (-> (dissoc memory :total)
-      (assoc :used (- total free))))
+      (assoc :used (- total free) :name "Memory")))
 
 (defn monitor-data [data]
   (let [init     #(subs % 0 (dec (count %)))
@@ -31,6 +38,7 @@
         (update $ :cpus   (partial mapv xform-cpu))
         (update $ :hdds   (partial mapv xform-hdd))
         (update $ :memory (partial xform-memory))
+        (assoc  $ :keyboard keyboard)
         (reduce-kv #(if (sequential? %3) (into-seq %1 %2 %3) (conj-map %1 %2 %3)) [] $)
         (assoc {} :components $))))
 
