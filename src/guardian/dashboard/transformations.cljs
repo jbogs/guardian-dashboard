@@ -4,10 +4,10 @@
 
 (def keyboard
   {:name  "Keyboard"
-   :zones [{:id 1 :name "Zone 1"}
-           {:id 2 :name "Zone 2"}
-           {:id 3 :name "Zone 3"}
-           {:id 4 :name "Zone 4"}]})
+   :zones [{:id 1 :name "Zone 1" :color 120}
+           {:id 2 :name "Zone 2" :color 180}
+           {:id 3 :name "Zone 3" :color 220}
+           {:id 4 :name "Zone 4" :color 330}]})
 
 (defn xform-cpu [{:keys [name temps loads volts] :as cpu}]
   (when cpu

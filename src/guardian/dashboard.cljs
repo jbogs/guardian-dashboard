@@ -145,14 +145,14 @@
   (elem font-label :pv 4 :ph 10 :c grey-5 :r 6
     attrs elems))
 
-(defelem color-picker [{:keys [sh sv s angle changed] :as attrs} elems]
+(defelem color-slider [{:keys [sh sv s angle color changed] :as attrs} elems]
   (let [size  (cell= (case angle 90 (or sh s) 180 (or sv s) 270 (or sh s) (or sv s)))
-        pos   (cell  (/ @size 2))
+        pos   (cell  (/ @size (* (/ @color 360) @size)))
         color (cell= (hsl (* (/ pos size) 360) (r 1 1) (r 1 2)))]
     (cell= (when changed (changed color)))
-    (elem :pt pos :c (apply lgr angle (map #(hsl % (r 1 1) (r 1 2)) (range 0 360 10))) :click #(reset! pos (mouse-y %))
+    (elem :pt pos :c (apply lgr angle (map #(hsl % (r 1 1) (r 1 2)) (range 0 360 10))) :click #(reset! pos (.parseInt (mouse-y %)))
       (elem :s 20 :r 10 :c color :b 2 :bc white :m :pointer)
-      (dissoc attrs :angle :changed) elems)))
+      (dissoc attrs :angle :color :changed) elems)))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -259,9 +259,9 @@
     (title :name (cell= (:name data-model))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
-      (for-tpl [{:keys [id name]} (cell= (:zones data-model))]
+      (for-tpl [{:keys [id name color]} (cell= (:zones data-model))]
        (elem :ah :mid :gv 20
-         (color-picker :sh 20 :sv 300 :r 10 :angle 180 :changed #(set-kb-color! id %))
+         (color-slider :sh 20 :sv 300 :r 10 :color color :angle 180 :changed #(set-kb-color! id %))
          (elem font-4 :sh (r 1 1) :ah :mid
            name))))))
 
@@ -286,7 +286,7 @@
             (when-tpl (b true sm false md true)
               (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
                 name)))))
-      (b nil sm (elem :sh (>sm 80 md 380) :sv (- (r 1 1) (* 60 4) (- (* 4 l) l)) :c grey-6)))
+      (b nil sm (elem :sh (>sm 80 md 380) :sv (r 2 1) :c grey-6)))
     (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c grey-6
       (case-tpl view
         :mb       (mb-view)
