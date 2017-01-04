@@ -75,12 +75,9 @@
 (def sub-hardware-data (partial poll "get_monitor_data"))
 (def get-smart-data    (partial call "get_smart_data"))
 (def set-client-data   (partial call "set_client_data"))
+(def set-keyboard-data (partial call "set_keyboard_data"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn set-kb-color! [zone color]
-  (prn :changing-color color)
-  #_(set-client-data zone color))
 
 (defn change-state! [view & [index]]
   (swap! state assoc :view view :index index))
@@ -92,6 +89,10 @@
   (-> (connect URL data error)
       (.then  #(sub-hardware-data %))
       (.catch #(.log js/console "error: " %))))
+
+(defn set-keyboard-color! [zone color]
+  (prn :set-keyboard-color zone color)
+  #_(set-keyboard-data :zone zone :color color))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -145,14 +146,15 @@
   (elem font-label :pv 4 :ph 10 :c grey-5 :r 6
     attrs elems))
 
-(defelem color-slider [{:keys [sh sv s angle color changed] :as attrs} elems]
-  (let [size  (cell= (case angle 90 (or sh s) 180 (or sv s) 270 (or sh s) (or sv s)))
-        pos   (cell  (/ @size (* (/ @color 360) @size)))
-        color (cell= (hsl (* (/ pos size) 360) (r 1 1) (r 1 2)))]
-    (cell= (when changed (changed color)))
-    (elem :pt pos :c (apply lgr angle (map #(hsl % (r 1 1) (r 1 2)) (range 0 360 10))) :click #(reset! pos (.parseInt (mouse-y %)))
-      (elem :s 20 :r 10 :c color :b 2 :bc white :m :pointer)
-      (dissoc attrs :angle :color :changed) elems)))
+(defelem hue-slider [{:keys [sh sv s dir hue hue-changed] :as attrs} elems]
+  (let [hue (cell 0) #_(cell= hue (or hue-changed identity))
+        len (cell= (case dir 90 (or sh s) 180 (or sv s) 270 (or sh s) (or sv s)))
+        pos (cell= (* (/ hue 360) len) #(reset! hue (int (* (/ % len) 360))))
+        col #(hsl % (r 1 1) (r 1 2))
+        lgr (apply lgr dir (map col (range 0 360 10)))]
+    (elem :pt pos :c lgr :click #(reset! pos (mouse-y %))
+      (elem :s 20 :r 10 :c (cell= (col hue)) :b 2 :bc white :m :pointer)
+      (dissoc attrs :dir :hue :hue-changed) elems)))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -261,7 +263,7 @@
     (elem :sh (r 1 1) :p 50 :g 50
       (for-tpl [{:keys [id name color]} (cell= (:zones data-model))]
        (elem :ah :mid :gv 20
-         (color-slider :sh 20 :sv 300 :r 10 :color color :angle 180 :changed #(set-kb-color! id %))
+         (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue color :hue-changed #(set-keyboard-color! id %))
          (elem font-4 :sh (r 1 1) :ah :mid
            name))))))
 
