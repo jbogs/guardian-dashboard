@@ -32,7 +32,7 @@
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def footer-menu-items
-  [["facebook-icon.svg"  "https://facebook.com"]
+  [["facebook-icon.svg"  "https://www.facebook.com/xoticpc/"]
    ["instagram-icon.svg" "https://www.instagram.com/xoticpc/"]
    ["twitter-icon.svg"   "https://twitter.com/XoticPC"]
    ["youtube-icon.svg"   "https://www.youtube.com/channel/UCJ9O0vRPsMFk5UtIDimr6hQ"]])
