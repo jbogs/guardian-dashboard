@@ -272,7 +272,7 @@
   :route        (cell= [[view]])
   :initiated    initiate!
   :routechanged change-route!
-  :c grey-4 :g l
+  :scroll (b true sm false) :c grey-4 :g l
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
@@ -280,7 +280,7 @@
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
   (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
-    (elem :sh (>sm 80 md 380) :sv (r 1 1) :gv l
+    (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
         (let [selected (cell= (= idx (:index state)))]
           (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
