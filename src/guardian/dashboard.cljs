@@ -76,9 +76,7 @@
 (defn poll [tag conn data & [interval]]
   (.setInterval js/window call (or interval 1000) tag conn data))
 
-(def sub-hardware-data  (partial poll "get_monitor_data"))
-(def get-smart-data     (partial call "get_smart_data"))
-(def set-effect         (partial call "set_effect_data"))
+(def subs-sensors       (partial poll "get_sensors"))
 (def set-keyboard-color (partial call "set_keyboard_color"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -91,7 +89,7 @@
 
 (defn initiate! [[path qmap] status _]
   (-> (connect URL data error)
-      (.then  #(sub-hardware-data %))
+      (.then  #(subs-sensors %))
       (.catch #(.log js/console "error: " %))))
 
 (defn set-effect! [name effect]
