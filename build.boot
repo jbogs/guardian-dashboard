@@ -8,7 +8,7 @@
                   [adzerk/env                "0.3.1"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
-                  [cljsjs/chartist           "0.9.4-4"]
+                  [cljsjs/d3                 "4.3.0-2"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 
 (require

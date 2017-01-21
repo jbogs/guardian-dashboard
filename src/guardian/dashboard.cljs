@@ -9,7 +9,8 @@
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]))
+    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]
+    [cljsjs.d3]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -56,8 +57,10 @@
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def conn (atom nil))
+
 (defn connect [url state error]
-  (let [conn (js/WebSocket. url)
+  (let [conn (reset! conn (js/WebSocket. url))
         cljs #(js->clj % :keywordize-keys true)
         data #(-> % .-data js/JSON.parse cljs :data x/xform)]
     (-> (fn [resolve reject]
@@ -66,16 +69,17 @@
           (set! (.-onmessage conn) #(reset! state (data %))))
         (js/Promise.))))
 
-(defn call [tag conn data]
-  (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn)))
+(defn call [tag conn & args]
+  (prn :call {:tag tag :data (apply hash-map args)})
+  (->> {:tag tag :data (apply hash-map args)} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
   (.setInterval js/window call (or interval 1000) tag conn data))
 
-(def sub-hardware-data (partial poll "get_monitor_data"))
-(def get-smart-data    (partial call "get_smart_data"))
-(def set-client-data   (partial call "set_client_data"))
-(def set-keyboard-data (partial call "set_keyboard_data"))
+(def sub-hardware-data  (partial poll "get_monitor_data"))
+(def get-smart-data     (partial call "get_smart_data"))
+(def set-effect         (partial call "set_effect_data"))
+(def set-keyboard-color (partial call "set_keyboard_color"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -90,9 +94,12 @@
       (.then  #(sub-hardware-data %))
       (.catch #(.log js/console "error: " %))))
 
-(defn set-keyboard-color! [zone color]
-  (prn :set-keyboard-color zone color)
-  #_(set-keyboard-data :zone zone :color color))
+(defn set-effect! [name effect]
+  (set-effect @conn :name name :data effect))
+
+(defn set-keyboard-hue! [zone hue]
+  (let [rgb (.rgb js.d3 (.hsl js.d3 hue 1 0.5))]
+    (set-keyboard-color @conn :zone zone :r (int (.-r rgb)) :g (int (.-g rgb)) :b (int (.-b rgb)))))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -147,9 +154,9 @@
     attrs elems))
 
 (defelem hue-slider [{:keys [sh sv s dir hue hue-changed] :as attrs} elems]
-  (let [hue (cell 0) #_(cell= hue (or hue-changed identity))
+  (let [hue (cell= hue (or hue-changed identity))
         len (cell= (case dir 90 (or sh s) 180 (or sv s) 270 (or sh s) (or sv s)))
-        pos (cell= (* (/ hue 360) len) #(reset! hue (int (* (/ % len) 360))))
+        pos (cell= (* (/ hue 360) len) #(reset! hue (int (* (/ % @len) 360))))
         col #(hsl % (r 1 1) (r 1 2))
         lgr (apply lgr dir (map col (range 0 360 10)))]
     (elem :pt pos :c lgr :click #(reset! pos (mouse-y %))
@@ -261,9 +268,9 @@
     (title :name (cell= (:name data-model))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
-      (for-tpl [{:keys [id name color]} (cell= (:zones data-model))]
+      (for-tpl [{:keys [id name h]} (cell= (:zones data-model))]
        (elem :ah :mid :gv 20
-         (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue color :hue-changed #(set-keyboard-color! id %))
+         (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue h :hue-changed #(set-keyboard-hue! @id %))
          (elem font-4 :sh (r 1 1) :ah :mid
            name))))))
 
