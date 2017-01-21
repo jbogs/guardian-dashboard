@@ -77,6 +77,7 @@
   (.setInterval js/window call (or interval 1000) tag conn data))
 
 (def subs-sensors       (partial poll "get_sensors"))
+(def set-plugin-effect  (partial call "set_plugin_effect"))
 (def set-keyboard-color (partial call "set_keyboard_color"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -92,8 +93,13 @@
       (.then  #(subs-sensors %))
       (.catch #(.log js/console "error: " %))))
 
-(defn set-effect! [name effect]
-  (set-effect @conn :name name :data effect))
+(defn set-effect! [name start-color end-color]
+  (let [msg {:name        "monitor_0"
+             :is_on       1
+             :sensor_type name
+             :start_value 20
+             :end_value   60}]
+    (set-plugin-effect @conn (apply concat msg :start_color start-color :end_color end-color))))
 
 (defn set-keyboard-hue! [zone hue]
   (let [rgb (.rgb js.d3 (.hsl js.d3 hue 1 0.5))]
