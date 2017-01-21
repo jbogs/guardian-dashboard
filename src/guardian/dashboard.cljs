@@ -94,12 +94,12 @@
       (.catch #(.log js/console "error: " %))))
 
 (defn set-effect! [name start-color end-color]
-  (let [msg {:name        "monitor_0"
-             :is_on       1
-             :sensor_type name
-             :start_value 20
-             :end_value   60}]
-    (set-plugin-effect @conn (apply concat msg :start_color start-color :end_color end-color))))
+  (let [data {:name        "monitor_0"
+              :is_on       1
+              :sensor_type name
+              :start_value 20
+              :end_value   60}]
+    (set-plugin-effect @conn (assoc data :start_color start-color :end_color end-color))))
 
 (defn set-keyboard-hue! [zone hue]
   (let [rgb (.rgb js.d3 (.hsl js.d3 hue 1 0.5))]
