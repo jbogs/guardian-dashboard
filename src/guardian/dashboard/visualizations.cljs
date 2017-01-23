@@ -4,8 +4,7 @@
     [hoplon.core     :refer [defelem for-tpl]]
     [hoplon.ui       :refer [elem]]
     [hoplon.ui.attrs :refer [r]]
-    [hoplon.ui.elems :refer [in]]
-    [cljsjs.chartist]))
+    [hoplon.ui.elems :refer [in]]))
 
 (defelem dist-chart [{:keys [domain range] :as attrs} _]
   (let [total (cell= (apply + (mapv :value domain)))]
