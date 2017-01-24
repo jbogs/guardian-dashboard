@@ -8,26 +8,16 @@
     [hoplon.ui.elems :refer [in]]
     [cljsjs.d3]))
 
-(defn scale-linear [domain range]
-  (-> (.scaleLinear js/d3)
-      (.domain (clj->js domain))
-      (.range  (clj->js range))))
-
-(defn scale-time [domain range]
-  (-> (.scaleTime js/d3)
-      (.domain (clj->js domain))
-      (.range  (clj->js range))))
-
-(def x (scale-linear [2 130] [0 800]))
-(def y (scale-linear [0 100] [0 200]))
+(def x (-> (.scaleLinear js/d3) (.rangeRound #js[0 800])))
+(def y (-> (.scaleLinear js/d3) (.rangeRound #js[200 0])))
 
 (prn :x (x 20) :y (y 20))
 
 (defelem temp-chart [{:keys [values] :as attrs} _]
   (elem (dissoc attrs :values)
     (svg :svg/width "100%" :svg/height "100%"
-      #_(text :svg/x 10 :svg/y 10 "hello")
-      (line :svg/x1 10 :svg/y1 10  :svg/x2 400 :svg/y2 10 :svg/stroke "steelblue")
+      (for-tpl [[i v] (cell= (map-indexed vector values))]
+        (line :svg/x1 (cell= (* i 10)) :svv/x2 (cell= (* i 10)) :svg/y1 "0%" :svg/y2 "100%" :svg/stroke "steelblue"))
       #_(path :svg/stroke "steelblue" :svg/d (cell= (-> (.line js/d3) (.x (x values)) (.y (y values))))))))
 
 (defelem dist-chart [{:keys [domain range] :as attrs} _]

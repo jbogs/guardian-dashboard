@@ -69,13 +69,13 @@
         (js/Promise.))))
 
 (defn call [tag conn & args]
-  (prn :call {:tag tag :data (apply hash-map args)})
   (->> {:tag tag :data (apply hash-map args)} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
   (.setInterval js/window call (or interval 1000) tag conn data))
 
 (def subs-sensors       (partial poll "get_sensors"))
+(def get-devices        (partial call "get_devices"))
 (def set-plugin-effect  (partial call "set_plugin_effect"))
 (def set-keyboard-zones (partial call "set_keyboard_zones"))
 
@@ -189,7 +189,7 @@
         (image :s 14 :url icon)
         (elem font-3 :sh (- (r 1 1) 24 10) :p 8 :fc (white :a 0.5)
           name))
-        (v/temp-chart :sh (r 1 1) :sv 200 :values (cell= (mapv (comp :value first :temps) hist-model))))
+        (v/temp-chart :sh (r 1 1) :sv 200 :values values))
     (elem font-3 :s 250 :a :mid :r 3 :c grey-4 :fc (white :a 0.5)
       elems)))
 
@@ -204,10 +204,10 @@
   (list
     (title :name (cell= (:name data-model))
       "Motherboard")
-    #_(elem :sh (r 1 1) :g g-lg ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (apply map vector (partition :temps hist-model)))]
-        (card :sh (r 1 1) :name name :icon "temperature-icon.svg" :values hist-model
-          (cell= (str value "° C")))))
+    (elem :sh (r 1 1) :g g-lg ;; remove after merging opts with vflatten
+      (for-tpl [temps (cell= (apply mapv vector (mapv :temps hist-model)))]
+        (card :sh (r 1 1) :name (cell= (-> temps last :name)) :icon "temperature-icon.svg" :values (cell= (mapv :value temps))
+          (cell= (str (-> temps last :value) "° C")))))
     (elem :sh (r 1 1) :g g-lg ;; remove after merging apts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:fans data-model))]
         (card :sh (r 1 1) :name name :icon "rpms-icon.svg"
@@ -226,18 +226,18 @@
            (for-tpl [{:keys [name load]} threads]
              (elem :sh 4 :sv (cell= (+ (* load 3) 6)) :r 6 :c (cell= (temp->color temp))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:volts data-model))]
-        (card :sh 100 :name name :icon "voltage-icon.svg"
-          (cell= (str value "V")))))))
+      (for-tpl [volts (cell= (apply mapv vector (mapv :volts hist-model)))]
+        (card :sh (r 1 1) :name (cell= (-> volts last :name)) :icon "voltage-icon.svg" :values (cell= (mapv :value volts))
+          (cell= (str (-> volts last :value) "V")))))))
 
 (defn gpu-view []
   (list
     (title :name (cell= (:name data-model))
       "GPU")
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
-        (card :sh 100 :name name :icon "voltage-icon.svg"
-          (cell= (str value "%")))))))
+      (for-tpl [loads (cell= (apply mapv vector (mapv :loads hist-model)))]
+        (card :sh (r 1 1) :name (cell= (-> loads last :name)) :icon "capacity-icon.svg" :values (cell= (mapv :value loads))
+          (cell= (str (-> loads last :value) "%")))))))
 
 (defn memory-view []
   (list
@@ -257,8 +257,7 @@
     (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
       :domain (cell= [{:label (->% (:used data-model)) :value (:used data-model)} {:label (->% (:free data-model)) :value (:free data-model)}])
       :range  [{:color :green} {:color grey-4}])
-    (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)
-    (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "voltage-icon.svg"
+    (card :sh (r 1 1) :name (cell= (-> data-model :temp :name)) :icon "voltage-icon.svg" :values (cell= (mapv (comp :value :temp) hist-model))
       (cell= (-> data-model :temp :value (str "° C"))))))
 
 (defn keyboard-view []
