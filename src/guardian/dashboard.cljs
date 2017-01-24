@@ -9,8 +9,7 @@
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]
-    [cljsjs.d3]))
+    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -78,7 +77,7 @@
 
 (def subs-sensors       (partial poll "get_sensors"))
 (def set-plugin-effect  (partial call "set_plugin_effect"))
-(def set-keyboard-color (partial call "set_keyboard_color"))
+(def set-keyboard-zones (partial call "set_keyboard_zones"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -93,17 +92,8 @@
       (.then  #(subs-sensors %))
       (.catch #(.log js/console "error: " %))))
 
-(defn set-effect! [name start-color end-color]
-  (let [data {:name        "monitor_0"
-              :is_on       1
-              :sensor_type name
-              :start_value 20
-              :end_value   60}]
-    (set-plugin-effect @conn (assoc data :start_color start-color :end_color end-color))))
-
 (defn set-keyboard-hue! [zone hue]
-  (let [rgb (.rgb js.d3 (.hsl js.d3 hue 1 0.5))]
-    (set-keyboard-color @conn :zone zone :r (int (.-r rgb)) :g (int (.-g rgb)) :b (int (.-b rgb)))))
+  (set-keyboard-zones @conn :name "static_color" :zone zone :color (x/hsl->rgb [hue 1 0.5])))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -272,7 +262,7 @@
     (title :name (cell= (:name data-model))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
-      (for-tpl [{:keys [id name h]} (cell= (:zones data-model))]
+      (for-tpl [{:keys [id name] [h s l] :color} (cell= (:zones data-model))]
        (elem :ah :mid :gv 20
          (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue h :hue-changed #(set-keyboard-hue! @id %))
          (elem font-4 :sh (r 1 1) :ah :mid
