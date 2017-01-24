@@ -9,8 +9,7 @@
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]
-    [cljsjs.d3]))
+    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -78,7 +77,7 @@
 
 (def subs-sensors       (partial poll "get_sensors"))
 (def set-plugin-effect  (partial call "set_plugin_effect"))
-(def set-keyboard-color (partial call "set_keyboard_color"))
+(def set-keyboard-zones (partial call "set_keyboard_zones"))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -93,17 +92,8 @@
       (.then  #(subs-sensors %))
       (.catch #(.log js/console "error: " %))))
 
-(defn set-effect! [name start-color end-color]
-  (let [data {:name        "monitor_0"
-              :is_on       1
-              :sensor_type name
-              :start_value 20
-              :end_value   60}]
-    (set-plugin-effect @conn (assoc data :start_color start-color :end_color end-color))))
-
 (defn set-keyboard-hue! [zone hue]
-  (let [rgb (.rgb js.d3 (.hsl js.d3 hue 1 0.5))]
-    (set-keyboard-color @conn :zone zone :r (int (.-r rgb)) :g (int (.-g rgb)) :b (int (.-b rgb)))))
+  (set-keyboard-zones @conn :name "static_color" :zone (str zone) :color (x/hsl->rgb [hue 1 0.5])))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -119,6 +109,7 @@
 
 (def l    2)
 (def g-sm 6)
+(def g-md 10)
 (def g-lg 16)
 
 ;-- colors --------------------------------------------------------------------;
@@ -191,12 +182,15 @@
     (elem :sh (r 1 2) :ah :end
       elems)))
 
-(defelem card [{:keys [name icon] :as attrs} elems]
-  (elem (dissoc attrs :icon)
-    (elem font-3 :sh (r 1 1) :p 8
-      name)
-    (image :p 28 :sh (r 1 1) :a :mid :c grey-5 :url icon)
-    (elem font-3 :p 6 :sh (r 1 1) :sv (r 1 5) :a :mid :c grey-3 :fc (white :a 0.5)
+(defelem card [{:keys [name icon values] :as attrs} elems]
+  (elem :p g-md :g g-md :r 3 :c grey-5 (dissoc attrs :name :icon)
+    (elem :sh (- (r 1 1) 250 g-md) :sv 250 :r 3 :c grey-4
+      (elem :sh (r 1 1) :ph 10 :pv 2 :av :mid
+        (image :s 14 :url icon)
+        (elem font-3 :sh (- (r 1 1) 24 10) :p 8 :fc (white :a 0.5)
+          name))
+        (v/temp-chart :sh (r 1 1) :sv 200 :values (cell= (mapv (comp :value first :temps) hist-model))))
+    (elem font-3 :s 250 :a :mid :r 3 :c grey-4 :fc (white :a 0.5)
       elems)))
 
 (defelem title [{:keys [name] :as attrs} elems]
@@ -210,13 +204,13 @@
   (list
     (title :name (cell= (:name data-model))
       "Motherboard")
-    (elem :g g-lg ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:temps data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
+    #_(elem :sh (r 1 1) :g g-lg ;; remove after merging opts with vflatten
+      (for-tpl [{:keys [name value]} (cell= (apply map vector (partition :temps hist-model)))]
+        (card :sh (r 1 1) :name name :icon "temperature-icon.svg" :values hist-model
           (cell= (str value "° C")))))
-    (elem :g g-lg ;; remove after merging apts with vflatten
+    (elem :sh (r 1 1) :g g-lg ;; remove after merging apts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:fans data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
+        (card :sh (r 1 1) :name name :icon "rpms-icon.svg"
           (cell= (str value "RPM")))))))
 
 (defn cpu-view []
@@ -233,7 +227,7 @@
              (elem :sh 4 :sv (cell= (+ (* load 3) 6)) :r 6 :c (cell= (temp->color temp))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:volts data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
+        (card :sh 100 :name name :icon "voltage-icon.svg"
           (cell= (str value "V")))))))
 
 (defn gpu-view []
@@ -242,7 +236,7 @@
       "GPU")
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
+        (card :sh 100 :name name :icon "voltage-icon.svg"
           (cell= (str value "%")))))))
 
 (defn memory-view []
@@ -264,7 +258,7 @@
       :domain (cell= [{:label (->% (:used data-model)) :value (:used data-model)} {:label (->% (:free data-model)) :value (:free data-model)}])
       :range  [{:color :green} {:color grey-4}])
     (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)
-    (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
+    (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "voltage-icon.svg"
       (cell= (-> data-model :temp :value (str "° C"))))))
 
 (defn keyboard-view []
@@ -272,7 +266,7 @@
     (title :name (cell= (:name data-model))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
-      (for-tpl [{:keys [id name h]} (cell= (:zones data-model))]
+      (for-tpl [{:keys [id name] [h s l] :color} (cell= (:zones data-model))]
        (elem :ah :mid :gv 20
          (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue h :hue-changed #(set-keyboard-hue! @id %))
          (elem font-4 :sh (r 1 1) :ah :mid
