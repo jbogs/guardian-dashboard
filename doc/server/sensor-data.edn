@@ -1,50 +1,50 @@
-(def data {:mb {:name "Micro-Star International Co., Ltd. MS-16H8"
-                :fans []
-                :temps [{:name "THRM", :value 38}
-                        {:name "TZ00", :value 27.8}
-                        {:name "TZ01", :value 29.8}]
-                :volts []}
-           :cpus [{:name "Intel Core i7 6700HQ"
-                   :loads [{:name "UC", :value 2.73}
-                           {:name "CPU #0", :value 15.38}
-                           {:name "CPU #1", :value 0}
-                           {:name "CPU #2", :value 0}
-                           {:name "CPU #3", :value 0}
-                           {:name "CPU #4", :value 1.54}
-                           {:name "CPU #5", :value 0}
-                           {:name "CPU #6", :value 0}
-                           {:name "CPU #7", :value 0}]
-                   :temps [{:name "Core #0", :value 33}
-                           {:name "Core #1", :value 35}
-                           {:name "Core #2", :value 33}
-                           {:name "Core #3", :value 34}
-                           {:name "Package", :value 35}]
-                   :volts [{:name "VID", :value 0.84}
-                           {:name "IA Offset", :value 0}
-                           {:name "GT Offset", :value 0}
-                           {:name "LLC/Ring Offset", :value 0}
-                           {:name "System Agent Offset", :value 0}]}]
-           :hdds [{:name "HGST HTS721010A9E630"
-                   :loads [{:name "Space (e:)", :value 0.02}]
-                   :temps [{:name "Assembly", :value 29}]}
-                  {:name "SAMSUNG MZVPV128HDGM-00000"
-                   :loads [{:name "Space (c:)", :value 18.84}]
-                   :temps [{:name "Assembly", :value 35}]}]
-           :gpus [{:name "Intel(R) HD Graphics 530"
-                   :fans []
-                   :loads []
-                   :temps []}
-                  {:name "NVIDIA GeForce GTX 965M"
-                   :fans []
-                   :loads [{:name "Memory", :value 1.42}
-                           {:name "GPU", :value 0}
-                           {:name "Frame Buffer", :value 0}
-                           {:name "Video Engine", :value 0}
-                           {:name "Bus Interface", :value 0}]
-                   :temps [{:name "TMPIN0", :value 37}]}]
-           :memory {:free 5788790784, :total 8496087040}
-           :led_keyboard {:1 {:name "static_color", :zone "1", :color [0 0 0]}
-                          :2 {:name "static_color", :zone "2", :color [0 0 0]}
-                          :3 {:name "static_color", :zone "3", :color [0 0 0]}
-                          :all {:name "off", :zone "all", :color [0 0 0]}}})
+{:mb {:name "Micro-Star International Co., Ltd. MS-16H8"
+          :fans []
+          :temps [{:name "THRM", :value 38}
+                  {:name "TZ00", :value 27.8}
+                  {:name "TZ01", :value 29.8}]
+          :volts []}
+     :cpus [{:name "Intel Core i7 6700HQ"
+             :loads [{:name "UC", :value 2.73}
+                     {:name "CPU #0", :value 15.38}
+                     {:name "CPU #1", :value 0}
+                     {:name "CPU #2", :value 0}
+                     {:name "CPU #3", :value 0}
+                     {:name "CPU #4", :value 1.54}
+                     {:name "CPU #5", :value 0}
+                     {:name "CPU #6", :value 0}
+                     {:name "CPU #7", :value 0}]
+             :temps [{:name "Core #0", :value 33}
+                     {:name "Core #1", :value 35}
+                     {:name "Core #2", :value 33}
+                     {:name "Core #3", :value 34}
+                     {:name "Package", :value 35}]
+             :volts [{:name "VID", :value 0.84}
+                     {:name "IA Offset", :value 0}
+                     {:name "GT Offset", :value 0}
+                     {:name "LLC/Ring Offset", :value 0}
+                     {:name "System Agent Offset", :value 0}]}]
+     :hdds [{:name "HGST HTS721010A9E630"
+             :loads [{:name "Space (e:)", :value 0.02}]
+             :temps [{:name "Assembly", :value 29}]}
+            {:name "SAMSUNG MZVPV128HDGM-00000"
+             :loads [{:name "Space (c:)", :value 18.84}]
+             :temps [{:name "Assembly", :value 35}]}]
+     :gpus [{:name "Intel(R) HD Graphics 530"
+             :fans []
+             :loads []
+             :temps []}
+            {:name "NVIDIA GeForce GTX 965M"
+             :fans []
+             :loads [{:name "Memory", :value 1.42}
+                     {:name "GPU", :value 0}
+                     {:name "Frame Buffer", :value 0}
+                     {:name "Video Engine", :value 0}
+                     {:name "Bus Interface", :value 0}]
+             :temps [{:name "TMPIN0", :value 37}]}]
+     :memory {:free 5788790784, :total 8496087040}
+     :led_keyboard {:1 {:name "static_color", :zone "1", :color [0 0 0]}
+                    :2 {:name "static_color", :zone "2", :color [0 0 0]}
+                    :3 {:name "static_color", :zone "3", :color [0 0 0]}
+                    :all {:name "off", :zone "all", :color [0 0 0]}}}
 
