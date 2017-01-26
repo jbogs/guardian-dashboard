@@ -56,7 +56,7 @@
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def conn (atom nil))
+(defonce conn (atom nil))
 
 (defn connect [url state error]
   (let [conn (reset! conn (js/WebSocket. url))
@@ -206,8 +206,10 @@
       "Motherboard")
     (elem :sh (r 1 1) :g g-lg ;; remove after merging opts with vflatten
       (for-tpl [temps (cell= (apply mapv vector (mapv :temps hist-model)))]
+        
         (card :sh (r 1 1) :name (cell= (-> temps last :name)) :icon "temperature-icon.svg" :values (cell= (mapv :value temps))
-          (cell= (str (-> temps last :value) "° C")))))
+          (prn :temps temps)
+              (cell= (str (-> temps last :value) "° C")))))
     (elem :sh (r 1 1) :g g-lg ;; remove after merging apts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:fans data-model))]
         (card :sh (r 1 1) :name name :icon "rpms-icon.svg"

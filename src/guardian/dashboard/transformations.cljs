@@ -17,10 +17,10 @@
 
 ;;; xforms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn msi-config
-  {"THRM" {:id "THRM" :name "Thermal Zone"}
-   "TZ00" {:id "TZ00" :name "Thermal Zone 0"}
-   "TZ01" {:id "TZ01" :name "Thermal Zone 1"}})
+(def msi-config
+  {"THRM" {:id "THRM" :name "CPU"}
+   "TZ00" {:id "TZ00" :name "North Bridge"}
+   "TZ01" {:id "TZ01" :name "South Bridge"}})
 
 (defn xform-cpu [{:keys [name temps loads volts] :as cpu}]
   (when cpu
@@ -45,16 +45,6 @@
                    (assoc :name (str "Zone " (:zone %))))]
     {:name  "Keyboardz"
      :zones (->> (dissoc keyboard :all) (sort first) (mapv (comp xform second)))}))
-
-{:name "Micro-Star International Co., Ltd. MS-16H8"
- :fans  []
- :north-bridge [{:time, :value 44} {:name "TZ00", :value 27.8} {:name "TZ01", :value 29.8}]
- :volts []}
-
-{:name "Micro-Star International Co., Ltd. MS-16H8"
- :fans []
- :temps [{:name "THRM", :value 44} {:name "TZ00", :value 27.8} {:name "TZ01", :value 29.8}]
- :volts []}
 
 (defn xform-mb [data]
   (prn :data data :time *time*)
@@ -81,6 +71,7 @@
             (assoc {} :components $)))))
 
 (defn xform [data]
+  (prn :data data)
   (cond
     (:mb data) (sensor-data data)
     :else      data))
