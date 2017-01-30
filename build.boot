@@ -25,7 +25,7 @@
 (def services
   {:local  "ws://localhost:8000"
     :remote "ws://jbog.pagekite.me:8000"
-    :simulator "ws://cov.us.to:8000"})
+    :simulator "ws://172.31.13.239:8000"})
 
 ;;; tasks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
