@@ -17,11 +17,6 @@
 
 ;;; xforms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def msi-config
-  {"THRM" {:id "THRM" :name "CPU"}
-   "TZ00" {:id "TZ00" :name "North Bridge"}
-   "TZ01" {:id "TZ01" :name "South Bridge"}})
-
 (defn xform-cpu [{:keys [name temps loads volts] :as cpu}]
   (when cpu
     (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) "Package") temps))
@@ -71,7 +66,6 @@
             (assoc {} :components $)))))
 
 (defn xform [data]
-  (prn :data data)
   (cond
     (:mb data) (sensor-data data)
     :else      data))

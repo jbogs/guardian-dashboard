@@ -17,7 +17,7 @@
 
 (e/def URL "ws://localhost:8000")
 
-(def hist-max 80)
+(def hist-max 120)
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -39,20 +39,30 @@
 
 ;;; data-models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc state {:view :mb :index 0 :hist #queue[]})
+(def machine
+  {:name    "MSI Gaming Series G Laptop"
+   :devices [{:name "Micro-Star International Co., Ltd. MS-16H8"
+              :type :mb
+              :zones [{:id "THRM" :name "CPU"          :temps #queue[{:time #inst"2017-01-26T00:00:00" :value 30}
+                                                                     {:time #inst"2017-01-26T00:00:01" :value 29}
+                                                                     {:time #inst"2017-01-26T00:00:02" :value 30}
+                                                                     {:time #inst"2017-01-26T00:00:03" :value 36}]}
+                      {:id "TZ00" :name "North Bridge" :temps #queue[{:time #inst"2017-01-26T00:00:00" :value 27.7}
+                                                                     {:time #inst"2017-01-26T00:00:01" :value 27.8}]}
+                      {:id "TZ01" :name "South Bridge" :temps #queue[{:time #inst"2017-01-26T00:00:00" :value 29.8}
+                                                                     {:time #inst"2017-01-26T00:00:01" :value 29.8}]}]}]})
+
+(defc state {:view :mb :index 0 :data machine})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc= hist  (-> state :hist))
-(defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
+(defc= data  (-> state :data) #(swap! state assoc :data %))
 (defc= view  (-> state :view))
+(defc= model (get-in data [:devices (:index state 0)]))
 
-(defc= hist-model (mapv #(get-in % [:components (:index state 0)]) hist))
-(defc= data-model (-> hist-model last))
-
-#_(cell= (prn :hist-model hist-model))
-#_(cell= (prn :data-model data-model))
+(cell= (prn :view view))
+(cell= (prn :model model))
 
 ;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -88,7 +98,7 @@
   (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
-  (-> (connect URL data error)
+  #_(-> (connect URL data error)
       (.then  #(subs-sensors %))
       (.catch #(.log js/console "error: " %))))
 
@@ -184,14 +194,16 @@
 
 (defelem card [{:keys [name icon values] :as attrs} elems]
   (elem :p g-md :g g-md :r 3 :c grey-5 (dissoc attrs :name :icon)
-    (elem :sh (- (r 1 1) 250 g-md) :sv 250 :r 3 :c grey-4
+    (elem :sh (>sm (- (r 1 1) 250 g-md)) :sv 250 :d :pile :r 3 :c grey-4
+      (v/histogram :s (r 1 1) :data (cell= (clj->js values)) :xfn #(.-time %) :yfn #(.-value %))
       (elem :sh (r 1 1) :ph 10 :pv 2 :av :mid
         (image :s 14 :url icon)
         (elem font-3 :sh (- (r 1 1) 24 10) :p 8 :fc (white :a 0.5)
-          name))
-        (v/temp-chart :sh (r 1 1) :sv 200 :values values))
-    (elem font-3 :s 250 :a :mid :r 3 :c grey-4 :fc (white :a 0.5)
-      elems)))
+          name)))
+    (elem font-3 :sh (>sm 250) :sv 250 :d :pile :f 32 :ft :800 :fw 3 :fc (white :a 0.5) :r 3 :c grey-4
+      (v/gauge :s (r 1 1) :yfn #(.-value %) :data (cell= (clj->js (last values))))
+      (elem :s (r 1 1) :a :mid
+        (cell= (str (:value (last values)) "°"))))))
 
 (defelem title [{:keys [name] :as attrs} elems]
   (elem font-1 :sh (r 1 1) :g g-sm :av :end
@@ -202,21 +214,18 @@
 
 (defn mb-view []
   (list
-    (title :name (cell= (:name data-model))
+    (title :name (cell= (:name model))
       "Motherboard")
     (elem :sh (r 1 1) :g g-lg ;; remove after merging opts with vflatten
-      (for-tpl [temps (cell= (apply mapv vector (mapv :temps hist-model)))]
-        
-        (card :sh (r 1 1) :name (cell= (-> temps last :name)) :icon "temperature-icon.svg" :values (cell= (mapv :value temps))
-          (prn :temps temps)
-              (cell= (str (-> temps last :value) "° C")))))
-    (elem :sh (r 1 1) :g g-lg ;; remove after merging apts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:fans data-model))]
+      (for-tpl [{:keys [id name temps]} (cell= (:zones model))]
+        (card :sh (r 1 1) :icon "temperature-icon.svg" :name name :values temps)))
+    #_(elem :sh (r 1 1) :g g-lg ;; remove after merging apts with vflatten
+      (for-tpl [{:keys [name value]} (cell= (:fans model))]
         (card :sh (r 1 1) :name name :icon "rpms-icon.svg"
           (cell= (str value "RPM")))))))
 
 (defn cpu-view []
-  (list
+  #_(list
     (title :name (cell= (:name data-model))
       "CPU")
     (v/hist-chart font-4 :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.5)
@@ -233,7 +242,7 @@
           (cell= (str (-> volts last :value) "V")))))))
 
 (defn gpu-view []
-  (list
+  #_(list
     (title :name (cell= (:name data-model))
       "GPU")
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
@@ -242,7 +251,7 @@
           (cell= (str (-> loads last :value) "%")))))))
 
 (defn memory-view []
-  (list
+  #_(list
     (title :name (cell= (:name data-model))
       "Memory")
     (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
@@ -253,7 +262,7 @@
       :range  [{:color :green}])))
 
 (defn hdd-view []
-  (list
+  #_(list
     (title :name (cell= (:name data-model))
       "Hard Drive")
     (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
@@ -263,7 +272,7 @@
       (cell= (-> data-model :temp :value (str "° C"))))))
 
 (defn keyboard-view []
-  (list
+  #_(list
     (title :name (cell= (:name data-model))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
@@ -287,7 +296,7 @@
           (image :m :pointer :url logo :click #(.open js/window link))))))
   (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
     (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
-      (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
+      (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:devices data)))]
         (let [selected (cell= (= idx (:index state)))]
           (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
             (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
