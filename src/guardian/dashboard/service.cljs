@@ -87,6 +87,10 @@
 (defn device-data [data]
   data)
 
+(defn- call [tag conn & kwargs]
+  (let [data (apply hash-map kwargs)]
+    (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn))))
+
 ;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connect [url]
@@ -95,10 +99,6 @@
           (set! (.-onopen    conn) #(resolve conn))
           (set! (.-onerror   conn) #(reject %)))
         (js/Promise.))))
-
-(defn call [tag conn & kwargs]
-  (let [data (apply hash-map kwargs)]
-    (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn))))
 
 (defn bind-sensors! [conn state error & [poll-freq hist-max]]
   (let [cljs #(js->clj % :keywordize-keys true)
