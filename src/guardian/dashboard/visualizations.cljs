@@ -1,29 +1,36 @@
 (ns guardian.dashboard.visualizations
   (:require
-    [javelin.core           :refer [cell=]]
+    [javelin.core           :refer [cell= with-let]]
     [hoplon.core            :refer [defelem for-tpl]]
     [hoplon.svg             :refer [text g path rect line]]
     [hoplon.ui              :refer [elem svg]]
-    [hoplon.ui.attrs        :refer [r translate]]
+    [hoplon.ui.attrs        :refer [r translate hsl lgr]]
     [hoplon.ui.elems        :refer [in]]
-    [hoplon.graphics.axes   :as axis]
-    [hoplon.graphics.scales :as scale]
-    [hoplon.graphics.shapes :as shape]
-    [hoplon.graphics.stats  :as stat]))
+    [cljsjs.d3]))
 
+;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+(defn duration! [scale data accessor mins]
+  (let [max (when data (.max js/d3 data accessor))]
+    (.domain scale #js [(.offset js/d3.timeMinute max (- mins)) max])))
 
 ;;; charts ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defelem grid [{:keys [eh ev xticks yticks]}]
+  (list
+    (for-tpl [y yticks]
+      (line :x1 0 :x2 eh :y1 y :y2 y :stroke "#202020" :stroke-width 3))
+    (for-tpl [x xticks]
+      (line :x1 x :x2 x :y1 0 :y2 ev :stroke "#202020" :stroke-width 3))))
+
 (defelem gauge [{:keys [data yfn] :as attrs}]
   (let [e 250
-        y (-> (scale/linear) (.domain #js[20 60]) (.rangeRound #js[e 0]))
-        h (-> data yfn y cell=)]
+        y (-> (.scaleLinear js/d3) (.domain #js[20 60]) (.rangeRound #js[e 0]))
+        h (cell= (when data (-> data yfn y)))]
     (svg :view-box [0 0 e e] (dissoc attrs :data :yf)
       (g :transform (translate 0 -2)
         (for-tpl [[yd yr] (cell= (mapv #(vector % (y %)) (.ticks y 10)))]
-          (g
+          (list
             (line :x1 0 :x2 12 :y1 yr :y2 yr :stroke "#202020" :stroke-width 3)
             (text :x 4 :y (cell= (+ yr 2)) :font-size 12
               (cell= (str yd "°"))))))
@@ -31,18 +38,26 @@
 
 (defelem histogram [{:keys [data xfn yfn] :as attrs}]
   (let [eh 800 ev 200
-        x (-> (scale/time)   (.domain #js[#inst"2017-01-26T00:00:00" #inst"2017-01-26T00:02:00"]) (.rangeRound #js[0 eh])) ;; todo: time extent
-        y (-> (scale/linear) (.domain #js[20 60])                                                 (.rangeRound #js[ev 0]))
-        l (-> (shape/area) (.x (comp x xfn)) (.y0 (y 0)) (.y1 (comp y yfn)))
-        b (-> (axis/bottom x) #_(.ticks (.every js/d3.timeMinute 15)))]
+        x (-> (.scaleTime   js/d3)                      (.rangeRound #js[0 eh]))
+        y (-> (.scaleLinear js/d3) (.domain #js[20 60]) (.rangeRound #js[ev 0]))
+        l (-> (.area        js/d3) (.x (comp x xfn)) (.y0 (y 0)) (.y1 (comp y yfn)))]
+    (cell= (duration! x data xfn 2))
     (svg :view-box [0 0 eh ev] (dissoc attrs :data :xfn :yfn)
-      (path :d (cell= (l data)) :fill "steelblue")
-      (g
-        (for-tpl [y (cell= (mapv y (.ticks y 11)))]
-          (line :x1 0 :x2 eh :y1 y :y2 y :stroke "#202020" :stroke-width 3)))
-      (g
-        (for-tpl [x (cell= (mapv x (.ticks x (.every js/d3.timeSecond 10))))]
-          (line :x1 x :x2 x :y1 0 :y2 ev :stroke "#202020" :stroke-width 3))))))
+      (path :d (cell= (when data (l data))) :fill "steelblue")
+      (grid :eh eh :ev ev :xticks (cell= (mapv x (.ticks x (.every js/d3.timeSecond 10)))) :yticks (cell= (mapv y (.ticks y 11)))))))
+
+#_(defelem stack-chart [{:keys [data xfn yfn zfn] :as attrs}]
+  (let [eh 800 ev 200
+        x (-> (.scaleTime    js/d3) (.domain #js[#inst"2017-01-26T00:00:00" #inst"2017-01-26T00:02:00"]) (.rangeRound #js[0 eh])) ;; todo: time extent
+        y (-> (.scaleLinear  js/d3) (.domain #js[20 60])                                                 (.rangeRound #js[ev 0]))
+        z (-> (.scaleOrdinal js/d3) (.-schemeCategory10 js/d3))
+        l (-> (shape/area) (.x (comp x xfn)) (.y0 (y 0)) (.y1 (comp y yfn)))]
+    (cell= (duration! x data xfn 2))
+    (elem :d :pile
+      (elem :s (r 1 1)
+        "thing")
+      (svg :s (r 1 1) :view-box [0 0 eh ev] (dissoc attrs :data)
+        (path :d (cell= (l data)) :fill "steelblue")))))
 
 (defelem dist-chart [{:keys [domain range] :as attrs} _]
   (let [total (cell= (apply + (mapv :value domain)))]

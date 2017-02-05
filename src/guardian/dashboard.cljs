@@ -4,7 +4,8 @@
   (:require
     [adzerk.env                         :as e]
     [guardian.dashboard.visualizations  :as v]
-    [guardian.dashboard.transformations :as x]
+    [guardian.dashboard.service         :as s]
+    [guardian.dashboard.service.data    :refer [machine]]
     [cljs.pprint     :refer [pprint]]
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
@@ -39,20 +40,9 @@
 
 ;;; data-models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def machine
-  {:name    "MSI Gaming Series G Laptop"
-   :devices [{:name "Micro-Star International Co., Ltd. MS-16H8"
-              :type :mb
-              :zones [{:id "THRM" :name "CPU"          :temps #queue[{:time #inst"2017-01-26T00:00:00" :value 30}
-                                                                     {:time #inst"2017-01-26T00:00:01" :value 29}
-                                                                     {:time #inst"2017-01-26T00:00:02" :value 30}
-                                                                     {:time #inst"2017-01-26T00:00:03" :value 36}]}
-                      {:id "TZ00" :name "North Bridge" :temps #queue[{:time #inst"2017-01-26T00:00:00" :value 27.7}
-                                                                     {:time #inst"2017-01-26T00:00:01" :value 27.8}]}
-                      {:id "TZ01" :name "South Bridge" :temps #queue[{:time #inst"2017-01-26T00:00:00" :value 29.8}
-                                                                     {:time #inst"2017-01-26T00:00:01" :value 29.8}]}]}]})
+(def conn (atom nil))
 
-(defc state {:view :mb :index 0 :data machine})
+(defc state {:view :mb :index 0 :data guardian.dashboard.service.data/machine})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -64,31 +54,6 @@
 (cell= (prn :view view))
 (cell= (prn :model model))
 
-;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defonce conn (atom nil))
-
-(defn connect [url state error]
-  (let [conn (reset! conn (js/WebSocket. url))
-        cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data x/xform)]
-    (-> (fn [resolve reject]
-          (set! (.-onopen    conn) #(resolve conn))
-          (set! (.-onerror   conn) #(reject (reset! error %)))
-          (set! (.-onmessage conn) #(reset! state (data %))))
-        (js/Promise.))))
-
-(defn call [tag conn & args]
-  (->> {:tag tag :data (apply hash-map args)} (clj->js) (.stringify js/JSON) (.send conn)))
-
-(defn poll [tag conn data & [interval]]
-  (.setInterval js/window call (or interval 1000) tag conn data))
-
-(def subs-sensors       (partial poll "get_sensors"))
-(def get-devices        (partial call "get_devices"))
-(def set-plugin-effect  (partial call "set_plugin_effect"))
-(def set-keyboard-zones (partial call "set_keyboard_zones"))
-
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn change-state! [view & [index]]
@@ -98,12 +63,12 @@
   (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
-  #_(-> (connect URL data error)
-      (.then  #(subs-sensors %))
+  (-> (s/connect URL data error)
+      (.then  #(reset! conn (s/subs-sensors %)))
       (.catch #(.log js/console "error: " %))))
 
 (defn set-keyboard-hue! [zone hue]
-  (set-keyboard-zones @conn :name "static_color" :zone (str zone) :color (x/hsl->rgb [hue 1 0.5])))
+  (s/set-keyboard-zones! @conn :name "static_color" :zone (str zone) :color [hue 1 0.5]))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -225,18 +190,24 @@
           (cell= (str value "RPM")))))))
 
 (defn cpu-view []
-  #_(list
-    (title :name (cell= (:name data-model))
+  (list
+    (title :name (cell= (:name model))
       "CPU")
-    (v/hist-chart font-4 :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.5)
+    #_(elem :sh (>sm (- (r 1 1) 250 g-md)) :sv 250 :d :pile :r 3 :c grey-4
+      (v/stack-chart :data (cell= (clj->js (:cores model))))
+      (elem :sh (r 1 1) :ph 10 :pv 2 :av :mid
+        #_(image :s 14 :url icon)
+        (elem font-3 :sh (- (r 1 1) 24 10) :p 8 :fc (white :a 0.5)
+          name)))
+    #_(v/hist-chart font-4 :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.5)
       :domain (cell= (mapv #(hash-map :value (* (/ (-> % :load :value) 100) 300) :color (-> % :temp :value temp->color)) hist-model))
       :range  [{:color :blue}])
-    (elem :s 300 :c grey-4 :b 10 :bc grey-5
+    #_(elem :s 300 :c grey-4 :b 10 :bc grey-5
        (for-tpl [{:keys [name temp threads]} (cell= (:cores data-model))]
          (elem :sh (cell= (r 1 (count (:cores data-model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
            (for-tpl [{:keys [name load]} threads]
              (elem :sh 4 :sv (cell= (+ (* load 3) 6)) :r 6 :c (cell= (temp->color temp))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
-    (elem :g g-lg :av :end ;; remove after merging opts with vflatten
+    #_(elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [volts (cell= (apply mapv vector (mapv :volts hist-model)))]
         (card :sh (r 1 1) :name (cell= (-> volts last :name)) :icon "voltage-icon.svg" :values (cell= (mapv :value volts))
           (cell= (str (-> volts last :value) "V")))))))
