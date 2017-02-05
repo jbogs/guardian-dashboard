@@ -15,6 +15,9 @@
   (let [c (.hsl js/d3 (.rgb js/d3 r g b))]
     (mapv int [(.-h c) (.-s c) (.-l c)])))
 
+(defn buffer [queue max val]
+  (conj (if (> (count queue) max) (pop queue) queue) val))
+
 ;;; conf (to be fatored out into edn file) ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def sensors
@@ -76,30 +79,40 @@
             (reduce-kv #(if (sequential? %3) (into-seq %1 %2 %3) (conj-map %1 %2 %3)) [] $)
             (assoc {} :components $)))))
 
+(defn buffer-sensor-data [state data]
+  (prn :state state)
+  (prn :data  data)
+  state)
+
 (defn device-data [data]
   data)
 
 ;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn connect [url state error]
-  (let [conn (js/WebSocket. url)
-        cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data)]
+(defn connect [url]
+  (let [conn (js/WebSocket. url)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
-          (set! (.-onerror   conn) #(reject (reset! error %)))
-          (set! (.-onmessage conn) #(reset! state (data %))))
+          (set! (.-onerror   conn) #(reject %)))
         (js/Promise.))))
 
 (defn call [tag conn & kwargs]
-  (let [data (-> (apply hash-map kwargs) (update :color hsl->rgb))]
+  (let [data (apply hash-map kwargs)]
     (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send conn))))
 
-(defn poll [tag conn data & [interval]]
-  (.setInterval js/window call (or interval 1000) tag conn data))
+(defn bind-sensors! [conn state error & [poll-freq hist-max]]
+  (let [cljs #(js->clj % :keywordize-keys true)
+        data #(-> % .-data js/JSON.parse cljs :data)]
+  (set! (.-onmessage conn) #(swap! state buffer-sensor-data (data %)))
+  (set! (.-onerror   conn) #(reset! error %))
+  (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn)))
 
-(def subs-sensors        (comp sensor-data (partial poll "get_sensors")))
-(def get-devices         (comp device-data (partial call "get_devices")))
-(def set-plugin-effect!  (partial call "set_plugin_effect"))
-(def set-keyboard-zones! (partial call "set_keyboard_zones"))
+(defn get-devices [conn]
+  (device-data (call "get_devices" conn)))
+
+(defn set-keyboard-zone! [conn zone color]
+  (call "set_keyboard_zones" conn :name "static_color" :zone (str zone) :color (hsl->rgb color)))
+
+(defn set-plugin-effect! [conn effect]
+  (call "set_plugin_effect" conn :name "static_color" :effect effect))
 

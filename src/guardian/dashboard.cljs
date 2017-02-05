@@ -18,8 +18,6 @@
 
 (e/def URL "ws://localhost:8000")
 
-(def hist-max 120)
-
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ->GB [bytes] (when bytes (str (.toFixed (/ bytes 1000000000) 2) "GB")))
@@ -63,12 +61,12 @@
   (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
-  (-> (s/connect URL data error)
-      (.then  #(reset! conn (s/subs-sensors %)))
+  (-> (s/connect URL)
+      (.then  #(reset! conn (s/bind-sensors! % data error 5000 120)))
       (.catch #(.log js/console "error: " %))))
 
 (defn set-keyboard-hue! [zone hue]
-  (s/set-keyboard-zones! @conn :name "static_color" :zone (str zone) :color [hue 1 0.5]))
+  (s/set-keyboard-zone! @conn zone [hue 1 0.5]))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
