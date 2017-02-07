@@ -8,7 +8,7 @@
                   [adzerk/env                "0.3.1"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
-                  [cljsjs/d3                 "4.3.0-2"]
+                  [cljsjs/d3                 "4.3.0-3"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 
 (require
@@ -23,9 +23,10 @@
   {:remote "xoticpcgui"})
 
 (def services
-  {:local  "ws://localhost:8000"
-    :remote "ws://jbog.pagekite.me:8000"
-    :simulator "ws://simulator.pagekite.me:8000"})
+  {:local     "ws://localhost:8000"
+   :remote    "ws://jbog.pagekite.me:8000"
+   :simulator "ws://simulator.pagekite.me:8000"
+   :aws       "ws://52.53.165.31:8000"})
 
 ;;; tasks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

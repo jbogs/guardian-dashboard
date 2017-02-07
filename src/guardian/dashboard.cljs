@@ -17,7 +17,7 @@
 
 (e/def URL "ws://localhost:8000")
 
-(def hist-max 80)
+(def hist-max 180)
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -69,7 +69,6 @@
         (js/Promise.))))
 
 (defn call [tag conn & args]
-  (prn :call {:tag tag :data (apply hash-map args)})
   (->> {:tag tag :data (apply hash-map args)} (clj->js) (.stringify js/JSON) (.send conn)))
 
 (defn poll [tag conn data & [interval]]
@@ -125,8 +124,8 @@
 (def black   (rgb 0x181818))
 
 (defn temp->color [t]
-  (let [h (-> (+ 20 t) (* 240) (/ 60) (- 20))]
-    (hsl h (r 7 10) (r 1 2))))
+  (let [h (- 240 (/ (* 11 t) 5))]
+    (hsl h (r 1 1) (r 1 2))))
 
 ;-- typography ----------------------------------------------------------------;
 
@@ -213,15 +212,14 @@
   (list
     (title :name (cell= (:name data-model))
       "CPU")
-    (v/hist-chart font-4 :sh (- (r 1 1) 300 g-lg) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.5)
-      :domain (cell= (mapv #(hash-map :value (* (/ (-> % :load :value) 100) 300) :color (-> % :temp :value temp->color)) hist-model))
-      :range  [{:color :blue}])
-    (elem :s 300 :c grey-4 :b 10 :bc grey-5
-       (for-tpl [{:keys [name temp threads]} (cell= (:cores data-model))]
-         (elem :sh (cell= (r 1 (count (:cores data-model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
-           (for-tpl [{:keys [name load]} threads]
-             (elem :sh 4 :sv (cell= (+ (* load 3) 6)) :r 6 :c (cell= (temp->color temp))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
-    (elem :g g-lg :av :end ;; remove after merging opts with vflatten
+    (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+      :name "CPU Load"
+      :icon "capacity-icon.svg"
+      :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) hist-model)))
+    (v/cpu-capacity font-4 :sh (>sm 300) :sv 300 :c grey-4 :b 10 :bc grey-5
+      :cfn  temp->color
+      :data data-model)
+    #_(elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:volts data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "V")))))))
@@ -242,9 +240,10 @@
     (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
       :domain (cell= [{:label (->GB (:used data-model)) :value (:used data-model)} {:label (->GB (:free data-model)) :value (:free data-model)}])
       :range  [{:color :green} {:color grey-4}])
-    (v/hist-chart font-4 :sh (r 1 1) :sv 400 :c grey-5 :fc (white :a 0.5)
-      :domain (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model))
-      :range  [{:color :green}])))
+    (v/histogram font-4 :sh (r 1 1) :sv 400 :c grey-5 :fc (white :a 0.5)
+      :name "Memory"
+      :icon "copaciy-icon.svg"
+      :data (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model)))))
 
 (defn hdd-view []
   (list
