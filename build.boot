@@ -25,6 +25,7 @@
 (def services
   {:local  "ws://localhost:8000"
     :remote "ws://jbog.pagekite.me:8000"
+    :aws  "ws://ec2-54-193-74-95.us-west-1.compute.amazonaws.com:8000"
     :simulator "ws://simulator.pagekite.me:8000"})
 
 ;;; tasks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
