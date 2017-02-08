@@ -9,7 +9,7 @@
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem chart [{:keys [f fh fv p ph pv pl pr pt pb] :as attrs} elems]
+(defelem chart [{:keys [b bh bv p ph pv pl pr pt pb] :as attrs} elems]
   "construct a vector image suitable for data visualizations where the size is
    the sum of the fill and the padding.  this is necessary because svg strokes
    cannot be inset, and will be cropped by the edges of the container if there's
@@ -19,19 +19,18 @@
         pr (or p ph pr 0)
         pt (or p pv pt 0)
         pb (or p pv pb 0)
-        ;fh (or f fh)
-        ;fv (or f fv)
-        ]
-    (svg :view-box [0 0 (+ fh pl pr) (+ fv pt pb)] (dissoc attrs :f :fh :fv :p :ph :pv :pl :pr :pt :pb)
+        bh (or b bh)
+        bv (or b bv)]
+    (svg :view-box [0 0 (+ bh pl pr) (+ bv pt pb)] (dissoc attrs :b :bh :bv :p :ph :pv :pl :pr :pt :pb)
       (g :transform (translate pl pt)
          elems))))
 
-(defelem grid [{:keys [fh fv xticks yticks]}]
+(defelem grid [{:keys [bh bv xticks yticks]}]
   (list
     (for-tpl [y yticks]
-      (line :x1 0 :x2 fh :y1 y :y2 y :stroke "#202020" :stroke-width 1))
+      (line :x1 0 :x2 bh :y1 y :y2 y :stroke "#202020" :stroke-width 1))
     (for-tpl [x xticks]
-      (line :x1 x :x2 x :y1 0 :y2 fv :stroke "#202020" :stroke-width 1))))
+      (line :x1 x :x2 x :y1 0 :y2 bv :stroke "#202020" :stroke-width 1))))
 
 ;;; charts ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -43,13 +42,13 @@
           (cell= (when (> value 5) label)))))))
 
 (defelem histogram [{:keys [name icon data] :as attrs}]
-  (let [fh 360 fv 100 s 2 o (/ s 2)]
+  (let [bh 360 bv 100 s 2 o (/ s 2)]
     (elem :d :pile (dissoc attrs :data)
-      (chart :s (r 1 1) :fh fh :fv fv
+      (chart :s (r 1 1) :bh bh :bv bv
         (for-tpl [[i {:keys [label value color]}] (cell= (map-indexed vector data))]
-          (let [x (cell= (- fh (- (* (count data) s) (* i s) o)))]
-            (line :x1 x :y1 (cell= (- fv value)) :x2 x :y2 fv :stroke color :stroke-width s :stroke-linecap "round")))
-        (grid :fh fh :fv fv :xticks (range 0 fh (* 10 s)) :yticks (range 0 fv (* 5 s))))
+          (let [x (cell= (- bh (- (* (count data) s) (* i s) o)))]
+            (line :x1 x :y1 (cell= (- bv value)) :x2 x :y2 bv :stroke color :stroke-width s :stroke-linecap "round")))
+        (grid :bh bh :bv bv :xticks (range 0 bh (* 10 s)) :yticks (range 0 bv (* 5 s))))
       (elem :sh (r 1 1) :p 10 :av :mid
         (image :s 24 :url icon)
         (elem :sh (- (r 1 1) 24 10) :p 8
