@@ -20,7 +20,7 @@
   '[tailrecursion.boot-static :refer [serve]])
 
 (def buckets
-  {:laptop "xoticpcgui"})
+  {:xotic "xoticpcgui"})
 
 (def services
   {:local     "ws://localhost:8000"
@@ -31,35 +31,36 @@
 ;;; tasks ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (deftask develop
-  [e environment   ENV kw   "Environment of the server to connect to"
+  [s service       SVC kw   "The guardian server the client should connect to."
    o optimizations OPM kw   "Optimizations to pass the cljs compiler."
    v no-validate       bool "Exclude validations from build"]
   (let [o (or optimizations :none)
-        e (or environment   :local)]
-    (System/setProperty "URL" (services e))
+        s (or service       :local)]
+    (System/setProperty "URL" (services s))
     (comp (watch) (speak) (hoplon) (reload) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts no-validate}) (serve))))
 
 (deftask build
-  [e environment   ENV kw "The application environment to be utilized by the service."
+  [s service       SVC kw "The guardian server the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (let [o (or optimizations :advanced)
-        e (or environment   :local)]
-    (System/setProperty "URL" (services e))
+        s (or service       :local)]
+    (System/setProperty "URL" (services s))
     (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts true}) (sift))))
 
 (deftask deploy
   "Build the application with advanced optimizations then deploy it to s3."
-  [e environment   ENV kw "The application environment to be utilized by the service."
+  [e environment   ENV kw "The aws environment to deploy to."
+   s service       SVC kw "The service the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (assert environment "Missing required environment argument.")
   (let [b (buckets environment)]
-    (comp (build :optimizations optimizations :environment environment) (spew :bucket b))))
+    (comp (build :optimizations optimizations :service service) (spew :bucket b))))
 
 (deftask package
   "Build the application with advanced optimizations then dump it into the tgt folder."
-  [e environment   ENV kw `"The application environment to be utilized by the service."
+  [s service       SVC kw `"The guardian server the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
-  (comp (build :optimizations optimizations :environment environment) (target :dir #{"tgt"})))
+  (comp (build :optimizations optimizations :service service) (target :dir #{"tgt"})))
 
 (task-options!
   serve {:port 7000}

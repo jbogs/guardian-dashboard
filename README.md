@@ -21,14 +21,14 @@ http://localhost:7000
 
 compiler optimizations, validation elision, and the service to connect to during development may be specificed with:
 ```
-boot develop -v -e <remote|local> -o <none|whitespace|simple|advanced>
+boot develop -v -s <local|laptop|aws> -o <none|whitespace|simple|advanced>
 ```
 
 ## Deployment
 
 to deploy the application to the staging environment in a aws bucket, from the project root:
 ```
-boot deploy -e remote
+boot deploy -e exotic
 ```
 
 then navigate the browser to:
