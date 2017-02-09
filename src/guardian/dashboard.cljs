@@ -196,27 +196,19 @@
         elems)))
 
 (defn mb-view []
-  (cell= (cljs.pprint/pprint data-model))
   (list
     (title :name (cell= (:name data-model))
       "Motherboard")
-    #_(for-tpl [{:keys [name value]} (cell= (:temps data-model))]
-      (list
-        (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
-          :name "Temperature"
-          :icon "temp-icon.svg"
-          :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) hist-model)))
-        (v/cpu-capacity font-4 :sh (>sm 300) :sv 300 :c grey-4 :b 10 :bc grey-5
-          :cfn  temp->color
-          :data data-model)))
-    #_(elem :g g-lg ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:temps data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
-          (cell= (str value "° C")))))
-    #_(elem :g g-lg ;; remove after merging apts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:fans data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
-          (cell= (str value "RPM")))))))
+    (elem :sh (r 1 1) :g g-lg
+      (for-tpl [{:keys [name temp] :as zone} (cell= (:zones data-model))]
+        (list
+          (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+            :name name
+            :icon "temperature-icon.svg"
+            :data (cell= (mapv #(hash-map :value (-> % :temp :value) :color (-> % :temp :value temp->color)) (mapv #(some (fn [v] (when (= v zone) v)) (:zones %)) hist-model))))
+          (v/gauge font-4 :sh (>sm 300) :sv 300 :c grey-4 :b 10 :bc grey-5
+            :cfn  temp->color
+            :data temp))))))
 
 (defn cpu-view []
   (list
