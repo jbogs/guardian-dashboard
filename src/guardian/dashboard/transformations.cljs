@@ -13,15 +13,36 @@
   (let [c (.hsl js/d3 (.rgb js/d3 r g b))]
     (mapv int [(.-h c) (.-s c) (.-l c)])))
 
+;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def sensors
+  {:cpu-temp    "Package"
+   :cpu-load    "UC"
+   :hdd-temp    "Assembly"
+   :zone-1-temp "THRM"
+   :zone-2-temp "TZ00"
+   :zone-3-temp "TZ01"})
+
+(def computer
+  {:name    "MSI Gaming Series G Laptop"
+   :sensors sensors
+   :zones   [{:name "CPU"}
+             {:name "North Bridge"}
+             {:name "South Bridge"}]})
+
 ;;; xforms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn xform-mb [mb]
+  (-> (dissoc mb :fans :temps :volts)
+      (assoc :zones (mapv #(hash-map :name (:name %1) :temp %2) (:zones computer) (:temps mb)))))
 
 (defn xform-cpu [{:keys [name temps loads volts] :as cpu}]
   (when cpu
-    (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) "Package") temps))
-          threads (mapv (fn [l] (rename-keys l {:value :load})) (remove #(= (:name %) "UC"     ) loads))]
+    (let [cores   (mapv (fn [t] (rename-keys t {:value :temp})) (remove #(= (:name %) (:cpu-temp sensors)) temps))
+          threads (mapv (fn [l] (rename-keys l {:value :load})) (remove #(= (:name %) (:cpu-load sensors)) loads))]
       (-> (dissoc cpu :temps :loads)
-          (assoc :temp  (some #(when (= "Package" (:name %)) %) temps)
-                 :load  (some #(when (= "UC"      (:name %)) %) loads)
+          (assoc :temp  (some #(when (= (:cpu-temp sensors) (:name %)) %) temps)
+                 :load  (some #(when (= (:cpu-load sensors) (:name %)) %) loads)
                  :cores (mapv #(assoc % :threads %2) cores (partition 2 threads)))))))
 
 (defn xform-hdd [{:keys [name loads temps] :as hdd}]
@@ -29,7 +50,7 @@
       (assoc :volume (-> loads first :name) ;; can't even use textual name here, will break relying on index
              :used   (-> loads first :value)
              :free   (- 100 (-> loads first :value))
-             :temp   (some #(when (= "Assembly" (:name %)) %) temps))))
+             :temp   (some #(when (= (:hdd-temp sensors) (:name %)) %) temps))))
 
 (defn xform-keyboard [keyboard]
   (let [xform #(-> (rename-keys % {:zone :id}) ;; todo: start, stop colors
@@ -50,6 +71,7 @@
         conj-map #(conj % (assoc %3 :type %2))]
   (as-> data $
         (rename-keys $ {:led_keyboard :keyboard})
+        (update $ :mb       xform-mb)
         (update $ :cpus     (partial mapv xform-cpu))
         (update $ :hdds     (partial mapv xform-hdd))
         (update $ :memory   xform-memory)
