@@ -7,7 +7,7 @@
     [guardian.dashboard.transformations :as x]
     [cljs.pprint     :refer [pprint]]
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
-    [hoplon.core     :refer [defelem for-tpl when-tpl case-tpl]]
+    [hoplon.core     :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
     [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]))
 
@@ -48,8 +48,10 @@
 (defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
 (defc= view  (-> state :view))
 
-(defc= hist-model (mapv #(get-in % [:components (:index state 0)]) hist))
+(defc= hist-model (mapv #(get-in % [:devices (:index state 0)]) hist))
 (defc= data-model (-> hist-model last))
+
+(cell= (cljs.pprint/pprint (-> state :hist last)))
 
 #_(cell= (prn :hist-model hist-model))
 #_(cell= (prn :data-model data-model))
@@ -61,7 +63,7 @@
 (defn connect [url state error]
   (let [conn (reset! conn (js/WebSocket. url))
         cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data x/xform)]
+        data #(-> % .-data js/JSON.parse cljs :data x/motherboard)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
           (set! (.-onerror   conn) #(reject (reset! error %)))
@@ -230,6 +232,10 @@
   (list
     (title :name (cell= (:name data-model))
       "GPU")
+    (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+      :name "CPU Load"
+      :icon "capacity-icon.svg"
+      :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) hist-model)))
     (elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
@@ -281,21 +287,24 @@
       (elem :sh (>sm (- (r 1 1) 200)) :ah (b :mid sm :end) :gh (* 2 g-lg)
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
-  (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
-    (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
-      (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
-        (let [selected (cell= (= idx (:index state)))]
-          (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
-            (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
-            (when-tpl (b true sm false md true)
-              (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
-                name)))))
-      (b nil sm (elem :sh (>sm 80 md 380) :sv (r 2 1) :c grey-6)))
-    (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c grey-6
-      (case-tpl view
-        :mb       (mb-view)
-        :cpu      (cpu-view)
-        :gpu      (gpu-view)
-        :memory   (memory-view)
-        :hdd      (hdd-view)
-        :keyboard (keyboard-view)))))
+  (if-tpl (cell= (not data))
+    (elem :s (r 1 1) :a :mid :c black
+      (image :s 80 :sv 200 :av :top :url "loading-icon.png"))
+    (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
+      (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
+        (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
+          (let [selected (cell= (= idx (:index state)))]
+            (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
+              (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
+              (when-tpl (b true sm false md true)
+                (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
+                  name)))))
+        (b nil sm (elem :sh (>sm 80 md 380) :sv (r 2 1) :c grey-6)))
+      (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c grey-6
+        (case-tpl view
+          :mb       (mb-view)
+          :cpu      (cpu-view)
+          :gpu      (gpu-view)
+          :memory   (memory-view)
+          :hdd      (hdd-view)
+          :keyboard (keyboard-view))))))
