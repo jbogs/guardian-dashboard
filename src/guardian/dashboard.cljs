@@ -63,7 +63,7 @@
 (defn connect [url state error]
   (let [conn (reset! conn (js/WebSocket. url))
         cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data x/motherboard)]
+        data #(-> % .-data js/JSON.parse cljs :data x/presentation)]
     (-> (fn [resolve reject]
           (set! (.-onopen    conn) #(resolve conn))
           (set! (.-onerror   conn) #(reject (reset! error %)))
@@ -292,7 +292,7 @@
       (image :s 80 :sv 200 :av :top :url "loading-icon.png"))
     (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
       (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
-        (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:components data)))]
+        (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]
           (let [selected (cell= (= idx (:index state)))]
             (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
               (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
