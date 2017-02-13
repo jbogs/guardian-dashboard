@@ -4,7 +4,7 @@
   (:require
     [adzerk.env                         :as e]
     [guardian.dashboard.visualizations  :as v]
-    [guardian.dashboard.transformations :as x]
+    [guardian.dashboard.service         :as s]
     [cljs.pprint     :refer [pprint]]
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
@@ -39,6 +39,8 @@
 
 ;;; data-models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defonce conn (atom nil))
+
 (defc state {:view :mb :index 0 :hist #queue[]})
 (defc error nil)
 
@@ -56,30 +58,6 @@
 #_(cell= (prn :hist-model hist-model))
 #_(cell= (prn :data-model data-model))
 
-;;; service ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(def conn (atom nil))
-
-(defn connect [url state error]
-  (let [conn (reset! conn (js/WebSocket. url))
-        cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data x/presentation)]
-    (-> (fn [resolve reject]
-          (set! (.-onopen    conn) #(resolve conn))
-          (set! (.-onerror   conn) #(reject (reset! error %)))
-          (set! (.-onmessage conn) #(reset! state (data %))))
-        (js/Promise.))))
-
-(defn call [tag conn & args]
-  (->> {:tag tag :data (apply hash-map args)} (clj->js) (.stringify js/JSON) (.send conn)))
-
-(defn poll [tag conn data & [interval]]
-  (.setInterval js/window call (or interval 1000) tag conn data))
-
-(def subs-sensors       (partial poll "get_sensors"))
-(def set-plugin-effect  (partial call "set_plugin_effect"))
-(def set-keyboard-zones (partial call "set_keyboard_zones"))
-
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn change-state! [view & [index]]
@@ -89,12 +67,13 @@
   (change-state! view index))
 
 (defn initiate! [[path qmap] status _]
-  (-> (connect URL data error)
-      (.then  #(subs-sensors %))
-      (.catch #(.log js/console "error: " %))))
+  (when-not @conn
+    (-> (s/connect URL)
+        (.then  #(reset! conn (s/bind-sensors! % data error 5000 120)))
+        (.catch #(.log js/console "error: " %)))))
 
 (defn set-keyboard-hue! [zone hue]
-  (set-keyboard-zones @conn :name "static_color" :zone zone :color (x/hsl->rgb [hue 1 0.5])))
+  (s/set-keyboard-zone! @conn zone [hue 1 0.5]))
 
 ;;; styles ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -288,8 +267,11 @@
         (for [[logo link] footer-menu-items]
           (image :m :pointer :url logo :click #(.open js/window link))))))
   (if-tpl (cell= (not data))
-    (elem :s (r 1 1) :a :mid :c black
-      (image :s 80 :sv 200 :av :top :url "loading-icon.png"))
+    (elem :s (r 1 1) :pb 200 :a :mid :c black
+      (elem :s 100 :g 10 :ah :mid
+        (image :url "loading-icon.png")
+        (elem :sh (r 1 1) :ah :mid font-2 :fc (white :a 0.9)
+          "connecting")))
     (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
       (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
         (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]

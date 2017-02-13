@@ -1,6 +1,7 @@
-(ns guardian.dashboard.transformations
+(ns guardian.dashboard.service
   (:require
-    [clojure.set :refer [rename-keys]]
+    [javelin.core :refer [cell cell=]]
+    [clojure.set  :refer [rename-keys]]
     [cljsjs.d3]))
 
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -107,6 +108,41 @@
    :cards    (mapv card  (rest gpus))
    :drives   (mapv drive       hdds)})
 
-(defn presentation [data]
+(defn buffer-sensor-data [data]
   (let [data (motherboard data)]
     (assoc (dissoc data :cards :drives) :views (apply concat ((juxt :cards :drives) data)))))
+
+(defn device-data [data]
+  (prn :device-data data)
+  data)
+
+
+;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn connect [url]
+  (let [conn (cell (js/WebSocket. url))]
+       (cell= (set! (.-onclose conn) ~(fn [_] (reset! conn (js/WebSocket. url)))))
+    (-> (fn [resolve reject]
+          (set! (.-onopen  @conn) #(resolve conn))
+          (set! (.-onerror @conn) #(reject %)))
+        (js/Promise.))))
+
+(defn- call [tag conn & kwargs]
+  (let [data (apply hash-map kwargs)]
+    (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send @conn))))
+
+(defn bind-sensors! [conn state error & [poll-freq hist-max]]
+  (let [cljs #(js->clj % :keywordize-keys true)
+        data #(-> % .-data js/JSON.parse cljs :data)]
+  (cell= (set! (.-onmessage conn) ~(fn [e] (reset! state (buffer-sensor-data (data e))))))
+  (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
+  (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn)))
+
+(defn get-devices [conn]
+  (device-data (call "get_devices" conn)))
+
+(defn set-keyboard-zone! [conn zone color]
+  (call "set_keyboard_zones" conn :name "static_color" :zone (str zone) :color (hsl->rgb color)))
+
+(defn set-plugin-effect! [conn effect]
+  (call "set_plugin_effect" conn :name "static_color" :effect effect))
