@@ -69,7 +69,7 @@
 (defn initiate! [[path qmap] status _]
   (when-not @conn
     (-> (s/connect URL)
-        (.then  #(reset! conn (s/bind-sensors! % data error 5000 120)))
+        (.then  #(reset! conn (s/bind-sensors! % data error 1000 120)))
         (.catch #(.log js/console "error: " %)))))
 
 (defn set-keyboard-hue! [zone hue]
