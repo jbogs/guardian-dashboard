@@ -25,6 +25,10 @@
       (g :transform (translate pl pt)
          elems))))
 
+(defelem path [{:keys [data] :as attrs}]
+  (chart (dissoc attrs :data)
+    (path :d data)))
+
 (defelem grid [{:keys [bh bv xticks yticks]}]
   (list
     (for-tpl [y yticks]

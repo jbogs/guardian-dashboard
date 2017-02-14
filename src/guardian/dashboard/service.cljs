@@ -116,12 +116,11 @@
   (prn :device-data data)
   data)
 
-
 ;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn connect [url]
   (let [conn (cell (js/WebSocket. url))]
-       (cell= (set! (.-onclose conn) ~(fn [_] (reset! conn (js/WebSocket. url)))))
+    (cell= (set! (.-onclose conn) ~(fn [_] (reset! conn (js/WebSocket. url)))))
     (-> (fn [resolve reject]
           (set! (.-onopen  @conn) #(resolve conn))
           (set! (.-onerror @conn) #(reject %)))

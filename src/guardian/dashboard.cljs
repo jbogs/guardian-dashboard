@@ -41,7 +41,7 @@
 
 (defonce conn (atom nil))
 
-(defc state {:view :mb :index 0 :hist #queue[]})
+(defc state {:view :monitor :index 0 :hist #queue[]})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -243,7 +243,45 @@
     (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
       (cell= (-> data-model :temp :value (str "° C"))))))
 
+(defn monitor-view []
+  (list
+    (elem :sh (>sm (r 2 5)) :sv (r 1 1) :p g-lg :c grey-6
+      (image :s 34 :a :mid :url "mb-icon.svg"))
+    (elem :sh (>sm (r 3 5)) :sv (r 1 1) :g 1
+      (elem :sh (r 2 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+        (image :s 34 :a :mid :url "cpu-icon.svg"))
+      (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+        "test")
+      (elem :sh (r 2 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+        (image :s 34 :a :mid :url "memory-icon.svg"))
+      (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+        "test"))
+    (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
+      (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]
+        (let [selected (cell= (= idx (:index state)))]
+          (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
+            (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
+            (when-tpl (b true sm false md true)
+              (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
+                name)))))
+      (b nil sm (elem :sh (>sm 80 md 380) :sv (r 2 1) :c grey-6)))
+    (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c grey-6
+      (case-tpl view
+        :gpu      (gpu-view)
+        :hdd      (hdd-view)))))
+
 (defn keyboard-view []
+  (list
+    (title :name (cell= (:name data-model))
+      "Keyboard")
+    (elem :sh (r 1 1) :p 50 :g 50
+      (for-tpl [{:keys [id name] [h s l] :color} (cell= (:zones data-model))]
+       (elem :ah :mid :gv 20
+         (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue h :hue-changed #(set-keyboard-hue! @id %))
+         (elem font-4 :sh (r 1 1) :ah :mid
+           name))))))
+
+(defn fan-view []
   (list
     (title :name (cell= (:name data-model))
       "Keyboard")
@@ -273,7 +311,7 @@
         (elem :sh (r 1 1) :ah :mid font-2 :fc (white :a 0.9)
           "connecting")))
     (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
-      (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
+      (elem :sh (>sm 80 md 380) :sv (b nil sm (r 3 5)) :gv l
         (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]
           (let [selected (cell= (= idx (:index state)))]
             (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
@@ -282,11 +320,8 @@
                 (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
                   name)))))
         (b nil sm (elem :sh (>sm 80 md 380) :sv (r 2 1) :c grey-6)))
-      (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (r 2 1) :p g-lg :g g-lg :c grey-6
+      (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (b nil sm (r 3 5))
         (case-tpl view
-          :mb       (mb-view)
-          :cpu      (cpu-view)
-          :gpu      (gpu-view)
-          :memory   (memory-view)
-          :hdd      (hdd-view)
+          :monitor  (monitor-view)
+          :fan      (fan-view)
           :keyboard (keyboard-view))))))
