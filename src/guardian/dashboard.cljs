@@ -41,14 +41,15 @@
 
 (defonce conn (atom nil))
 
-(defc state {:view :monitor :index 0 :hist #queue[]})
+(defc state {:path [:system :gpu] :index 0 :hist #queue[]})
 (defc error nil)
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defc= hist  (-> state :hist))
 (defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
-(defc= view  (-> state :view))
+(defc= path  (-> state :path))
+(defc= view  (-> path first))
 
 (defc= hist-model (mapv #(get-in % [:devices (:index state 0)]) hist))
 (defc= data-model (-> hist-model last))
@@ -60,8 +61,9 @@
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn change-state! [view]
-  (swap! state assoc :view view))
+(defn change-state! [& args]
+  (prn :args args)
+  (swap! state assoc :path (vec args)))
 
 (defn change-route! [[[view] _]]
   (change-state! view))
@@ -243,7 +245,7 @@
     (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
       (cell= (-> data-model :temp :value (str "° C"))))))
 
-(defn monitor-view []
+(defn system-view []
   (list
     (elem :sh (>sm (r 2 5)) :sv (r 1 1) :p g-lg :c grey-6
       (image :s 34 :a :mid :url "mb-icon.svg"))
@@ -256,10 +258,10 @@
         (image :s 34 :a :mid :url "memory-icon.svg"))
       (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
         "test"))
-    #_(elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
+    (elem :sh (>sm 80 md 380) :sv (b nil sm (r 1 1)) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]
         (let [selected (cell= (= idx (:index state)))]
-          (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type @idx)
+          (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type)
             (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
             (when-tpl (b true sm false md true)
               (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
@@ -284,7 +286,7 @@
 (defn fan-view []
   (list
     (title :name (cell= (:name data-model))
-      "Keyboard")
+      "Fans")
     (elem :sh (r 1 1) :p 50 :g 50
       (for-tpl [{:keys [id name] [h s l] :color} (cell= (:zones data-model))]
        (elem :ah :mid :gv 20
@@ -294,7 +296,7 @@
 
 (window
   :title        "Xotic"
-  :route        (cell= [[view]])
+  :route        (cell= [path])
   :initiated    initiate!
   :routechanged change-route!
   :scroll (b true sm false) :c grey-4 :g l
@@ -310,18 +312,19 @@
         (image :url "loading-icon.png")
         (elem :sh (r 1 1) :ah :mid font-2 :fc (white :a 0.9)
           "connecting")))
-    (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
-      (elem :sh (>sm 80 md 380) :sv (b nil sm (r 3 5)) :gv l
-        (for-tpl [{label :label v :view} (cell= [{:view :monitor :label "Monitor"} {:view :keyboard :label "Keyboard"} {:view :fan :label "Fans"}])]
-          (let [selected (cell= (= view v))]
-            (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! v)
-              (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))
-              (when-tpl (b true sm false md true)
-                (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
-                  label)))))
-        (b nil sm (elem :sh (>sm 80 md 380) :sv (r 2 1) :c grey-6)))
-      (elem :sh (>sm (- (r 1 1) 80 l) md (- (r 1 1) 380 l)) :sv (b nil sm (r 3 5))
-        (case-tpl view
-          :monitor  (monitor-view)
+    (let [sh-close 80 sh-open 240]
+      (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
+        (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 3 5)) :gv l
+          (for-tpl [{label :label v :view} (cell= [{:view :system :label "System"} {:view :keyboard :label "Keyboard"} {:view :fan :label "Fans"}])]
+            (let [selected (cell= (= view v))]
+              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v)
+                (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))
+                (when-tpl (b true sm false md true)
+                  (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
+                    label)))))
+          (b nil sm (elem :sh (>sm sh-close md sh-open) :sv (r 2 1) :c grey-6)))
+      (elem :sh (>sm (- (r 1 1) sh-close l) md (- (r 1 1) sh-open l)) :sv (b nil sm (r 3 5))
+        (case-tpl (cell= (-> path first))
+          :system   (system-view)
           :fan      (fan-view)
-          :keyboard (keyboard-view))))))
+          :keyboard (keyboard-view)))))))
