@@ -54,7 +54,7 @@
 (defc= hist-model (mapv #(get-in % [:devices (:index state 0)]) hist))
 (defc= data-model (-> hist-model last))
 
-#_(cell= (cljs.pprint/pprint (-> state :hist last)))
+(cell= (cljs.pprint/pprint (-> state :hist last)))
 
 #_(cell= (prn :hist-model hist-model))
 #_(cell= (prn :data-model data-model))
@@ -135,7 +135,7 @@
         col #(hsl % (r 1 1) (r 1 2))
         lgr (apply lgr dir (map col (range 0 360 10)))]
     (elem :pt pos :c lgr :click #(reset! pos (mouse-y %))
-      (elem :s 20 :r 10 :c (cell= (col hue)) :b 2 :bc white :m :pointer)
+      (elem :s 20 :r 10 :c (cell= (col hue)) :b 2 :bc (white :a 0.8) :m :pointer)
       (dissoc attrs :dir :hue :hue-changed) elems)))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -203,12 +203,6 @@
 
 (defn gpu-view []
   (list
-    (title :name (cell= (:name data-model))
-      "GPU")
-    (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
-      :name "CPU Load"
-      :icon "capacity-icon.svg"
-      :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) hist-model)))
     #_(elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
@@ -225,17 +219,6 @@
       :name "Memory"
       :icon "copaciy-icon.svg"
       :data (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model)))))
-
-(defn hdd-view []
-  (list
-    (title :name (cell= (:name data-model))
-      "Hard Drive")
-    (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
-      :domain (cell= [{:label (->% (:used data-model)) :value (:used data-model)} {:label (->% (:free data-model)) :value (:free data-model)}])
-      :range  [{:color :green} {:color grey-4}])
-    (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)
-    #_(card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
-      (cell= (-> data-model :temp :value (str "° C"))))))
 
 (defn system-view []
   (list
@@ -254,23 +237,20 @@
          (image :s 34 :a :mid :url "memory-icon.svg"))
        (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
          "test"))
-    #_(elem :sh (>sm 80) :sv (b nil sm (r 1 3)) :gv l
-      (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]
-        (let [selected (cell= (= idx (:index state)))]
-          (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type)
-            (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg"))))
-            (when-tpl (b true sm false)
-              (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
-                name)))))
-      (b nil sm (elem :sh (>sm 80) :sv (r 2 1) :c grey-6)))
-    (panel :sh (>sm (r 1 2)) :sv (r 2 3)
+    (panel :sh (>sm (r 1 2)) :sv (r 1 3)
       :items          (cell= (:graphics-cards data))
       :selected-index (cell= (:selected-graphics-card-index state))
-      "graphics chart")
-    (panel :sh (>sm (r 1 2)) :sv (r 2 3)
+      (v/histogram font-4 :s (r 1 1) :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+        :name "GPU Load"
+        :icon "capacity-icon.svg"
+        :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) (mapv #(:gpu (get (:graphics-cards %) (:selected-graphics-card-index state 0))) (:hist state))))))
+    (panel :sh (>sm (r 1 2)) :sv (r 1 3)
       :items          (cell= (:hard-drives data))
       :selected-index (cell= (:selected-hard-drive-index state))
-      "drive chart")))
+      (v/histogram font-4 :s (r 1 1) :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+        :name "Space Used"
+        :icon "capacity-icon.svg"
+        :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) (mapv #(get (:hard-drives %) (:selected-hard-drive-index state 0)) (:hist state))))))))
 
 (defn keyboard-view []
   (elem :s (r 1 1) :p g-lg :c grey-6
