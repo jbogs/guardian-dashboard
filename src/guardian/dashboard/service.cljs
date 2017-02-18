@@ -59,7 +59,7 @@
      :cores (mapv #(assoc % :threads %2) cores* (partition 2 loads*))}))
 
 (defn hard-drive [{:keys [name loads temps]}]
-  {:name   name
+  {:name   (->> loads first :name (str name " "))
    :type   :hard-drive
    :volume (-> loads first :name)
    :used   (-> loads first name->sensor)
