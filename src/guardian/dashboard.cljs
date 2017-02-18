@@ -140,35 +140,28 @@
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem panel [{:keys [icon name] :as attrs} elems]
-  (elem (dissoc attrs :icon :name) :fc grey-1
-    (elem :sh (r 1 1) :c grey-4 :p g-lg :gh g-lg
-      (image :sv 40 :av :mid :url icon)
-      (elem :sv 40 :av :mid
-        name))
-    (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c grey-5
-      elems)))
-
-(defelem panel-table [{:keys [name] :as attrs} elems]
-  (elem (dissoc attrs :name)
-    (elem :sh (r 1 1) :p g-sm :ah :mid
-      name)
-    elems))
-
-(defelem panel-row [{:keys [name] :as attrs} elems]
-  (elem :fc grey-4 :pv g-sm (dissoc attrs :name)
-    (elem :sh (r 1 2)
-      name)
-    (elem :sh (r 1 2) :ah :end
-      elems)))
-
-(defelem card [{:keys [name icon] :as attrs} elems]
-  (elem (dissoc attrs :icon)
-    (elem font-3 :sh (r 1 1) :p 8
-      name)
-    (image :p 28 :sh (r 1 1) :a :mid :c grey-5 :url icon)
-    (elem font-3 :p 6 :sh (r 1 1) :sv (r 1 5) :a :mid :c grey-3 :fc (white :a 0.5)
-      elems)))
+(defelem panel [{:keys [items selected-index] :as attrs} elems]
+  (let [selected-index (cell= (or selected-index 0))
+        selected-item  (cell= (get items selected-index))]
+    (elem (dissoc attrs :items :index) :c grey-6 :fc grey-1
+      (if-tpl (cell= (> (count items) 1))
+        (elem :sh (r 1 1) :sv 64
+          (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
+            (let [selected (cell= (= idx selected-index))]
+              (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
+                :c     (cell= (if selected grey-4 grey-5))
+                :bc    (cell= (if selected red    grey-5))
+                :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
+                (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
+          (elem font-3 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :p g-lg :av :mid
+            (cell= (:name selected-item))))
+        (elem :sh (r 1 1) :sv 64
+          (elem :sh 64 :sv (r 1 1) :a :mid
+            (image :s 34 :a :mid :url (cell= (when-let [t (:type selected-item)] t (str (safe-name t) "-icon.svg")))))
+          (elem font-3 :sh (cell= (- (r 1 1) 64)) :sv (r 1 1) :p g-lg :av :mid
+             (cell= (:name selected-item)))))
+      (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c grey-5
+        elems))))
 
 (defelem title [{:keys [name] :as attrs} elems]
   (elem font-1 :sh (r 1 1) :g g-sm :av :end
@@ -216,7 +209,7 @@
       :name "CPU Load"
       :icon "capacity-icon.svg"
       :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) hist-model)))
-    (elem :g g-lg :av :end ;; remove after merging opts with vflatten
+    #_(elem :g g-lg :av :end ;; remove after merging opts with vflatten
       (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "%")))))))
@@ -241,11 +234,15 @@
       :domain (cell= [{:label (->% (:used data-model)) :value (:used data-model)} {:label (->% (:free data-model)) :value (:free data-model)}])
       :range  [{:color :green} {:color grey-4}])
     (elem :sh (r 1 1) :sv 300 :c grey-4 :b 10 :bc grey-5)
-    (card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
+    #_(card :sh 100 :name (cell= (-> data-model :temp :name)) :icon "mb-icon.svg"
       (cell= (-> data-model :temp :value (str "° C"))))))
 
 (defn system-view []
   (list
+     #_(panel :sh (>sm (r 1 2)) :sv (r 2 3)
+        :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))
+        :selected-index (cell= (:selected-graphics-card-index state))
+        "thermal zones")
      (elem :sh (>sm (r 2 5)) :sv (r 2 3) :p g-lg :c grey-6
        (image :s 34 :a :mid :url "mb-icon.svg"))
      (elem :sh (>sm (r 3 5)) :sv (r 2 3) :g 2
@@ -257,7 +254,7 @@
          (image :s 34 :a :mid :url "memory-icon.svg"))
        (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
          "test"))
-    (elem :sh (>sm 80) :sv (b nil sm (r 1 3)) :gv l
+    #_(elem :sh (>sm 80) :sv (b nil sm (r 1 3)) :gv l
       (for-tpl [[idx {:keys [name type]}] (cell= (map-indexed vector (:views data)))]
         (let [selected (cell= (= idx (:index state)))]
           (elem font-4 :sh (r 1 1) :s 80 :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @type)
@@ -266,19 +263,23 @@
               (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
                 name)))))
       (b nil sm (elem :sh (>sm 80) :sv (r 2 1) :c grey-6)))
-    (elem :sh (>sm (- (r 1 1) 80 l)) :sv (r 1 3) :p g-lg :g g-lg :c grey-6
-      (case-tpl (cell= (-> path second))
-        :gpu (gpu-view)
-        :hdd (hdd-view)))))
+    (panel :sh (>sm (r 1 2)) :sv (r 2 3)
+      :items          (cell= (:graphics-cards data))
+      :selected-index (cell= (:selected-graphics-card-index state))
+      "graphics chart")
+    (panel :sh (>sm (r 1 2)) :sv (r 2 3)
+      :items          (cell= (:hard-drives data))
+      :selected-index (cell= (:selected-hard-drive-index state))
+      "drive chart")))
 
 (defn keyboard-view []
-  (elem :s (r 1 1) :c grey-6
+  (elem :s (r 1 1) :p g-lg :c grey-6
     (title :name (cell= (:name data))
       "Keyboard")
-    (elem :sh (r 1 1) :p 50 :g 50
+    (elem :sh (r 1 1) :sv (>sm (r 1 1)) :a :mid :p 50 :g 50
       (for-tpl [{id :id z-name :name z-effect :effect [hue :as color] :color [beg-hue :as beg-color] :beg-color [end-hue :as end-color] :end-color :as zone} (cell= (:zones (:keyboard data)))]
         (let [zone (cell= zone #(s/set-keyboard-zone! @conn @id (:effect %) (:color %) (:beg-color %) (:end-color %)))]
-          (elem :sh 160 :ah :mid :g 20
+          (elem :sh 160 :ah :mid :g 40
             (elem :sh (r 1 1) :b 2 :bc grey-2
               (for [[effect [e-name _]] s/effects]
                 (elem font-4 :sh (r 1 1) :p 8 :m :pointer :c (cell= (if (= effect z-effect) grey-4 grey-5)) :fc (cell= (if (= effect z-effect) white grey-1)) :click #(swap! zone assoc :effect effect)

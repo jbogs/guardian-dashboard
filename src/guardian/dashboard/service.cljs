@@ -7,7 +7,7 @@
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def effects
-  {:color    ["Constant Color"  "static_color"]
+  {:color    ["Fixed Color"     "static_color"]
    :cpu-load ["CPU Load"        "cpu_load"]
    :cpu-temp ["CPU Temperature" "cpu_temp"]
    :gpu-load ["GPU Load"        "gpu_load"]
@@ -58,17 +58,17 @@
      :load  (get-sensor loads :cpu-load)
      :cores (mapv #(assoc % :threads %2) cores* (partition 2 loads*))}))
 
-(defn drive [{:keys [name loads temps]}]
+(defn hard-drive [{:keys [name loads temps]}]
   {:name   name
-   :type   :hdd
+   :type   :hard-drive
    :volume (-> loads first :name)
    :used   (-> loads first name->sensor)
    :free   (-> loads first name->sensor (update :value (partial - 100)))
    :temp   (get-sensor temps :hdd-temp)})
 
-(defn card [{:keys [name loads temps]}]
+(defn graphics-card [{:keys [name loads temps]}]
   {:name          name
-   :type          :gpu
+   :type          :graphics-card
    :gpu           {:name "GPU"
                    :temp (get-sensor loads :gpu-processor)
                    :load (get-sensor temps :gpu-processor)}
@@ -103,27 +103,23 @@
    :free {:value free}})
 
 (defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds]}]
-  {:name     name
-   :type     :mb
-   :zone-1   {:name "CPU Thermal Zone"
-              :desc "Located next to the CPU core on Intel boards"
-              :temp (get-sensor temps :zone-1)}
-   :zone-2   {:name "North Bridge Thermal Zone"
-              :desc "Located next to the CPU socket on Intel boards"
-              :temp (get-sensor temps :zone-2)}
-   :zone-3   {:name "South Bridge Thermal Zone"
-              :desc "Located next to the memory slots on Intel boards"
-              :temp (get-sensor temps :zone-3)}
-   :cpu       (cpu     (first cpus))
-   :gpu       {:name (-> gpus first :name)}
-   :memory   (memory mem)
-   :keyboard (keyboard kb)
-   :cards    (mapv card  (rest gpus))
-   :drives   (mapv drive       hdds)})
-
-(defn buffer-sensor-data [data]
-  (let [data (motherboard data)]
-    (assoc (dissoc data :cards :drives) :views (apply concat ((juxt :cards :drives) data)))))
+  {:name           name
+   :type           :mb
+   :zone-1         {:name "CPU Thermal Zone"
+                    :desc "Located next to the CPU core on Intel boards"
+                    :temp (get-sensor temps :zone-1)}
+   :zone-2         {:name "North Bridge Thermal Zone"
+                    :desc "Located next to the CPU socket on Intel boards"
+                    :temp (get-sensor temps :zone-2)}
+   :zone-3         {:name "South Bridge Thermal Zone"
+                    :desc "Located next to the memory slots on Intel boards"
+                    :temp (get-sensor temps :zone-3)}
+   :cpu             (cpu     (first cpus))
+   :gpu             {:name (-> gpus first :name)}
+   :memory         (memory mem)
+   :keyboard       (keyboard kb)
+   :graphics-cards (mapv graphics-card (rest gpus))
+   :hard-drives    (mapv hard-drive          hdds)})
 
 (defn device-data [data]
   (prn :device-data data)
@@ -147,7 +143,7 @@
   (let [cljs #(js->clj % :keywordize-keys true)
         parse #(-> % .-data js/JSON.parse cljs)]
     (with-let [_ conn]
-      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (buffer-sensor-data (:data d))))))))
+      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (motherboard (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
       (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn))))
 
