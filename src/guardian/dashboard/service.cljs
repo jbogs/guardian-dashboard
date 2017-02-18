@@ -1,10 +1,17 @@
 (ns guardian.dashboard.service
   (:require
-    [javelin.core :refer [cell cell=]]
+    [javelin.core :refer [with-let cell cell=]]
     [clojure.set  :refer [rename-keys]]
     [cljsjs.d3]))
 
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def effects
+  {:color    ["Constant Color"  "static_color"]
+   :cpu-load ["CPU Load"        "cpu_load"]
+   :cpu-temp ["CPU Temperature" "cpu_temp"]
+   :gpu-load ["GPU Load"        "gpu_load"]
+   :gpu-temp ["GPU Temperature" "gpu_temp"]})
 
 (def sensors
   {:cpu-power         "Package"
@@ -23,12 +30,14 @@
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn hsl->rgb [[h s l]]
-  (let [c (.rgb js/d3 (.hsl js/d3 h s l))]
-    (mapv int [(.-r c) (.-g c) (.-b c)])))
+  (when (and h s l)
+    (let [c (.rgb js/d3 (.hsl js/d3 h s l))]
+      (mapv js/parseInt [(.-r c) (.-g c) (.-b c)]))))
 
 (defn rgb->hsl [[r g b]]
-  (let [c (.hsl js/d3 (.rgb js/d3 r g b))]
-    (mapv int [(.-h c) (.-s c) (.-l c)])))
+  (when (and r g b)
+    (let [c (.hsl js/d3 (.rgb js/d3 r g b))]
+      (mapv js/parseFloat [(.-h c) (.-s c) (.-l c)]))))
 
 (defn name->sensor [reading]
   (rename-keys reading {:name :sensor}))
@@ -74,8 +83,12 @@
 
 (defn keyboard [keyboard]
   (let [zone #(hash-map
-                 :name  (->> % :zone (str "Zone "))
-                 :color (->> % :color rgb->hsl))
+                :id        (->> % :zone js/parseInt)
+                :name      (->> % :zone (str "Zone "))
+                :effect    (some (fn [[ k [_ n]]] (when (= n (:name %)) k)) effects)
+                :color     (-> % :color     rgb->hsl)
+                :beg-color (-> % :beg_color rgb->hsl)
+                :end-color (-> % :end_color rgb->hsl))
         zones (->> (dissoc keyboard :all)
                    (sort first)
                    (mapv (comp zone second)))]
@@ -133,15 +146,19 @@
 (defn bind-sensors! [conn state error & [poll-freq hist-max]]
   (let [cljs #(js->clj % :keywordize-keys true)
         data #(-> % .-data js/JSON.parse cljs :data)]
-  (cell= (set! (.-onmessage conn) ~(fn [e] (reset! state (buffer-sensor-data (data e))))))
-  (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
-  (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn)))
+    (with-let [_ conn]
+      (cell= (set! (.-onmessage conn) ~(fn [e] (reset! state (buffer-sensor-data (data e))))))
+      (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
+      (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn))))
 
 (defn get-devices [conn]
   (device-data (call "get_devices" conn)))
 
-(defn set-keyboard-zone! [conn zone color]
-  (call "set_keyboard_zones" conn :name "static_color" :zone (str zone) :color (hsl->rgb color)))
+(defn set-keyboard-zone!
+  ([conn zone color]
+   (set-keyboard-zone! conn zone :color color nil nil))
+  ([conn zone effect beg-color end-color]
+   (set-keyboard-zone! conn zone effect nil beg-color end-color))
+  ([conn zone effect color beg-color end-color]
+   (call "set_keyboard_zones" conn :zone (str zone) :name (-> effect effects second) :color (hsl->rgb color) :beg_color (hsl->rgb beg-color) :end_color (hsl->rgb end-color))))
 
-(defn set-plugin-effect! [conn effect]
-  (call "set_plugin_effect" conn :name "static_color" :effect effect))

@@ -25,9 +25,9 @@
       (g :transform (translate pl pt)
          elems))))
 
-(defelem path [{:keys [data] :as attrs}]
-  (chart (dissoc attrs :data)
-    (path :d data)))
+(defelem path [{:keys [data stroke] :as attrs}]
+  (chart :p stroke
+    (path :d data (dissoc attrs stroke :data))))
 
 (defelem grid [{:keys [bh bv xticks yticks]}]
   (list

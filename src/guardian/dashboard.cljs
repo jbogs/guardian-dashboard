@@ -54,7 +54,7 @@
 (defc= hist-model (mapv #(get-in % [:devices (:index state 0)]) hist))
 (defc= data-model (-> hist-model last))
 
-(cell= (cljs.pprint/pprint (-> state :hist last)))
+#_(cell= (cljs.pprint/pprint (-> state :hist last)))
 
 #_(cell= (prn :hist-model hist-model))
 #_(cell= (prn :data-model data-model))
@@ -62,7 +62,6 @@
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn change-state! [& args]
-  (prn :args args)
   (swap! state assoc :path (vec args)))
 
 (defn change-route! [[[view] _]]
@@ -277,11 +276,20 @@
     (title :name (cell= (:name data-model))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
-      (for-tpl [{:keys [id name] [h s l] :color} (cell= ((juxt :zone-1 :zone-2 :zone-3) data-model))]
-       (elem :ah :mid :gv 20
-         (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue h :hue-changed #(set-keyboard-hue! @id %))
-         (elem font-4 :sh (r 1 1) :ah :mid
-           name))))))
+      (for-tpl [{id :id z-name :name z-effect :effect [hue :as color] :color [beg-hue :as beg-color] :beg-color [end-hue :as end-color] :end-color :as zone} (cell= (:zones (:keyboard data)))]
+        (let [zone (cell= zone #(s/set-keyboard-zone! @conn @id (:effect %) (:color %) (:beg-color %) (:end-color %)))]
+          (elem :sh 160 :ah :mid :g 20
+            (elem :sh (r 1 1) :b 2 :bc grey-2
+              (for [[effect [e-name _]] s/effects]
+                (elem font-4 :sh (r 1 1) :p 8 :m :pointer :c (cell= (if (= effect z-effect) grey-4 grey-5)) :fc (cell= (if (= effect z-effect) white grey-1)) :click #(swap! zone assoc :effect effect)
+                  e-name)))
+            (if-tpl (cell= (= z-effect :color))
+              (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue hue :hue-changed #(swap! zone assoc :color [% 1 0.5]))
+              (list
+                (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue beg-hue :hue-changed #(swap! zone assoc :beg-color [% 1 0.5]))
+                (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue end-hue :hue-changed #(swap! zone assoc :end-color [% 1 0.5]))))
+            (elem font-4 :sh (r 1 1) :ah :mid
+              z-name)))))))
 
 (defn fan-view []
   (list
