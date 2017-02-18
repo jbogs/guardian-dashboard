@@ -237,24 +237,24 @@
          (image :s 34 :a :mid :url "memory-icon.svg"))
        (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
          "test"))
-    (panel :sh (>sm (r 1 2)) :sv (r 1 3)
+    (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
       :items          (cell= (:graphics-cards data))
       :selected-index (cell= (:selected-graphics-card-index state))
-      (v/histogram font-4 :s (r 1 1) :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+      (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
         :name "GPU Load"
         :icon "capacity-icon.svg"
         :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) (mapv #(:gpu (get (:graphics-cards %) (:selected-graphics-card-index state 0))) (:hist state))))))
-    (panel :sh (>sm (r 1 2)) :sv (r 1 3)
+    (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
       :items          (cell= (:hard-drives data))
       :selected-index (cell= (:selected-hard-drive-index state))
-      (v/histogram font-4 :s (r 1 1) :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
+      (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
         :name "Space Used"
         :icon "capacity-icon.svg"
         :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) (mapv #(get (:hard-drives %) (:selected-hard-drive-index state 0)) (:hist state))))))))
 
 (defn keyboard-view []
   (elem :s (r 1 1) :p g-lg :c grey-6
-    (title :name (cell= (:name data))
+    (title :name (cell= (-> data :keyboard :name))
       "Keyboard")
     (elem :sh (r 1 1) :sv (>sm (r 1 1)) :a :mid :p 50 :g 50
       (for-tpl [{id :id z-name :name z-effect :effect [hue :as color] :color [beg-hue :as beg-color] :beg-color [end-hue :as end-color] :end-color :as zone} (cell= (:zones (:keyboard data)))]

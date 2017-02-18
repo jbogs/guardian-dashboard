@@ -59,7 +59,7 @@
      :cores (mapv #(assoc % :threads %2) cores* (partition 2 loads*))}))
 
 (defn hard-drive [{:keys [name loads temps]}]
-  {:name   (->> loads first :name (str name " "))
+  {:name   (->> loads first :name (str name " ")) 
    :type   :hard-drive
    :volume (-> loads first :name)
    :used   (-> loads first name->sensor)
@@ -145,7 +145,7 @@
     (with-let [_ conn]
       (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (motherboard (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
-      (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn))))
+      (call "get_sensors" conn))))
 
 (defn get-devices [conn]
   (device-data (call "get_devices" conn)))
