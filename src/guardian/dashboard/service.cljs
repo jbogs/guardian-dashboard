@@ -145,9 +145,9 @@
 
 (defn bind-sensors! [conn state error & [poll-freq hist-max]]
   (let [cljs #(js->clj % :keywordize-keys true)
-        data #(-> % .-data js/JSON.parse cljs :data)]
+        parse #(-> % .-data js/JSON.parse cljs)]
     (with-let [_ conn]
-      (cell= (set! (.-onmessage conn) ~(fn [e] (reset! state (buffer-sensor-data (data e))))))
+      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (buffer-sensor-data (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
       (.setInterval js/window call (or poll-freq 1000) "get_sensors" conn))))
 

@@ -273,7 +273,7 @@
 
 (defn keyboard-view []
   (elem :s (r 1 1) :c grey-6
-    (title :name (cell= (:name data-model))
+    (title :name (cell= (:name data))
       "Keyboard")
     (elem :sh (r 1 1) :p 50 :g 50
       (for-tpl [{id :id z-name :name z-effect :effect [hue :as color] :color [beg-hue :as beg-color] :beg-color [end-hue :as end-color] :end-color :as zone} (cell= (:zones (:keyboard data)))]
