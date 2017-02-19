@@ -56,9 +56,6 @@
 
 (cell= (cljs.pprint/pprint (-> state :hist last)))
 
-#_(cell= (prn :hist-model hist-model))
-#_(cell= (prn :data-model data-model))
-
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn change-state! [& args]
@@ -106,6 +103,10 @@
 (def black   (rgb 0x181818))
 
 (defn temp->color [t]
+  (let [h (- (/ 1040 3) (/ (* 13 t) 3))]
+    (hsl h (r 1 1) (r 1 2))))
+
+#_(defn temp->color [t]
   (let [h (- 240 (/ (* 11 t) 5))]
     (hsl h (r 1 1) (r 1 2))))
 
@@ -119,14 +120,6 @@
 (def font-body  {:f 12 :ff ["Lato Medium"     :sans-serif] :fc black})
 
 ;-- controls ------------------------------------------------------------------;
-
-(defelem primary-button [attrs elems]
-  (elem font-label :pv 6 :ph 12 :c red :r 6
-    attrs elems))
-
-(defelem secondary-button [attrs elems]
-  (elem font-label :pv 4 :ph 10 :c grey-5 :r 6
-    attrs elems))
 
 (defelem hue-slider [{:keys [sh sv s dir hue hue-changed] :as attrs} elems]
   (let [hue (cell= hue (or hue-changed identity))
