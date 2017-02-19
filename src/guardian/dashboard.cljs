@@ -54,7 +54,7 @@
 (defc= hist-model (mapv #(get-in % [:devices (:index state 0)]) hist))
 (defc= data-model (-> hist-model last))
 
-(cell= (cljs.pprint/pprint (-> state :hist last)))
+#_(cell= (cljs.pprint/pprint (-> state :hist last)))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -214,7 +214,6 @@
         cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
         gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
         hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))]
-    (cell= (prn :mem-hist (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color grey-4) mem-hist)))
     (list
        #_(panel :sh (>sm (r 1 2)) :sv (r 2 3)
           :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))

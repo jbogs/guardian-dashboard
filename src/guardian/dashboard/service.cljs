@@ -145,7 +145,7 @@
     (with-let [_ conn]
       (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (motherboard (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
-      (call (or poll-freq 1000) "get_sensors" conn))))
+      (call "get_sensors" conn))))
 
 (defn get-devices [conn]
   (device-data (call "get_devices" conn)))
