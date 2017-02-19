@@ -100,7 +100,7 @@
      :zones zones}))
 
 (defn memory [{:keys [name free total] :as memory}]
-  {:name  "Memory"
+  {:name  name
    :type  :memory
    :used  {:value (- total free)}
    :total {:value total}})
