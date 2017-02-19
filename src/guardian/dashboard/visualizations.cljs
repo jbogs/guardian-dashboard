@@ -31,10 +31,10 @@
 
 (defelem grid [{:keys [bh bv xticks yticks]}]
   (list
-    (for-tpl [y yticks]
-      (line :x1 0 :x2 bh :y1 y :y2 y :stroke "#202020" :stroke-width 1))
-    (for-tpl [x xticks]
-      (line :x1 x :x2 x :y1 0 :y2 bv :stroke "#202020" :stroke-width 1))))
+    (for-tpl [y (drop 1 yticks)]
+      (line :x1 0 :x2 bh :y1 y :y2 y :stroke "#161616" :stroke-width 1))
+    (for-tpl [x (drop 1 xticks)]
+      (line :x1 x :x2 x :y1 0 :y2 bv :stroke "#161616" :stroke-width 1))))
 
 ;;; charts ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -53,7 +53,7 @@
           (let [x (cell= (- bh (- (* (count data) s) (* i s) o)))]
             (line :x1 x :y1 (cell= (- bv value)) :x2 x :y2 bv :stroke color :stroke-width s :stroke-linecap "round")))
         (grid :bh bh :bv bv :xticks (range 0 bh (* 10 s)) :yticks (range 0 bv (* 5 s))))
-      (elem :sh (r 1 1) :p 10 :av :mid
+      #_(elem :sh (r 1 1) :p 10 :av :mid
         (image :s 14 :url icon)
         (elem :sh (- (r 1 1) 24 10) :p 8
           name)))))

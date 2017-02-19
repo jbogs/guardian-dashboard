@@ -138,7 +138,7 @@
           (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
             (let [selected (cell= (= idx selected-index))]
               (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
-                :c     (cell= (if selected grey-4 grey-5))
+                :c     (cell= (if selected grey-5 grey-6))
                 :bc    (cell= (if selected red    grey-5))
                 :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
                 (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
@@ -149,7 +149,7 @@
             (image :s 34 :a :mid :url (cell= (when-let [t (:type selected-item)] t (str (safe-name t) "-icon.svg")))))
           (elem font-3 :sh (cell= (- (r 1 1) 64)) :sv (r 1 1) :p g-lg :av :mid
              (cell= (:name selected-item)))))
-      (elem :sh (r 1 1) :sv (- (r 1 1) 40 g-lg) :pv g-sm :ph g-lg :c grey-5
+      (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-6
         elems))))
 
 (defelem title [{:keys [name] :as attrs} elems]
@@ -190,12 +190,6 @@
         (card :sh 100 :name name :icon "mb-icon.svg"
           (cell= (str value "V")))))))
 
-(defn gpu-view []
-  (list
-    #_(elem :g g-lg :av :end ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:loads data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
-          (cell= (str value "%")))))))
 
 (defn memory-view []
   (list
@@ -219,13 +213,11 @@
           :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))
           :selected-index (cell= (:selected-graphics-card-index state))
           "thermal zones")
-       (elem :sh (>sm (r 2 5)) :sv (r 2 3) :p g-lg :c grey-6
-         (image :s 34 :a :mid :url "mb-icon.svg"))
        (elem :sh (>sm (r 3 5)) :sv (r 2 3) :g 2
          (panel :sh (r 2 3) :sv (b nil sm (r 1 2)) :c grey-6
            :items          (cell= (:cpus data))
            :selected-index (cell= (:selected-cpu-index state))
-           (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+           (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
              :name "CPU Load & Temperature"
              :icon "cpu-icon.svg"
              :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist))))
@@ -233,23 +225,25 @@
            "test")
          (panel :sh (r 2 3) :sv (b nil sm (r 1 2)) :c grey-6
            :items          (cell= [(:memory data)])
-           (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+           (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
              :name "Memory Utilization"
              :icon "memory-icon.svg"
              :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
          (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
            "test"))
+       (elem :sh (>sm (r 2 5)) :sv (r 2 3) :p g-lg :c grey-6
+         (image :s 34 :a :mid :url "mb-icon.svg"))
       (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
-        (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "GPU Load"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist))))
       (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
         :items          (cell= (:hard-drives data))
         :selected-index (cell= (:selected-hard-drive-index state))
-        (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "Drive Utilization"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) hds-hist)))))))
