@@ -4,7 +4,7 @@
     [hoplon.core     :refer [defelem for-tpl]]
     [hoplon.svg      :refer [g line rect]]
     [hoplon.ui       :refer [elem image svg]]
-    [hoplon.ui.attrs :refer [r translate]]
+    [hoplon.ui.attrs :refer [r rgb translate]]
     [hoplon.ui.elems :refer [in]]))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -64,13 +64,14 @@
       (cell= (str (:value data) "°C")))))
 
 (defelem cpu-capacity [{:keys [data cfn] :as attrs}]
-  (cell= (cljs.pprint/pprint data))
   (elem :d :pile (dissoc attrs :data :cfn)
     (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :temp :value cfn))
       (cell= (str (-> data :load :value) "%")))
     (elem :s (r 1 1)
-       (for-tpl [{{temp :value} :temp :keys [name threads]} (cell= (:cores data))]
-         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
+       (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
+         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid :av :end
+           (elem :sh (r 1 1) :ah :mid :fc (rgb 0x414141)
+             freq)
            (for-tpl [{{load :value} :load name :name} threads]
              (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp))))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
 
