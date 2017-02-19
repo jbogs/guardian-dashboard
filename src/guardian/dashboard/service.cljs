@@ -61,7 +61,7 @@
      :load  load
      :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))}))
 
-(defn hard-drive [{:keys [name loads temps]}]
+(defn hard-drive [{:keys [name loads temps] :as hdd}]
   {:name   (->> loads first :name (str name " "))
    :type   :hard-drive
    :volume (-> loads first :name)
@@ -93,7 +93,7 @@
                 :beg-color (-> % :beg_color rgb->hsl)
                 :end-color (-> % :end_color rgb->hsl))
         zones (->> (dissoc keyboard :all)
-                   (sort first)
+                   (sort-by first)
                    (mapv (comp zone second)))]
     {:name  "Keyboard"
      :type  :kb
@@ -122,7 +122,7 @@
    :keyboard       (keyboard kb)
    :cpus           (mapv cpu cpus)
    :graphics-cards (mapv graphics-card (rest gpus))
-   :hard-drives    (mapv hard-drive          hdds)})
+   :hard-drives    (into [] (sort-by :volume (mapv hard-drive hdds)))})
 
 (defn device-data [data]
   (prn :device-data data)
