@@ -49,14 +49,17 @@
 ;;; xforms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn cpu [{:keys [name clocks loads temps volts watts]}]
-  (let [temps* (remove #(= (:name %) (:cpu-temp sensors)) temps)
-        loads* (remove #(= (:name %) (:cpu-load sensors)) loads)
-        cores* (mapv #(hash-map :name (:name %) :freq (name->sensor %1) :temp (name->sensor %2)) clocks temps*)]
+  (let [load    (get-sensor loads :cpu-load)
+        temp    (get-sensor temps :cpu-temp)
+        loads*  (remove (partial = load) loads)
+        temps*  (remove (partial = temp) temps)
+        threads (mapv #(hash-map :name (:name %) :load (name->sensor %1)) loads*)
+        cores   (mapv #(hash-map :name (:name %) :freq (name->sensor %1) :temp (name->sensor %2)) clocks temps*)]
     {:name  name
      :type  :cpu
-     :temp  (get-sensor temps :cpu-temp)
-     :load  (get-sensor loads :cpu-load)
-     :cores (mapv #(assoc % :threads %2) cores* (partition 2 loads*))}))
+     :temp  temp
+     :load  load
+     :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))}))
 
 (defn hard-drive [{:keys [name loads temps]}]
   {:name   (->> loads first :name (str name " "))

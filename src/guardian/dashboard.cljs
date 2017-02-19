@@ -209,31 +209,29 @@
         gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
         hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))]
     (list
-       #_(panel :sh (>sm (r 1 2)) :sv (r 2 3)
-          :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))
-          :selected-index (cell= (:selected-graphics-card-index state))
-          "thermal zones")
-       (elem :sh (>sm (r 3 5)) :sv (r 2 3) :g 2
-         (panel :sh (r 2 3) :sv (b nil sm (r 1 2)) :c grey-6
+       (panel :sh (r 1 1) :sv (b nil sm (r 1 3)) :gh l :c grey-6
            :items          (cell= (:cpus data))
            :selected-index (cell= (:selected-cpu-index state))
-           (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
+           (v/histogram font-4 :sh (r 3 4) :sv (r 1 1) :c grey-5 :fc (white :a 0.6)
              :name "CPU Load & Temperature"
              :icon "cpu-icon.svg"
-             :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist))))
-         (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-           "test")
-         (panel :sh (r 2 3) :sv (b nil sm (r 1 2)) :c grey-6
+             :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist)))
+           (v/cpu-capacity font-4 :sh (r 1 4) :sv (r 1 1) :c grey-5
+            :cfn  temp->color
+            :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
+       (panel :sh (r 1 2) :sv (b nil sm (r 1 3)) :c grey-6
            :items          (cell= [(:memory data)])
            (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
              :name "Memory Utilization"
              :icon "memory-icon.svg"
              :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
-         (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-           "test"))
-       (elem :sh (>sm (r 2 5)) :sv (r 2 3) :p g-lg :c grey-6
-         (image :s 34 :a :mid :url "mb-icon.svg"))
-      (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
+      (panel :sh (r 1 2) :sv (b nil sm (r 1 3)) :c grey-6
+           :items          (cell= [(:memory data)])
+           (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
+             :name "Thermal Zones"
+             :icon "mb-icon.svg"
+             :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
+       (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
