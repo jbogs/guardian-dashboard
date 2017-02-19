@@ -106,10 +106,6 @@
   (let [h (- (/ 1040 3) (/ (* 13 t) 3))]
     (hsl h (r 1 1) (r 1 2))))
 
-#_(defn temp->color [t]
-  (let [h (- 240 (/ (* 11 t) 5))]
-    (hsl h (r 1 1) (r 1 2))))
-
 ;-- typography ----------------------------------------------------------------;
 
 (def font-1     {:f 21 :ff ["MagistralC Bold" :sans-serif] :fc white})
@@ -214,36 +210,44 @@
       :data (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model)))))
 
 (defn system-view []
-  (list
-     #_(panel :sh (>sm (r 1 2)) :sv (r 2 3)
-        :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))
+  (let [cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
+        gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
+        hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))]
+    (list
+       #_(panel :sh (>sm (r 1 2)) :sv (r 2 3)
+          :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))
+          :selected-index (cell= (:selected-graphics-card-index state))
+          "thermal zones")
+       (elem :sh (>sm (r 2 5)) :sv (r 2 3) :p g-lg :c grey-6
+         (image :s 34 :a :mid :url "mb-icon.svg"))
+       (elem :sh (>sm (r 3 5)) :sv (r 2 3) :g 2
+         (panel :sh (r 2 3) :sv (b nil sm (r 1 2)) :c grey-6
+           :items          (cell= (:cpus data))
+           :selected-index (cell= (:selected-cpu-index state))
+           (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+           :name "CPU Load & Temperature"
+           :icon "cpu-icon.svg"
+           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist))))
+         (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+           "test")
+         (elem :sh (r 2 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+           (image :s 34 :a :mid :url "memory-icon.svg"))
+         (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
+           "test"))
+      (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
+        :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
-        "thermal zones")
-     (elem :sh (>sm (r 2 5)) :sv (r 2 3) :p g-lg :c grey-6
-       (image :s 34 :a :mid :url "mb-icon.svg"))
-     (elem :sh (>sm (r 3 5)) :sv (r 2 3) :g 2
-       (elem :sh (r 2 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-         (image :s 34 :a :mid :url "cpu-icon.svg"))
-       (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-         "test")
-       (elem :sh (r 2 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-         (image :s 34 :a :mid :url "memory-icon.svg"))
-       (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-         "test"))
-    (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
-      :items          (cell= (:graphics-cards data))
-      :selected-index (cell= (:selected-graphics-card-index state))
-      (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
-        :name "GPU Load"
-        :icon "capacity-icon.svg"
-        :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) (mapv #(:gpu (get (:graphics-cards %) (:selected-graphics-card-index state 0))) (:hist state))))))
-    (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
-      :items          (cell= (:hard-drives data))
-      :selected-index (cell= (:selected-hard-drive-index state))
-      (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
-        :name "Space Used"
-        :icon "capacity-icon.svg"
-        :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) (mapv #(get (:hard-drives %) (:selected-hard-drive-index state 0)) (:hist state))))))))
+        (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+          :name "GPU Load"
+          :icon "capacity-icon.svg"
+          :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist))))
+      (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
+        :items          (cell= (:hard-drives data))
+        :selected-index (cell= (:selected-hard-drive-index state))
+        (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+          :name "Drive Utilization"
+          :icon "capacity-icon.svg"
+          :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) hds-hist)))))))
 
 (defn keyboard-view []
   (elem :s (r 1 1) :p g-lg :c grey-6

@@ -59,7 +59,7 @@
      :cores (mapv #(assoc % :threads %2) cores* (partition 2 loads*))}))
 
 (defn hard-drive [{:keys [name loads temps]}]
-  {:name   (->> loads first :name (str name " ")) 
+  {:name   (->> loads first :name (str name " "))
    :type   :hard-drive
    :volume (-> loads first :name)
    :used   (-> loads first name->sensor)
@@ -114,10 +114,10 @@
    :zone-3         {:name "South Bridge Thermal Zone"
                     :desc "Located next to the memory slots on Intel boards"
                     :temp (get-sensor temps :zone-3)}
-   :cpu             (cpu     (first cpus))
    :gpu             {:name (-> gpus first :name)}
    :memory         (memory mem)
    :keyboard       (keyboard kb)
+   :cpus           (mapv cpu cpus)
    :graphics-cards (mapv graphics-card (rest gpus))
    :hard-drives    (mapv hard-drive          hdds)})
 
