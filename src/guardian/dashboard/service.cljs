@@ -97,10 +97,10 @@
      :zones zones}))
 
 (defn memory [{:keys [name free total] :as memory}]
-  {:name "Memory"
-   :type :memory
-   :used {:value (- total free)}
-   :free {:value free}})
+  {:name  "Memory"
+   :type  :memory
+   :used  {:value (- total free)}
+   :total {:value total}})
 
 (defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds]}]
   {:name           name

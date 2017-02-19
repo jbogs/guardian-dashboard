@@ -210,9 +210,11 @@
       :data (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model)))))
 
 (defn system-view []
-  (let [cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
+  (let [mem-hist  (cell= (mapv :memory (:hist state)))
+        cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
         gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
         hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))]
+    (cell= (prn :mem-hist (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color grey-4) mem-hist)))
     (list
        #_(panel :sh (>sm (r 1 2)) :sv (r 2 3)
           :items          (cell= ((juxt :zone-1 :zone-2 :zone-3) data))
@@ -225,13 +227,17 @@
            :items          (cell= (:cpus data))
            :selected-index (cell= (:selected-cpu-index state))
            (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
-           :name "CPU Load & Temperature"
-           :icon "cpu-icon.svg"
-           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist))))
+             :name "CPU Load & Temperature"
+             :icon "cpu-icon.svg"
+             :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist))))
          (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
            "test")
-         (elem :sh (r 2 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
-           (image :s 34 :a :mid :url "memory-icon.svg"))
+         (panel :sh (r 2 3) :sv (b nil sm (r 1 2)) :c grey-6
+           :items          (cell= [(:memory data)])
+           (v/histogram font-4 :s (r 1 1) :c grey-4 :fc (white :a 0.6)
+             :name "Memory Utilization"
+             :icon "memory-icon.svg"
+             :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
          (elem :sh (r 1 3) :sv (b nil sm (r 1 2)) :p g-lg :c grey-6
            "test"))
       (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
