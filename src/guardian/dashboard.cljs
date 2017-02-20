@@ -132,7 +132,7 @@
 (defelem panel [{:keys [items selected-index] :as attrs} elems]
   (let [selected-index (cell= (or selected-index 0))
         selected-item  (cell= (get items selected-index))]
-    (elem (dissoc attrs :items :index) :c grey-6 :fc grey-1
+    (elem :c grey-6 :fc grey-1 (dissoc attrs :items :index)
       (if-tpl (cell= (> (count items) 1))
         (elem :sh (r 1 1) :sv 64
           (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
@@ -191,25 +191,22 @@
         (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
           :cfn  temp->color
           :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
-       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
+      (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
+        :items          (cell= (:graphics-cards data))
+        :selected-index (cell= (:selected-graphics-card-index state))
+        (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
+          :name "GPU Load"
+          :icon "capacity-icon.svg"
+          :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
+        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
+          :cfn  temp->color
+          :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
+      (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :items (cell= [(:memory data)])
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "Memory Utilization"
           :icon "memory-icon.svg"
           :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
-      (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
-        :items (cell= [(:memory data)])
-        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
-          :name "Thermal Zones"
-          :icon "mb-icon.svg"
-          :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
-      (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
-        :items          (cell= (:graphics-cards data))
-        :selected-index (cell= (:selected-graphics-card-index state))
-        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
-          :name "GPU Load"
-          :icon "capacity-icon.svg"
-          :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :items          (cell= (:hard-drives data))
         :selected-index (cell= (:selected-hard-drive-index state))
@@ -254,7 +251,7 @@
   :route        (cell= [path])
   :initiated    initiate!
   :routechanged change-route!
-  :scroll       (b false sm true md) :c grey-4 :g 2
+  :scroll       (b true sm false) :c grey-4 :g 2
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
