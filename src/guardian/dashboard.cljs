@@ -174,71 +174,43 @@
             :cfn  temp->color
             :data temp))))))
 
-(defn cpu-view []
-  (list
-    (title :name (cell= (:name data-model))
-      "CPU")
-    (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
-      :name "CPU Load"
-      :icon "capacity-icon.svg"
-      :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) hist-model)))
-    (v/cpu-capacity font-4 :sh (>sm 300) :sv 300 :c grey-4 :b 10 :bc grey-5
-      :cfn  temp->color
-      :data data-model)
-    #_(elem :g g-lg :av :end ;; remove after merging opts with vflatten
-      (for-tpl [{:keys [name value]} (cell= (:volts data-model))]
-        (card :sh 100 :name name :icon "mb-icon.svg"
-          (cell= (str value "V")))))))
-
-
-(defn memory-view []
-  (list
-    (title :name (cell= (:name data-model))
-      "Memory")
-    (v/dist-chart font-4 :sh (r 1 1) :sv 100 :c grey-5 :fc (white :a 0.5)
-      :domain (cell= [{:label (->GB (:used data-model)) :value (:used data-model)} {:label (->GB (:free data-model)) :value (:free data-model)}])
-      :range  [{:color :green} {:color grey-4}])
-    (v/histogram font-4 :sh (r 1 1) :sv 400 :c grey-5 :fc (white :a 0.5)
-      :name "Memory"
-      :icon "copaciy-icon.svg"
-      :data (cell= (mapv #(hash-map :label "" :value (* (/ (:used %) (:free %)) 400)) hist-model)))))
-
 (defn system-view []
-  (let [mem-hist  (cell= (mapv :memory (:hist state)))
+  (let [sv-sm     280
+        mem-hist  (cell= (mapv :memory (:hist state)))
         cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
         gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
         hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))]
     (list
-       (panel :sh (r 1 1) :sv (b nil sm (r 1 3)) :gh l :c grey-6
-           :items          (cell= (:cpus data))
-           :selected-index (cell= (:selected-cpu-index state))
-           (v/histogram font-4 :sh (r 3 4) :sv (r 1 1) :c grey-5 :fc (white :a 0.6)
-             :name "CPU Load & Temperature"
-             :icon "cpu-icon.svg"
-             :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist)))
-           (v/cpu-capacity font-4 :sh (r 1 4) :sv (r 1 1) :c grey-5
-            :cfn  temp->color
-            :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
-       (panel :sh (r 1 2) :sv (b nil sm (r 1 3)) :c grey-6
-           :items          (cell= [(:memory data)])
-           (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
-             :name "Memory Utilization"
-             :icon "memory-icon.svg"
-             :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
-      (panel :sh (r 1 2) :sv (b nil sm (r 1 3)) :c grey-6
-           :items          (cell= [(:memory data)])
-           (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
-             :name "Thermal Zones"
-             :icon "mb-icon.svg"
-             :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
-       (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
+      (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
+        :items          (cell= (:cpus data))
+        :selected-index (cell= (:selected-cpu-index state))
+        (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
+          :name "CPU Load & Temperature"
+          :icon "cpu-icon.svg"
+          :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist)))
+        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
+          :cfn  temp->color
+          :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
+       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
+        :items (cell= [(:memory data)])
+        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
+          :name "Memory Utilization"
+          :icon "memory-icon.svg"
+          :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
+      (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
+        :items (cell= [(:memory data)])
+        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
+          :name "Thermal Zones"
+          :icon "mb-icon.svg"
+          :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
+      (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "GPU Load"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist))))
-      (panel :sh (>sm (r 1 2)) :sv (r 1 3) :c grey-6
+      (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :items          (cell= (:hard-drives data))
         :selected-index (cell= (:selected-hard-drive-index state))
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
@@ -247,13 +219,13 @@
           :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) hds-hist)))))))
 
 (defn keyboard-view []
-  (elem :s (r 1 1) :p g-lg :c grey-6
+  (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6
     (title :name (cell= (-> data :keyboard :name))
       "Keyboard")
-    (elem :sh (r 1 1) :sv (>sm (r 1 1)) :a :mid :p 50 :g 50
+    (elem :s (r 1 1) :a :mid :p (b g-sm sm 50) :g (b g-sm sm 50)
       (for-tpl [{id :id z-name :name z-effect :effect [hue :as color] :color [beg-hue :as beg-color] :beg-color [end-hue :as end-color] :end-color :as zone} (cell= (:zones (:keyboard data)))]
         (let [zone (cell= zone #(s/set-keyboard-zone! @conn @id (:effect %) (:color %) (:beg-color %) (:end-color %)))]
-          (elem :sh 160 :ah :mid :g 40
+          (elem :sh 140 :ah :mid :g 40
             (elem :sh (r 1 1) :b 2 :bc grey-2
               (for [[effect [e-name _]] s/effects]
                 (elem font-4 :sh (r 1 1) :p 8 :m :pointer :c (cell= (if (= effect z-effect) grey-4 grey-5)) :fc (cell= (if (= effect z-effect) white grey-1)) :click #(swap! zone assoc :effect effect)
@@ -267,7 +239,7 @@
               z-name)))))))
 
 (defn fan-view []
-  (list
+  (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6
     (title :name (cell= (:name data-model))
       "Fans")
     (elem :sh (r 1 1) :p 50 :g 50
@@ -282,7 +254,7 @@
   :route        (cell= [path])
   :initiated    initiate!
   :routechanged change-route!
-  :scroll (b true sm false) :c grey-4 :g 2
+  :scroll       (b false sm true md) :c grey-4 :g 2
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
