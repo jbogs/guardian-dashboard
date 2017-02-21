@@ -104,7 +104,7 @@
 
 (defn temp->color [t]
   (let [h (- (/ 1040 3) (/ (* 13 t) 3))]
-    (hsl h (r 1 1) (r 1 2))))
+    (hsl h (r 4 5) (r 9 20))))
 
 ;-- typography ----------------------------------------------------------------;
 
@@ -134,7 +134,7 @@
         selected-item  (cell= (get items selected-index))]
     (elem :c grey-6 :fc grey-1 (dissoc attrs :items :index)
       (if-tpl (cell= (> (count items) 1))
-        (elem :sh (r 1 1) :sv 64
+        (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
           (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
             (let [selected (cell= (= idx selected-index))]
               (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
@@ -149,7 +149,7 @@
             (image :s 34 :a :mid :url (cell= (when-let [t (:type selected-item)] t (str (safe-name t) "-icon.svg")))))
           (elem font-3 :sh (cell= (- (r 1 1) 64)) :sv (r 1 1) :p g-lg :av :mid
              (cell= (:name selected-item)))))
-      (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-6
+      (elem :sh (r 1 1) :sv (- (r 1 1) 64)
         elems))))
 
 (defelem title [{:keys [name] :as attrs} elems]
@@ -158,21 +158,6 @@
         name)
       (elem font-4 :fc red
         elems)))
-
-(defn mb-view []
-  (list
-    (title :name (cell= (:name data-model))
-      "Motherboard")
-    (elem :sh (r 1 1) :g g-lg
-      (for-tpl [{:keys [name temp] :as zone} (cell= (:zones data-model))]
-        (list
-          (v/histogram font-4 :sh (>sm (- (r 1 1) 300 g-lg)) :sv 300 :c grey-4 :b 10 :bc grey-5 :fc (white :a 0.6)
-            :name name
-            :icon "temperature-icon.svg"
-            :data (cell= (mapv #(hash-map :value (-> % :temp :value) :color (-> % :temp :value temp->color)) (mapv #(some (fn [v] (when (= v zone) v)) (:zones %)) hist-model))))
-          (v/gauge font-4 :sh (>sm 300) :sv 300 :c grey-4 :b 10 :bc grey-5
-            :cfn  temp->color
-            :data temp))))))
 
 (defn system-view []
   (let [sv-sm     280
@@ -188,7 +173,7 @@
           :name "CPU Load & Temperature"
           :icon "cpu-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist)))
-        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
+        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl 2 :bc grey-4
           :cfn  temp->color
           :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
@@ -198,9 +183,9 @@
           :name "GPU Load"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
-        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
+        (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
           :cfn  temp->color
-          :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
+          :data (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :items (cell= [(:memory data)])
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
