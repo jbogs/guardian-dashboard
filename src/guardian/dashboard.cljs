@@ -133,7 +133,7 @@
   (let [selected-index (cell= (when (> (count items) 1) (or selected-index 0)))
         selected-item  (cell= (get items (or selected-index 0)))]
     (elem :c grey-6 :fc grey-1 (dissoc attrs :items :index)
-      (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6 :ph g-lg
+      (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
         (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
           (let [selected (cell= (and (= idx selected-index)))]
             (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
@@ -141,10 +141,10 @@
               :bc    (cell= (if selected red    grey-5))
               :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
               (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
-        (elem font-4 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :av :mid :f (b 14 sm 12 md 16 lg 18)
-          (elem :sh (- (r 1 1) 100) :sv (r 1 1) :l :text
+        (elem font-4 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :ph g-lg :av :mid
+          (elem :sh (- (r 1 1) 100) :sv (r 1 1) :f (b 14 sm 12 md 16 lg 18) :l :text
             (cell= (name-fn selected-item)))
-          (elem :sh 100 :ah :end :l :text :fc (white :a 0.5)
+          (elem :sh 100 :ah :end :l :text :f (b 12 sm 14 md 18 lg 21) :fc (white :a 0.6)
             (cell= (value-fn selected-item)))))
       (elem :sh (r 1 1) :sv (- (r 1 1) 64)
         elems))))
@@ -172,7 +172,7 @@
           :name "CPU Load & Temperature"
           :icon "cpu-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist)))
-        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl 2 :bc grey-4
+        (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
           :cfn  temp->color
           :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
@@ -184,7 +184,7 @@
           :name "GPU Load"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
-        (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl 2 :bc grey-4
+        (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
           :cfn  temp->color
           :data (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
@@ -262,7 +262,7 @@
               (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v :gpu)
                 (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))
                 (when-tpl (b true sm false md true)
-                  (elem :sh (b 300 sm (- (r 1 1) 34 g-lg))
+                  (elem :sh (b 120 sm (- (r 1 1) 34 g-lg))
                     label)))))
           (b nil sm (elem :sh (>sm sh-close md sh-open) :sv (r 2 1) :c grey-6)))
       (elem :sh (>sm (- (r 1 1) sh-close l) md (- (r 1 1) sh-open l)) :sv (b nil sm (r 1 1)) :g 2
