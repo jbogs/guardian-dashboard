@@ -130,25 +130,19 @@
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defelem panel [{:keys [items selected-index] :as attrs} elems]
-  (let [selected-index (cell= (or selected-index 0))
+  (let [selected-index (cell= (when (> (count items) 1) (or selected-index 0)))
         selected-item  (cell= (get items selected-index))]
     (elem :c grey-6 :fc grey-1 (dissoc attrs :items :index)
-      (if-tpl (cell= (> (count items) 1))
-        (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
-          (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
-            (let [selected (cell= (= idx selected-index))]
-              (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
-                :c     (cell= (if selected grey-5 grey-6))
-                :bc    (cell= (if selected red    grey-5))
-                :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
-                (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
-          (elem font-3 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :p g-lg :av :mid
-            (cell= (:name selected-item))))
-        (elem :sh (r 1 1) :sv 64
-          (elem :sh 64 :sv (r 1 1) :a :mid
-            (image :s 34 :a :mid :url (cell= (when-let [t (:type selected-item)] t (str (safe-name t) "-icon.svg")))))
-          (elem font-3 :sh (cell= (- (r 1 1) 64)) :sv (r 1 1) :p g-lg :av :mid
-             (cell= (:name selected-item)))))
+      (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
+        (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
+          (let [selected (cell= (and (= idx selected-index)))]
+            (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
+              :c     (cell= (if selected grey-5 grey-6))
+              :bc    (cell= (if selected red    grey-5))
+              :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
+              (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
+        (elem font-3 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :p g-lg :av :mid
+          (cell= (:name selected-item))))
       (elem :sh (r 1 1) :sv (- (r 1 1) 64)
         elems))))
 
