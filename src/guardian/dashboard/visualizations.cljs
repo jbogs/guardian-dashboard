@@ -65,29 +65,43 @@
 
 (defelem cpu-capacity [{:keys [data cfn] :as attrs}]
   (elem :d :pile (dissoc attrs :data :cfn)
-    (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :temp :value cfn))
+    #_(elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :temp :value cfn))
       (cell= (str (-> data :load :value) "%")))
+    (elem :s (r 1 1) :pt 8
+      (for-tpl [{{temp :value} :temp {freq :value} :freq name :name} (cell= (:cores data))]
+         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid
+           #_(elem :sh (r 1 1) :ah :mid :f 10 :fc "#141414"
+             name)
+           (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
+             (cell= (str (/ freq 100) "GHz"))))))
+    (elem :s (r 1 1)
+       (for-tpl [{{temp :value} :temp :keys [name threads]} (cell= (:cores data))]
+         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid :av :end
+           (for-tpl [{{load :value} :load name :name} threads]
+             (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp))))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
+
+(defelem gpu-capacity [{:keys [data cfn] :as attrs}]
+  (prn :data @data)
+  (elem :d :pile (dissoc attrs :data :cfn)
+    (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :gpu :temp :value cfn))
+      (cell= (str (-> data :gpu :load :value) "%")))
     (elem :s (r 1 1)
        (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
          (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid :av :end
            (elem :sh (r 1 1) :ah :mid :fc (rgb 0x414141)
              freq)
            (for-tpl [{{load :value} :load name :name} threads]
-             (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp))))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
+             (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp)))))))))
 
-#_(elem :s 300 :c grey-4 :b 10 :bc grey-5
-  (for-tpl [{:keys [name temp threads]} (cell= (:cores data-model))]
-    (elem :sh (cell= (r 1 (count (:cores data-model)))) :sv (r 1 1) :gh 8 :ah :mid :av :end
-      (for-tpl [{:keys [name load]} threads]
-        (elem :sh 2 :sv (cell= (+ (* load 3) 10)) :r 6 :c (cell= (condp < temp 40 :blue 50 :yellow :red)))))))
-
-#_(defelem line-chart [{:keys [labels series styles] :as attrs} _]
-  (with-let [e (elem (dissoc attrs :labels :series))]
-    (doto (js/Chartist.Line. (in e) (clj->js {:labels labels :series series :pointSmooth false :lineSmooth false}))
-      (.on "draw" #(when-let [style (some (fn [[k v]] (prn :k k :v v :t (.-type %)) (= (.-type %) (name k)) v) styles)]
-        (.attr (.-element %) #js{:style style}))))))
-
-#_(v/line-chart :sh (r 1 1) :sv (- (r 1 1) 30)
-      :labels (->> (range) (take 11) (mapv #(str (* 10 %) "%")))
-      :series [[0 5 8 10 8 10 8 10]]
-      :styles {:line "stroke: red"})
+#_(defelem gpu-capacity [{:keys [data cfn] :as attrs}]
+  (prn :data @data)
+  (elem :d :pile (dissoc attrs :data :cfn)
+    (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :gpu :temp :value cfn))
+      (cell= (str (-> data :gpu :load :value) "%")))
+    (elem :s (r 1 1)
+       (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
+         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid :av :end
+           (elem :sh (r 1 1) :ah :mid :fc (rgb 0x414141)
+             freq)
+           (for-tpl [{{load :value} :load name :name} threads]
+             (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp)))))))))
