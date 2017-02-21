@@ -40,7 +40,8 @@
       (mapv js/parseFloat [(.-h c) (.-s c) (.-l c)]))))
 
 (defn name->sensor [reading]
-  (rename-keys reading {:name :sensor}))
+  (-> (rename-keys reading {:name :sensor})
+      (update :value int)))
 
 (defn get-sensor [coll sensor]
  (-> (some #(when (= (sensor sensors) (:name %)) %) coll)
@@ -62,7 +63,7 @@
      :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))}))
 
 (defn hard-drive [{:keys [name loads temps] :as hdd}]
-  {:name   (->> loads first :name (str name " "))
+  {:name   name #_(->> loads first :name (str name " "))
    :type   :hard-drive
    :volume (-> loads first :name)
    :used   (-> loads first name->sensor)

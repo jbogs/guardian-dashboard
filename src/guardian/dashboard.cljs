@@ -129,11 +129,11 @@
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem panel [{:keys [items selected-index] :as attrs} elems]
+(defelem panel [{:keys [items selected-index name-fn value-fn] :as attrs} elems]
   (let [selected-index (cell= (when (> (count items) 1) (or selected-index 0)))
-        selected-item  (cell= (get items selected-index))]
+        selected-item  (cell= (get items (or selected-index 0)))]
     (elem :c grey-6 :fc grey-1 (dissoc attrs :items :index)
-      (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
+      (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6 :ph g-lg
         (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
           (let [selected (cell= (and (= idx selected-index)))]
             (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
@@ -141,8 +141,11 @@
               :bc    (cell= (if selected red    grey-5))
               :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
               (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
-        (elem font-3 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :p g-lg :av :mid
-          (cell= (:name selected-item))))
+        (elem font-4 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :av :mid :f (b 14 sm 12 md 16 lg 18)
+          (elem :sh (- (r 1 1) 100) :sv (r 1 1) :l :text
+            (cell= (name-fn selected-item)))
+          (elem :sh 100 :ah :end :l :text
+            (cell= (value-fn selected-item)))))
       (elem :sh (r 1 1) :sv (- (r 1 1) 64)
         elems))))
 
@@ -161,6 +164,8 @@
         hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))]
     (list
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
+        :name-fn        :name
+        :value-fn       #(str (:value (:load %)) "% " (:value (:temp %)) "°")
         :items          (cell= (:cpus data))
         :selected-index (cell= (:selected-cpu-index state))
         (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
@@ -171,22 +176,28 @@
           :cfn  temp->color
           :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
+        :name-fn        :name
+        :value-fn       #(str (-> % :gpu :load :value) "% " (-> % :gpu :temp :value) "°")
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
         (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
           :name "GPU Load"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
-        (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5
+        (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl 2 :bc grey-4
           :cfn  temp->color
           :data (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
+        :name-fn        :name
+        :value-fn       #(-> % :used :value (/ 1000000000) (.toFixed 2) (str "G"))
         :items (cell= [(:memory data)])
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "Memory Utilization"
           :icon "memory-icon.svg"
           :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
+        :name-fn        :name
+        :value-fn       #(str (-> % :used :value #_(/ 1000000000) #_(.toFixed 2)) "% " (-> % :temp :value) "°")
         :items          (cell= (:hard-drives data))
         :selected-index (cell= (:selected-hard-drive-index state))
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
