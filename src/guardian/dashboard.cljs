@@ -144,7 +144,7 @@
         (elem font-4 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :av :mid :f (b 14 sm 12 md 16 lg 18)
           (elem :sh (- (r 1 1) 100) :sv (r 1 1) :l :text
             (cell= (name-fn selected-item)))
-          (elem :sh 100 :ah :end :l :text
+          (elem :sh 100 :ah :end :l :text :fc (white :a 0.5)
             (cell= (value-fn selected-item)))))
       (elem :sh (r 1 1) :sv (- (r 1 1) 64)
         elems))))
