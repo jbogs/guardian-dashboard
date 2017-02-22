@@ -257,7 +257,7 @@
     (let [sh-close 80 sh-open 240]
       (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
         (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 3 5)) :gv l
-          (for-tpl [{label :label v :view} (cell= [{:view :system :label "System Monitor"} {:view :keyboard :label "Keyboard Settings"} {:view :fan :label "Fan Settings"}])]
+          (for-tpl [{label :label v :view} (cell= [{:view :system :label "System Monitor"} {:view :keyboard :label "Keyboard Settings"} #_{:view :fan :label "Fan Settings"}])]
             (let [selected (cell= (= view v))]
               (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v :gpu)
                 (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))

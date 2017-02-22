@@ -64,24 +64,23 @@
       (cell= (str (:value data) "°C")))))
 
 (defelem cpu-capacity [{:keys [data cfn] :as attrs}]
-  (elem :d :pile (dissoc attrs :data :cfn)
-    #_(elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :temp :value cfn))
-      (cell= (str (-> data :load :value) "%")))
-    (elem :s (r 1 1) :pt 8
-      (for-tpl [{{temp :value} :temp {freq :value} :freq name :name} (cell= (:cores data))]
-         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid
-           #_(elem :sh (r 1 1) :ah :mid :f 10 :fc "#141414"
-             name)
-           (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
-             (cell= (str (/ freq 100) "GHz"))))))
-    (elem :s (r 1 1)
-       (for-tpl [{{temp :value} :temp :keys [name threads]} (cell= (:cores data))]
-         (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid :av :end
-           (for-tpl [{{load :value} :load name :name} threads]
-             (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp))))))))) ;; can't use ratio because of https://github.com/hoplon/ui/issues/25
+  (let [b 300 s 4 p (/ b 11)]
+    (elem :d :pile (dissoc attrs :data :cfn)
+      (elem :s (r 1 1) :pt 8
+        (for-tpl [{{temp :value} :temp {freq :value} :freq name :name} (cell= (:cores data))]
+           (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid
+             (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
+               (cell= (str (/ freq 100) "GHz"))))))
+      (chart :s (r 1 1) :b b
+         (for-tpl [[i {{temp :value} :temp :keys [name threads]}] (cell= (map-indexed vector (:cores data)))]
+            (let [w (cell= (- (/ b (count (:cores data))) (* 2 p)))]
+              (g :transform (cell= (translate (+ p (* i (/ b (count (:cores data))))) 0))
+                (for-tpl [[j {{load :value} :load name :name}] (cell= (map-indexed vector threads))]
+                  (let [x (cell= (+ (* j (/ w (count threads))) (/ w 4)))]
+                    (line :x1 x :y1 (cell= (- b load)) :x2 x :y2 b :stroke (cell= (cfn temp)) :stroke-width s :stroke-linecap "round"))))))))))
 
 (defelem gpu-capacity [{:keys [data cfn] :as attrs}]
-  (prn :data @data)
+  #_(prn :data @data)
   (elem :d :pile (dissoc attrs :data :cfn)
     (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :gpu :temp :value cfn))
       (cell= (str (-> data :gpu :load :value) "%")))
