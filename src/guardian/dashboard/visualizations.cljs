@@ -64,22 +64,24 @@
       (cell= (str (:value data) "°C")))))
 
 (defelem cpu-capacity [{:keys [data cfn] :as attrs}]
-  (let [b 300 s 4 p (/ b 11)]
+  (let [b 300 s 4 p (/ b 11) h 70]
     (elem :d :pile (dissoc attrs :data :cfn)
       (elem :s (r 1 1) :pt 8
-        (for-tpl [{{temp :value} :temp {freq :value} :freq name :name} (cell= (:cores data))]
+        (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
            (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 4 :ah :mid
               (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
                  (cell= (str (/ freq 100) "GHz")))
               (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
-                 (cell= (str temp "°"))))))
+                 (cell= (str temp "°")))
+              (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
+                 (cell= (apply str (interpose " " (mapv #(-> % :load :value (str "%")) threads))))))))
       (chart :s (r 1 1) :b b
          (for-tpl [[i {{temp :value} :temp :keys [name threads]}] (cell= (map-indexed vector (:cores data)))]
             (let [w (cell= (- (/ b (count (:cores data))) (* 2 p)))]
               (g :transform (cell= (translate (+ p (* i (/ b (count (:cores data))))) 0))
                 (for-tpl [[j {{load :value} :load name :name}] (cell= (map-indexed vector threads))]
                   (let [x (cell= (+ (* j (/ w (count threads))) (/ w 4)))]
-                    (line :x1 x :y1 (cell= (- b load)) :x2 x :y2 b :stroke (cell= (cfn temp)) :stroke-width s :stroke-linecap "round"))))))))))
+                    (line :x1 x :y1 (cell= (- b (* (/ load 100) (- b h)))) :x2 x :y2 b :stroke (cell= (cfn temp)) :stroke-width s :stroke-linecap "round"))))))))))
 
 (defelem gpu-capacity [{:keys [data cfn] :as attrs}]
   #_(prn :data @data)
