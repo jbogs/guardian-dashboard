@@ -70,7 +70,7 @@
         (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
            (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 2 :ah :mid
               (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
-                 (cell= (str (/ freq 100) "GHz")))
+                 (cell= (str (/ freq 1000) "GHz")))
               (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
                  (cell= (str temp "°")))
               (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
