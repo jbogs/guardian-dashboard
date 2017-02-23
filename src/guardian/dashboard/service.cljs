@@ -71,19 +71,24 @@
    :temp   (get-sensor temps :hdd-temp)})
 
 (defn graphics-card [{:keys [name loads temps]}]
-  {:name          name
-   :type          :graphics-card
-   :gpu           {:name "GPU"
-                   :temp (get-sensor temps :gpu-processor)
-                   :load (get-sensor loads :gpu-processor)}
-   :memory        {:name "Memory"
-                   :load (get-sensor loads :gpu-memory)}
-   :frame-buffer  {:name "Frame Buffer"
-                   :load (get-sensor loads :gpu-frame-buffer)}
-   :video-engine  {:name "Video Engine"
-                   :temp (get-sensor loads :gpu-video-engine)}
-   :bus-interface {:name "Bus Interface"
-                   :temp (get-sensor loads :gpu-bus-interface)}})
+  (let [card {:name name :type :graphics-card}]
+    (if (seq loads)
+      (assoc card
+        :name          name
+        :type          :graphics-card
+        :integrated?   false
+        :gpu           {:name "GPU"
+                        :temp (get-sensor temps :gpu-processor)
+                        :load (get-sensor loads :gpu-processor)}
+        :memory        {:name "Memory"
+                        :load (get-sensor loads :gpu-memory)}
+        :frame-buffer  {:name "Frame Buffer"
+                        :load (get-sensor loads :gpu-frame-buffer)}
+        :video-engine  {:name "Video Engine"
+                        :temp (get-sensor loads :gpu-video-engine)}
+        :bus-interface {:name "Bus Interface"
+                        :temp (get-sensor loads :gpu-bus-interface)})
+      (assoc card :integrated? true))))
 
 (defn keyboard [keyboard]
   (let [zone #(hash-map
@@ -122,7 +127,7 @@
    :memory         (memory mem)
    :keyboard       (keyboard kb)
    :cpus           (mapv cpu cpus)
-   :graphics-cards (mapv graphics-card (rest gpus))
+   :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
    :hard-drives    (into [] (sort-by :volume (mapv hard-drive hdds)))})
 
 (defn device-data [data]

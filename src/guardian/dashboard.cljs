@@ -180,13 +180,17 @@
         :value-fn       #(str (-> % :gpu :load :value) "% " (-> % :gpu :temp :value) "°")
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
-        (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
-          :name "GPU Load"
-          :icon "capacity-icon.svg"
-          :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
-        (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
-          :cfn  temp->color
-          :data (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))))
+        (if-tpl (cell= (:integrated? (get (:graphics-cards data) (:selected-graphics-card-index state 0))))
+          (elem font-4 :s (r 1 1) :a :mid :fc (white :a 0.6)
+            "No sensor data available for integrated GPU.")
+          (list
+            (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
+              :name "GPU Load"
+              :icon "capacity-icon.svg"
+              :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
+            (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
+              :cfn  temp->color
+              :data (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :name-fn        :name
         :value-fn       #(-> % :used :value (/ 1000000000) (.toFixed 2) (str "G"))
