@@ -7,7 +7,7 @@
                   [adzerk/boot-reload        "0.4.13"         :scope "test"]
                   [adzerk/env                "0.3.1"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
-                  [tailrecursion/boot-bucket "0.1.0-SNAPSHOT" :scope "test"]
+                  [tailrecursion/boot-bucket "0.2.0-SNAPSHOT" :scope "test"]
                   [cljsjs/d3                 "4.3.0-3"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 
