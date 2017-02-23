@@ -102,9 +102,10 @@
 (def grey-6  (rgb 0x161616))
 (def black   (rgb 0x181818))
 
-(defn temp->color [t]
-  (let [h (- (/ 1040 3) (/ (* 13 t) 3))]
-    (hsl h (r 4 5) (r 9 20))))
+(defn temp->color [d1 d2]
+  (fn [t]
+    (let [h (v/scale-linear [d1 d2] [260 0])]
+      (hsl (h t) (r 4 5) (r 9 20)))))
 
 ;-- typography ----------------------------------------------------------------;
 
@@ -162,7 +163,9 @@
         cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
         gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
         hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))
-        gc        (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))]
+        gc        (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))
+        cpu-color (temp->color 20 80)
+        hdd-color (temp->color 20 50)]
     (list
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
         :name-fn        :name
@@ -172,9 +175,9 @@
         (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
           :name "CPU Load & Temperature"
           :icon "cpu-icon.svg"
-          :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value temp->color)) cpus-hist)))
+          :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value cpu-color)) cpus-hist)))
         (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
-          :cfn  temp->color
+          :cfn  cpu-color
           :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
         :name-fn        :name
@@ -188,9 +191,9 @@
             (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
               :name "GPU Load"
               :icon "capacity-icon.svg"
-              :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value temp->color)) gcs-hist)))
+              :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value cpu-color)) gcs-hist)))
             (v/gpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
-              :cfn  temp->color
+              :cfn  cpu-color
               :data gc))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
         :name-fn        :name
@@ -208,7 +211,7 @@
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "Drive Utilization"
           :icon "capacity-icon.svg"
-          :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value temp->color)) hds-hist)))))))
+          :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
 (defn keyboard-view []
   (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6

@@ -9,6 +9,10 @@
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn scale-linear [[d1 d2] [r1 r2]]
+  (let [m (/ (- r2 r1) (- d2 d1))]
+    (fn [x] (+ (* m (- x d1)) r1))))
+
 (defelem chart [{:keys [b bh bv p ph pv pl pr pt pb] :as attrs} elems]
   "construct a vector image suitable for data visualizations where the size is
    the sum of the fill and the padding.  this is necessary because svg strokes
