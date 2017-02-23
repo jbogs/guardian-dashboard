@@ -204,14 +204,14 @@
           :icon "memory-icon.svg"
           :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
       (panel :sh (>sm (r 1 2)) :sv (b sv-sm sm (r 1 3)) :c grey-6
-        :name-fn        :name
-        :value-fn       #(str (-> % :used :value #_(/ 1000000000) #_(.toFixed 2)) "% " (-> % :temp :value) "°")
+        :name-fn        #(apply str (:name %) " " (interpose " & " (mapv :name (:volumes %))))
+        :value-fn       #(str (-> % :load :value int) "% " (-> % :temp :value) "°")
         :items          (cell= (:hard-drives data))
         :selected-index (cell= (:selected-hard-drive-index state))
         (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
           :name "Drive Utilization"
           :icon "capacity-icon.svg"
-          :data (cell= (mapv #(hash-map :value (-> % :used :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
+          :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
 (defn keyboard-view []
   (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6

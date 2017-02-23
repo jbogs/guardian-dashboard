@@ -63,12 +63,11 @@
      :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))}))
 
 (defn hard-drive [{:keys [name loads temps] :as hdd}]
-  {:name   name #_(->> loads first :name (str name " "))
-   :type   :hard-drive
-   :volume (-> loads first :name)
-   :used   (-> loads first name->sensor)
-   :free   (-> loads first name->sensor (update :value (partial - 100)))
-   :temp   (get-sensor temps :hdd-temp)})
+  {:name    name
+   :type    :hard-drive
+   :temp    (hash-map :value (apply + (mapv :value temps)))
+   :load    (hash-map :value (apply + (mapv :value loads)))
+   :volumes (mapv #(hash-map :name (:name %1) :load (name->sensor %1) :temp (name->sensor %2)) loads temps)})
 
 (defn graphics-card [{:keys [name loads temps]}]
   (let [card {:name name :type :graphics-card}]
@@ -128,7 +127,7 @@
    :keyboard       (keyboard kb)
    :cpus           (mapv cpu cpus)
    :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
-   :hard-drives    (into [] (sort-by :volume (mapv hard-drive hdds)))})
+   :hard-drives    (into [] (sort-by (comp :name first :volumes) (mapv hard-drive hdds)))})
 
 (defn device-data [data]
   (prn :device-data data)
