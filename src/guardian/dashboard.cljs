@@ -185,7 +185,7 @@
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
         (if-tpl (cell= (:integrated? gc))
-          (elem font-4 :s (r 1 1) :a :mid :fc (white :a 0.6)
+          (elem font-2 :s (r 1 1) :a :mid :fc (white :a 0.6) :c grey-5
             "No sensor data available for integrated GPU.")
           (list
             (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
@@ -216,7 +216,7 @@
 (defn keyboard-view []
   (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6
     (title :name (cell= (-> data :keyboard :name))
-      "Keyboard")
+      "Lighting")
     (elem :s (r 1 1) :a :mid :p (b g-sm sm 50) :g (b g-sm sm 50)
       (for-tpl [{id :id z-name :name z-effect :effect [hue :as color] :color [beg-hue :as beg-color] :beg-color [end-hue :as end-color] :end-color :as zone} (cell= (:zones (:keyboard data)))]
         (let [zone (cell= zone #(s/set-keyboard-zone! @conn @id (:effect %) (:color %) (:beg-color %) (:end-color %)))]
