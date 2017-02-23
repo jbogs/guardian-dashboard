@@ -20,7 +20,8 @@
   '[tailrecursion.boot-static :refer [serve]])
 
 (def buckets
-  {:xotic "xoticpcgui"})
+  {:guardian "guardiangui"
+   :xotic    "xoticpcgui"})
 
 (def services
   {:local     "ws://localhost:8000"
