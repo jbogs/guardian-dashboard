@@ -28,7 +28,7 @@ boot develop -v -s <local|laptop|aws> -o <none|whitespace|simple|advanced>
 
 to deploy the application to the staging environment in a aws bucket, from the project root:
 ```
-boot deploy -e exotic
+boot deploy -e <exotic|guardian> -s <local|laptop|aws> -o <none|whitespace|simple|advanced>
 ```
 
 then navigate the browser to:
@@ -40,12 +40,8 @@ then navigate the browser to:
 
 to build the application as part of the larger product:
 ```
-boot package
+boot package -o <none|whitespace|simple|advanced>
 ```
-
-## License
-
-Copyright © 2016, **VigilanceTech.com**
 
 [1]: http://boot-clj.com
 [2]: http://localhost:8000
