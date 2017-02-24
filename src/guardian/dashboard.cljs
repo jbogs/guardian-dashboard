@@ -41,8 +41,8 @@
 
 (defonce conn (atom nil))
 
-(defc state {:path [:system :gpu] :index 0 :hist #queue[]})
-(defc error nil)
+(defonce state (cell {:path [:system :gpu] :index 0 :hist #queue[]}))
+(defonce error (cell nil))
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -50,9 +50,6 @@
 (defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
 (defc= path  (-> state :path))
 (defc= view  (-> path first))
-
-(defc= hist-model (mapv #(get-in % [:devices (:index state 0)]) hist))
-(defc= data-model (-> hist-model last))
 
 #_(cell= (cljs.pprint/pprint (-> state :hist last)))
 
@@ -116,7 +113,7 @@
 (def font-label {:f 14 :ff ["Lato Semibold"   :sans-serif] :fc black})
 (def font-body  {:f 12 :ff ["Lato Medium"     :sans-serif] :fc black})
 
-;-- controls ------------------------------------------------------------------;
+;;; controls ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defelem hue-slider [{:keys [sh sv s dir hue hue-changed] :as attrs} elems]
   (let [hue (cell= hue (or hue-changed identity))
@@ -235,14 +232,7 @@
 
 (defn fan-view []
   (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6
-    (title :name (cell= (:name data-model))
-      "Fans")
-    (elem :sh (r 1 1) :p 50 :g 50
-      (for-tpl [{:keys [id name] [h s l] :color} (cell= (:zones data-model))]
-       (elem :ah :mid :gv 20
-         (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue h :hue-changed #(set-keyboard-hue! @id %))
-         (elem font-4 :sh (r 1 1) :ah :mid
-           name))))))
+    (title "Fans")))
 
 (window
   :title        "Xotic"
@@ -267,7 +257,7 @@
         (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 3 5)) :gv l
           (for-tpl [{label :label v :view} (cell= [{:view :system :label "System Monitor"} {:view :keyboard :label "Keyboard Settings"} #_{:view :fan :label "Fan Settings"}])]
             (let [selected (cell= (= view v))]
-              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v :gpu)
+              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v)
                 (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))
                 (when-tpl (b true sm false md true)
                   (elem :sh (b 120 sm (- (r 1 1) 34 g-lg))
