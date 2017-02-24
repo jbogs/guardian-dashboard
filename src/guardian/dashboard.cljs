@@ -41,15 +41,15 @@
 
 (defonce conn (atom nil))
 
-(defonce state (cell {:path [:system :gpu] :index 0 :hist #queue[]}))
+(defonce state (cell {:path [:system] :hist #queue[]}))
 (defonce error (cell nil))
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc= hist  (-> state :hist))
-(defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
-(defc= path  (-> state :path))
-(defc= view  (-> path first))
+(defonce hist  (cell= (-> state :hist)))
+(defonce data  (cell= (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %)))))
+(defonce path  (cell= (-> state :path)))
+(defonce view  (cell= (-> path first)))
 
 #_(cell= (cljs.pprint/pprint (-> state :hist last)))
 
@@ -164,6 +164,7 @@
         cpu-color (temp->color 20 80)
         hdd-color (temp->color 20 50)]
     (list
+      (elem "hi again dud")
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
         :name-fn        :name
         :value-fn       #(str (:value (:load %)) "% " (:value (:temp %)) "°")
