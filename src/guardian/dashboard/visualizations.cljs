@@ -68,7 +68,7 @@
 
 (defelem gauge [{:keys [data cfn] :as attrs}]
   (elem :d :pile (dissoc attrs :data :cfn)
-    (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :value cfn))
+    (elem :s (r 1 1) :a :mid :t 36 :ts 2 :tc (cell= (-> data :value cfn)) ; font weight 500
       (cell= (str (:value data) "°C")))))
 
 (defelem cpu-capacity [{:keys [data cfn] :as attrs}]
@@ -77,11 +77,11 @@
       (elem :s (r 1 1) :pt 8
         (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
            (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 2 :ah :mid
-              (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
+              (elem :sh (r 1 1) :ah :mid :t 12 :tc (cell= (cfn temp))
                  (cell= (str temp "°")))
-              (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
+              (elem :sh (r 1 1) :ah :mid :t 12 :tc (cell= (cfn temp))
                  (cell= (str (/ freq 1000) "GHz")))
-              (elem :sh (r 1 1) :ah :mid :f 12 :fc (cell= (cfn temp))
+              (elem :sh (r 1 1) :ah :mid :t 12 :tc (cell= (cfn temp))
                  (cell= (apply str (interpose " " (mapv #(-> % :load :value (str "%")) threads))))))))
       (chart :s (r 1 1) :b b
          (for-tpl [[i {{temp :value} :temp :keys [name threads]}] (cell= (map-indexed vector (:cores data)))]
@@ -93,12 +93,12 @@
 
 (defelem gpu-capacity [{:keys [data cfn] :as attrs}]
   (elem :d :pile (dissoc attrs :data :cfn)
-    (elem :s (r 1 1) :a :mid :f 36 :fw 2 :ft :500 :fc (cell= (-> data :gpu :temp :value cfn))
+    (elem :s (r 1 1) :a :mid :t 36 :ts 2 :tc (cell= (-> data :gpu :temp :value cfn))
       (cell= (str (-> data :gpu :load :value) "%")))
     (elem :s (r 1 1)
        (for-tpl [{{temp :value} :temp {freq :value} :freq :keys [name threads]} (cell= (:cores data))]
          (elem :sh (cell= (r 1 (count (:cores data)))) :sv (r 1 1) :g 8 :ah :mid :av :end
-           (elem :sh (r 1 1) :ah :mid :fc (rgb 0x414141)
+           (elem :sh (r 1 1) :ah :mid :tc (rgb 0x414141)
              freq)
            (for-tpl [{{load :value} :load name :name} threads]
              (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp)))))))))

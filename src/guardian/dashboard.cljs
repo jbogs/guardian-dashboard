@@ -9,7 +9,7 @@
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- r d rgb hsl lgr]]))
+    [hoplon.ui.attrs :refer [- r d font rgb hsl lgr]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -46,10 +46,10 @@
 
 ;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defonce hist  (cell= (-> state :hist)))
-(defonce data  (cell= (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %)))))
-(defonce path  (cell= (-> state :path)))
-(defonce view  (cell= (-> path first)))
+(defc= hist  (-> state :hist))
+(defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
+(defc= path  (-> state :path))
+(defc= view  (-> path first))
 
 #_(cell= (cljs.pprint/pprint (-> state :hist last)))
 
@@ -106,12 +106,16 @@
 
 ;-- typography ----------------------------------------------------------------;
 
-(def font-1     {:f 21 :ff ["MagistralC Bold" :sans-serif] :fc white})
-(def font-2     {:f 18 :ff ["MagistralC Bold" :sans-serif] :fc white})
-(def font-3     {:f 16 :ff ["MagistralC Bold" :sans-serif] :fc white})
-(def font-4     {:f 14 :ff ["MagistralC Bold" :sans-serif] :fc white})
-(def font-label {:f 14 :ff ["Lato Semibold"   :sans-serif] :fc black})
-(def font-body  {:f 12 :ff ["Lato Medium"     :sans-serif] :fc black})
+(def magistralc-bold (font :system ["MagistralC Bold"] :opentype "magistralc-bold.otf"))
+(def lato-semibold   (font :system ["Lato Semibold"]   :truetype "lato-semibold.ttf"))
+(def lato-medium     (font :system ["Lato Medium"]     :truetype "lato-medium.ttf"))
+
+(def font-1     {:t 21 :tf magistralc-bold :tc white})
+(def font-2     {:t 18 :tf magistralc-bold :tc white})
+(def font-3     {:t 16 :tf magistralc-bold :tc white})
+(def font-4     {:t 14 :tf magistralc-bold :tc white})
+(def font-label {:t 14 :tf lato-semibold   :tc black})
+(def font-body  {:t 12 :tf lato-medium     :tc black})
 
 ;;; controls ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -130,7 +134,7 @@
 (defelem panel [{:keys [items selected-index name-fn value-fn] :as attrs} elems]
   (let [selected-index (cell= (when (> (count items) 1) (or selected-index 0)))
         selected-item  (cell= (get items (or selected-index 0)))]
-    (elem :c grey-6 :fc grey-1 (dissoc attrs :items :index)
+    (elem :c grey-6 :tc grey-1 (dissoc attrs :items :index)
       (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
         (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
           (let [selected (cell= (and (= idx selected-index)))]
@@ -140,9 +144,9 @@
               :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
               (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
         (elem font-4 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :ph g-lg :av :mid
-          (elem :sh (- (r 1 1) 100) :sv (r 1 1) :f (b 14 sm 12 md 16 lg 18) :l :text
+          (elem :sh (- (r 1 1) 100) :sv (r 1 1) :t (b 14 sm 12 md 16 lg 18) :ms :text
             (cell= (name-fn selected-item)))
-          (elem :sh 100 :ah :end :l :text :f (b 16 sm 14 md 18 lg 21) :fc (white :a 0.6)
+          (elem :sh 100 :ah :end :ms :text :t (b 16 sm 14 md 18 lg 21) :tc (white :a 0.6)
             (cell= (value-fn selected-item)))))
       (elem :sh (r 1 1) :sv (- (r 1 1) 64)
         elems))))
@@ -151,7 +155,7 @@
   (elem font-1 :sh (r 1 1) :g g-sm :av :end
       (elem font-1
         name)
-      (elem font-4 :fc red
+      (elem font-4 :tc red
         elems)))
 
 (defn system-view []
@@ -164,13 +168,12 @@
         cpu-color (temp->color 20 80)
         hdd-color (temp->color 20 50)]
     (list
-      (elem "hi again dud")
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
         :name-fn        :name
         :value-fn       #(str (:value (:load %)) "% " (:value (:temp %)) "°")
         :items          (cell= (:cpus data))
         :selected-index (cell= (:selected-cpu-index state))
-        (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
+        (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :tc (white :a 0.6)
           :name "CPU Load & Temperature"
           :icon "cpu-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value cpu-color)) cpus-hist)))
@@ -183,10 +186,10 @@
         :items          (cell= (:graphics-cards data))
         :selected-index (cell= (:selected-graphics-card-index state))
         (if-tpl (cell= (:integrated? gc))
-          (elem font-2 :s (r 1 1) :a :mid :fc (white :a 0.6) :c grey-5
+          (elem font-2 :s (r 1 1) :a :mid :tc (white :a 0.6) :c grey-5
             "No sensor data available for integrated GPU.")
           (list
-            (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :fc (white :a 0.6)
+            (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :tc (white :a 0.6)
               :name "GPU Load"
               :icon "capacity-icon.svg"
               :data (cell= (mapv #(hash-map :value (-> % :gpu :load :value) :color (-> % :gpu :temp :value cpu-color)) gcs-hist)))
@@ -197,7 +200,7 @@
         :name-fn        :name
         :value-fn       #(-> % :used :value (/ 1000000000) (.toFixed 2) (str "G"))
         :items (cell= [(:memory data)])
-        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
+        (v/histogram font-4 :s (r 1 1) :c grey-5 :tc (white :a 0.6)
           :name "Memory Utilization"
           :icon "memory-icon.svg"
           :data (cell= (mapv #(hash-map :value (* (/ (-> % :used :value) (-> % :total :value)) 100) :color "grey") mem-hist))))
@@ -206,7 +209,7 @@
         :value-fn       #(str (-> % :load :value int) "% " (-> % :temp :value) "°")
         :items          (cell= (:hard-drives data))
         :selected-index (cell= (:selected-hard-drive-index state))
-        (v/histogram font-4 :s (r 1 1) :c grey-5 :fc (white :a 0.6)
+        (v/histogram font-4 :s (r 1 1) :c grey-5 :tc (white :a 0.6)
           :name "Drive Utilization"
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
@@ -221,7 +224,7 @@
           (elem :sh 140 :ah :mid :g 40
             (elem :sh (r 1 1) :b 2 :bc grey-2
               (for [[effect [e-name _]] s/effects]
-                (elem font-4 :sh (r 1 1) :p 8 :m :pointer :c (cell= (if (= effect z-effect) grey-4 grey-5)) :fc (cell= (if (= effect z-effect) white grey-1)) :click #(swap! zone assoc :effect effect)
+                (elem font-4 :sh (r 1 1) :p 8 :m :pointer :c (cell= (if (= effect z-effect) grey-4 grey-5)) :tc (cell= (if (= effect z-effect) white grey-1)) :click #(swap! zone assoc :effect effect)
                   e-name)))
             (if-tpl (cell= (= z-effect :color))
               (hue-slider :sh 20 :sv 300 :r 10 :dir 180 :hue hue :hue-changed #(swap! zone assoc :color [% 1 0.5]))
@@ -251,14 +254,14 @@
     (elem :s (r 1 1) :pb 200 :a :mid :c black
       (elem :s 100 :g 10 :ah :mid
         (image :url "loading-icon.png")
-        (elem :sh (r 1 1) :ah :mid font-2 :fc (white :a 0.9)
+        (elem :sh (r 1 1) :ah :mid font-2 :tc (white :a 0.9)
           "connecting")))
     (let [sh-close 80 sh-open 240]
       (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
         (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 3 5)) :gv l
           (for-tpl [{label :label v :view} (cell= [{:view :system :label "System Monitor"} {:view :keyboard :label "Keyboard Settings"} #_{:view :fan :label "Fan Settings"}])]
             (let [selected (cell= (= view v))]
-              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :fc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v)
+              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :tc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v)
                 (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))
                 (when-tpl (b true sm false md true)
                   (elem :sh (b 120 sm (- (r 1 1) 34 g-lg))
