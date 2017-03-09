@@ -7,7 +7,8 @@
                   [adzerk/boot-reload        "0.4.13"         :scope "test"]
                   [adzerk/env                "0.3.1"          :scope "test"]
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
-                  [tailrecursion/boot-bucket "0.2.0-SNAPSHOT" :scope "test"]
+                  [tailrecursion/boot-bucket "0.2.1-SNAPSHOT" :scope "test"]
+                  [tailrecursion/boot-front  "0.1.0-SNAPSHOT" :scope "test"]
                   [cljsjs/d3                 "4.3.0-3"]
                   [hoplon/ui                 "0.1.0-SNAPSHOT"]])
 
@@ -17,11 +18,16 @@
   '[adzerk.boot-reload        :refer [reload]]
   '[hoplon.boot-hoplon        :refer [hoplon]]
   '[tailrecursion.boot-bucket :refer [spew]]
+  '[tailrecursion.boot-front  :refer [burst]]
   '[tailrecursion.boot-static :refer [serve]])
 
 (def buckets
   {:guardian "guardiangui"
    :xotic    "xoticpcgui"})
+
+(def distributions
+  {:guardian "guardian"
+   :xotic   "xotipcdistro"})
 
 (def services
   {:local     "ws://localhost:8000"
@@ -54,8 +60,9 @@
    s service       SVC kw "The service the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (assert environment "Missing required environment argument.")
-  (let [b (buckets environment)]
-    (comp (build :optimizations optimizations :service service) (spew :bucket b))))
+  (let [b (buckets       environment)
+        d (distributions environment)]
+    (comp (build :optimizations optimizations :service service) (spew :bucket b) (burst :distribution d))))
 
 (deftask package
   "Build the application with advanced optimizations then dump it into the tgt folder."
@@ -67,4 +74,6 @@
   serve {:port 7000}
   sift  {:include #{#"index.html.out/" #"guardian/"} :invert true}
   spew  {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
+         :secret-key (System/getenv "ROOT_JBOG_AWS_SECRET_KEY")}
+  burst {:access-key (System/getenv "ROOT_JBOG_AWS_ACCESS_KEY")
          :secret-key (System/getenv "ROOT_JBOG_AWS_SECRET_KEY")})
