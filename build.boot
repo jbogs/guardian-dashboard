@@ -10,7 +10,7 @@
                   [tailrecursion/boot-bucket "0.2.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-front  "0.1.0-SNAPSHOT" :scope "test"]
                   [cljsjs/d3                 "4.3.0-3"]
-                  [hoplon/ui                 "0.1.0-SNAPSHOT"]])
+                  [hoplon/ui                 "0.2.0-SNAPSHOT"]])
 
 (require
   '[clojure.string :as s]
