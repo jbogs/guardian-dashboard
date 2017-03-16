@@ -2,7 +2,7 @@
   :asset-paths  #{"rsc"}
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure       "1.8.0"          :scope "test"]
-                  [org.clojure/clojurescript "1.9.293"        :scope "test"]
+                  [org.clojure/clojurescript "1.9.494"        :scope "test"]
                   [adzerk/boot-cljs          "1.7.228-2"      :scope "test"]
                   [adzerk/boot-reload        "0.4.13"         :scope "test"]
                   [adzerk/env                "0.3.1"          :scope "test"]
