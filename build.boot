@@ -21,6 +21,8 @@
   '[tailrecursion.boot-front  :refer [burst]]
   '[tailrecursion.boot-static :refer [serve]])
 
+(def +version+ "0.9.3")
+
 (def buckets
   {:guardian "guardiangui"
    :xotic    "xoticpcgui"})
@@ -49,7 +51,7 @@
 (deftask build
   [s service       SVC kw "The guardian server the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
-  (let [o (or optimizations :advanced)
+  (let [o (or optimizations :simple) ;; default to simple until hsl->rgb lib issue resolved
         s (or service       :local)]
     (System/setProperty "URL" (services s))
     (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts true}) (sift))))
@@ -69,6 +71,15 @@
   [s service       SVC kw `"The guardian server the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
   (comp (build :optimizations optimizations :service service) (target :dir #{"tgt"})))
+
+(deftask distribute
+  "Build the application with advanced optimizations then zip it."
+  [s service       SVC kw `"The guardian server the client should connect to."
+   o optimizations OPM kw "Optimizations to pass the cljs compiler."]
+  (comp (build :optimizations optimizations :service service)
+        (zip :file (str "guardian-dashboard-" +version+  ".zip"))
+        (sift :include #{#"guardian-dashboard-*."} :invert false)
+        (target :dir #{"dst"})))
 
 (task-options!
   serve {:port 7000}

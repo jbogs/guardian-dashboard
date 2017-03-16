@@ -40,7 +40,14 @@ then navigate the browser to:
 
 to build the application as part of the larger product:
 ```
-boot package -o <none|whitespace|simple|advanced>
+boot package -s <local|laptop|aws> -o <none|whitespace|simple|advanced>
+```
+
+## Distribution
+
+to create a distribution snapshot to be uploaded to github:
+```
+boot distribute -s <local|laptop|aws> -o <none|whitespace|simple|advanced>
 ```
 
 [1]: http://boot-clj.com
