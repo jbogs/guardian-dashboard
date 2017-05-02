@@ -9,7 +9,7 @@
     [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
     [hoplon.core     :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
     [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- r d font rgb hsl lgr]]))
+    [hoplon.ui.attrs :refer [- r font rgb hsl lgr]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
