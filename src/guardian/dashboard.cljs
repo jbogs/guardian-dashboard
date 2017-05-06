@@ -1,15 +1,17 @@
 (ns ^{:hoplon/page "index.html"} guardian.dashboard
   (:refer-clojure
-    :exclude [-])
+    :exclude [- name])
   (:require
     [adzerk.env                         :as e]
     [guardian.dashboard.visualizations  :as v]
     [guardian.dashboard.service         :as s]
-    [cljs.pprint     :refer [pprint]]
-    [javelin.core    :refer [defc defc= cell= cell cell-let with-let]]
-    [hoplon.core     :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
-    [hoplon.ui       :refer [elem image window video s b]]
-    [hoplon.ui.attrs :refer [- r font rgb hsl lgr]]))
+    [cljs.pprint          :refer [pprint]]
+    [javelin.core         :refer [defc defc= cell= cell cell-let with-let]]
+    [hoplon.core          :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
+    [hoplon.ui            :refer [elem image window video s b]]
+    [hoplon.ui.attrs      :refer [- r font rgb hsl lgr]]
+    [hoplon.ui.utils      :refer [name]]
+    [hoplon.ui.transforms :refer [linear]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -17,17 +19,16 @@
 
 (e/def URL "ws://localhost:8000")
 
-(def hist-max 180)
-
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ->GB [bytes] (when bytes (str (.toFixed (/ bytes 1000000000) 2) "GB")))
 (defn ->% [num]    (when num (str (.toFixed num) "%")))
-(defn safe-name [keyword] (try (name keyword) (catch js/Error _)))
 
 (defn rect    [e] (.getBoundingClientRect (.-currentTarget e)))
 (defn mouse-x [e] (- (.-pageX e) (.-left (rect e))))
 (defn mouse-y [e] (- (.-pageY e) (.-top  (rect e))))
+
+(defn path= [c path] (cell= (get-in c path) (partial swap! c assoc-in path)))
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -37,29 +38,22 @@
    ["twitter-icon.svg"   "https://twitter.com/XoticPC"]
    ["youtube-icon.svg"   "https://www.youtube.com/channel/UCJ9O0vRPsMFk5UtIDimr6hQ"]])
 
-;;; data-models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; models ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defonce conn (atom nil))
 
-(defonce state (cell {:path [:system] :hist #queue[]}))
-(defonce error (cell nil))
+(defonce sess (cell {:state :system}))
+(defonce hist (cell #queue[]))
 
-;;; queries ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; derivations ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defc= hist  (-> state :hist))
-(defc= data  (-> hist  last) #(swap! state update :hist (fn [h] (conj (if (> (count h) hist-max) (pop h) h) %))))
-(defc= path  (-> state :path))
-(defc= view  (-> path first))
+(def state (path= sess [:state]))
+(def error (path= sess [:error]))
+(def route (cell= [[state]] #(reset! state (ffirst %))))
 
-#_(cell= (cljs.pprint/pprint (-> state :hist last)))
+(def data  (cell= (-> hist last) #(swap! hist (fn [h] (conj (if (> (count h) 180) (pop h) h) %)))))
 
 ;;; commands ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn change-state! [& args]
-  (swap! state assoc :path (vec args)))
-
-(defn change-route! [[[view] _]]
-  (change-state! view))
 
 (defn initiate! [[path qmap] status _]
   (when-not @conn
@@ -99,10 +93,7 @@
 (def grey-6  (rgb 0x161616))
 (def black   (rgb 0x181818))
 
-(defn temp->color [d1 d2]
-  (fn [t]
-    (let [h (v/scale-linear [d1 d2] [260 0])]
-      (hsl (h t) (r 4 5) (r 9 20)))))
+(defn temp->color [& ds] #(hsl ((linear ds [260 0]) %) (r 4 5) (r 9 20)))
 
 ;-- typography ----------------------------------------------------------------;
 
@@ -136,13 +127,13 @@
         selected-item  (cell= (get items (or selected-index 0)))]
     (elem :c grey-6 :tc grey-1 (dissoc attrs :items :index)
       (elem :sh (r 1 1) :sv 64 :bb 2 :bc grey-6
-        (for-tpl [[idx {:keys [name type] :as item}] (cell= (map-indexed vector items))]
+        (for-tpl [[idx {:keys [_ type] :as item}] (cell= (map-indexed vector items))]
           (let [selected (cell= (and (= idx selected-index)))]
             (elem :sh 64 :sv (r 1 1) :a :mid :bt 2 :m :pointer
               :c     (cell= (if selected grey-5 grey-6))
               :bc    (cell= (if selected red    grey-5))
-              :click #(swap! state assoc (keyword (str "selected-" (safe-name @type) "-index")) @idx)
-              (image :s 34 :a :mid :url (cell= (when type (str (safe-name type) "-icon.svg")))))))
+              :click #(swap! sess assoc (keyword (str "selected-" (name @type) "-index")) @idx)
+              (image :s 34 :a :mid :url (cell= (when type (str (name type) "-icon.svg")))))))
         (elem font-4 :sh (cell= (- (r 1 1) (-> items count (* 64)))) :sv (r 1 1) :ph g-lg :av :mid
           (elem :sh (- (r 1 1) 100) :sv (r 1 1) :t (b 14 sm 12 md 16 lg 18) :ms :text
             (cell= (name-fn selected-item)))
@@ -160,11 +151,11 @@
 
 (defn system-view []
   (let [sv-sm     280
-        mem-hist  (cell= (mapv :memory (:hist state)))
-        cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           state 0)) (:hist state)))
-        gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index state 0)) (:hist state)))
-        hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    state 0)) (:hist state)))
-        gc        (cell= (get (:graphics-cards data) (:selected-graphics-card-index state 0)))
+        mem-hist  (cell= (mapv :memory hist))
+        cpus-hist (cell= (mapv #(get (:cpus %)           (:selected-cpu-index           sess 0)) hist))
+        gcs-hist  (cell= (mapv #(get (:graphics-cards %) (:selected-graphics-card-index sess 0)) hist))
+        hds-hist  (cell= (mapv #(get (:hard-drives    %) (:selected-hard-drive-index    sess 0)) hist))
+        gc        (cell= (get (:graphics-cards data) (:selected-graphics-card-index sess 0)))
         cpu-color (temp->color 20 80)
         hdd-color (temp->color 20 50)]
     (list
@@ -172,19 +163,19 @@
         :name-fn        :name
         :value-fn       #(str (:value (:load %)) "% " (:value (:temp %)) "°")
         :items          (cell= (:cpus data))
-        :selected-index (cell= (:selected-cpu-index state))
+        :selected-index (cell= (:selected-cpu-index sess))
         (v/histogram font-4 :sh (>sm (r 3 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :tc (white :a 0.6)
           :name "CPU Load & Temperature"
           :icon "cpu-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value cpu-color)) cpus-hist)))
         (v/cpu-capacity font-4 :sh (>sm (r 1 4)) :sv (b (r 1 2) sm (r 1 1)) :c grey-5 :bl (b 0 sm 2) :bt (b 2 sm 0) :bc grey-4
           :cfn  cpu-color
-          :data (cell= (get (:cpus data) (:selected-cpu-index state 0)))))
+          :data (cell= (get (:cpus data) (:selected-cpu-index sess 0)))))
       (panel :sh (r 1 1) :sv (b (* sv-sm 2) sm (r 1 3)) :gh 5 :c grey-6
         :name-fn        :name
         :value-fn       #(when-let [gpu (:gpu %)] % (str (-> gpu  :load :value) "% " (-> gpu :temp :value) "°"))
         :items          (cell= (:graphics-cards data))
-        :selected-index (cell= (:selected-graphics-card-index state))
+        :selected-index (cell= (:selected-graphics-card-index sess))
         (if-tpl (cell= (:integrated? gc))
           (elem font-2 :s (r 1 1) :a :mid :tc (white :a 0.6) :c grey-5
             "No sensor data available for integrated GPU.")
@@ -208,7 +199,7 @@
         :name-fn        #(apply str (:name %) " " (interpose " & " (mapv :name (:volumes %))))
         :value-fn       #(str (-> % :load :value int) "% " (-> % :temp :value) "°")
         :items          (cell= (:hard-drives data))
-        :selected-index (cell= (:selected-hard-drive-index state))
+        :selected-index (cell= (:selected-hard-drive-index sess))
         (v/histogram font-4 :s (r 1 1) :c grey-5 :tc (white :a 0.6)
           :name "Drive Utilization"
           :icon "capacity-icon.svg"
@@ -238,12 +229,7 @@
   (elem :sh (r 1 1) :sv (b (- js/window.innerHeight 113 246 l) sm (r 1 1)) :p g-lg :c grey-6
     (title "Fans")))
 
-(window
-  :title        "Xotic"
-  :route        (cell= [path])
-  :initiated    initiate!
-  :routechanged change-route!
-  :scroll       (b true sm false) :c grey-4 :g 2
+(window :src route :title "Xotic" :initiated initiate! :scroll (b true sm false) :c grey-4 :g 2
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :url "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
@@ -260,15 +246,15 @@
       (elem :sh (r 1 1) :sv (- (r 1 1) 80) :g l
         (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 3 5)) :gv l
           (for-tpl [{label :label v :view} (cell= [{:view :system :label "System Monitor"} {:view :keyboard :label "Keyboard Settings"} #_{:view :fan :label "Fan Settings"}])]
-            (let [selected (cell= (= view v))]
-              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :tc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(change-state! @v)
-                (image :s 34 :a :mid :url (cell= (when v (str (safe-name v) "-icon.svg"))))
+            (let [selected (cell= (= state v))]
+              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :tc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(reset! state @v)
+                (image :s 34 :a :mid :url (cell= (when v (str (name v) "-icon.svg"))))
                 (when-tpl (b true sm false md true)
                   (elem :sh (b 120 sm (- (r 1 1) 34 g-lg))
                     label)))))
           (b nil sm (elem :sh (>sm sh-close md sh-open) :sv (r 2 1) :c grey-6)))
       (elem :sh (>sm (- (r 1 1) sh-close l) md (- (r 1 1) sh-open l)) :sv (b nil sm (r 1 1)) :g 2
-        (case-tpl (cell= (-> path first))
+        (case-tpl state
           :system   (system-view)
           :fan      (fan-view)
           :keyboard (keyboard-view)))))))
