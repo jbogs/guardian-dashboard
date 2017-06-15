@@ -9,7 +9,6 @@
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.2.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-front  "0.1.0-SNAPSHOT" :scope "test"]
-                  [cljsjs/d3                 "4.3.0-3"]
                   [hoplon/ui                 "0.2.1-SNAPSHOT"]])
 
 (require
@@ -51,7 +50,7 @@
 (deftask build
   [s service       SVC kw "The guardian server the client should connect to."
    o optimizations OPM kw "Optimizations to pass the cljs compiler."]
-  (let [o (or optimizations :simple) ;; default to simple until hsl->rgb lib issue resolved
+  (let [o (or optimizations :advanced)
         s (or service       :local)]
     (System/setProperty "URL" (services s))
     (comp (speak) (hoplon) (cljs :optimizations o :compiler-options {:language-in :ecmascript5-strict :elide-asserts true}) (sift))))

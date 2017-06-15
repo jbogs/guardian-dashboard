@@ -1,17 +1,17 @@
 (ns guardian.dashboard.service
   (:require
-    [javelin.core :refer [with-let cell cell=]]
-    [clojure.set  :refer [rename-keys]]
-    [cljsjs.d3]))
+    [clojure.set    :refer [rename-keys]]
+    [clojure.string :refer [replace]]
+    [javelin.core   :refer [with-let cell cell=]]))
 
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def effects
-  {:color    ["Fixed Color"     "static_color"]
-   :cpu-load ["CPU Load"        "cpu_load"]
-   :cpu-temp ["CPU Temperature" "cpu_temp"]
-   :gpu-load ["GPU Load"        "gpu_load"]
-   :gpu-temp ["GPU Temperature" "gpu_temp"]})
+  {:color    ["Fixed Color"     "static_color" "color"]
+   :cpu-load ["CPU Load"        "cpu_load"     "cpu"]
+   :cpu-temp ["CPU Temperature" "cpu_temp"     "cpu"]
+   :gpu-load ["GPU Load"        "gpu_load"     "gpu"]
+   :gpu-temp ["GPU Temperature" "gpu_temp"     "gpu"]})
 
 (def sensors
   {:cpu-power         "Package"
@@ -29,15 +29,11 @@
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn hsl->rgb [[h s l]]
-  (when (and h s l)
-    (let [c (.rgb js/d3 (.hsl js/d3 h s l))]
-      (mapv js/parseInt [(.-r c) (.-g c) (.-b c)]))))
+(defn colkey->type [x]
+  (keyword (replace (apply str (drop-last (name x))) #"_" "-")))
 
-(defn rgb->hsl [[r g b]]
-  (when (and r g b)
-    (let [c (.hsl js/d3 (.rgb js/d3 r g b))]
-      (mapv js/parseFloat [(.-h c) (.-s c) (.-l c)]))))
+(defn type->colkey [x]
+  (keyword (replace (str (name x) "s") #"-" "_")))
 
 (defn name->sensor [reading]
   (-> (rename-keys reading {:name :sensor})
@@ -93,10 +89,10 @@
   (let [zone #(hash-map
                 :id        (->> % :zone js/parseInt)
                 :name      (->> % :zone (str "Zone "))
-                :effect    (some (fn [[ k [_ n]]] (when (= n (:name %)) k)) effects)
-                :color     (-> % :color     rgb->hsl)
-                :beg-color (-> % :beg_color rgb->hsl)
-                :end-color (-> % :end_color rgb->hsl))
+                :effect    (some (fn [[k [_ n]]] (when (= n (:name %)) k)) effects)
+                :color     (-> % :color)
+                :beg-color (-> % :beg_color)
+                :end-color (-> % :end_color))
         zones (->> (dissoc keyboard :all)
                    (sort-by first)
                    (mapv (comp zone second)))]
@@ -104,13 +100,29 @@
      :type  :kb
      :zones zones}))
 
+(defn light [{:keys [name type effect color beg_color end_color]}]
+  {:id        [type name]
+   :name      name
+   :type      type
+   :effect    (or (some (fn [[k [_ n]]] (when (= n name) k)) effects) :color)
+   :color     color
+   :beg_color beg_color
+   :end_color end_color})
+
+(defn fan [{:keys [name auto pwm tach]}]
+  {:id   [:fan name]
+   :name name
+   :auto auto
+   :pwm  pwm
+   :tach tach})
+
 (defn memory [{:keys [name free total] :as memory}]
   {:name  name
    :type  :memory
    :used  {:value (- total free)}
    :total {:value total}})
 
-(defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds]}]
+(defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips]}]
   {:name           name
    :type           :mb
    :zone-1         {:name "CPU Thermal Zone"
@@ -124,14 +136,19 @@
                     :temp (get-sensor temps :zone-3)}
    :gpu             {:name (-> gpus first :name)}
    :memory         (memory mem)
-   :keyboard       (keyboard kb)
+   :lights         (mapv light (concat fans strips uv_strips (:zones (keyboard kb))))
+   :fans           (mapv fan fans)
    :cpus           (mapv cpu cpus)
    :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
    :hard-drives    (into [] (sort-by (comp :name first :volumes) (mapv hard-drive hdds)))})
 
 (defn device-data [data]
-  (prn :device-data data)
   data)
+
+(defn data [data]
+  (->> data
+      (mapcat (fn [[k v]] [k (if (sequential? v) (mapv #(assoc % :type (colkey->type k)) v) v)]))
+      (motherboard)))
 
 ;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -151,18 +168,21 @@
   (let [cljs #(js->clj % :keywordize-keys true)
         parse #(-> % .-data js/JSON.parse cljs)]
     (with-let [_ conn]
-      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (motherboard (:data d))))))))
+      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (data (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
       (call "get_sensors" conn))))
 
 (defn get-devices [conn]
   (device-data (call "get_devices" conn)))
 
-(defn set-keyboard-zone!
-  ([conn zone color]
-   (set-keyboard-zone! conn zone :color color nil nil))
-  ([conn zone effect beg-color end-color]
-   (set-keyboard-zone! conn zone effect nil beg-color end-color))
-  ([conn zone effect color beg-color end-color]
-   (call "set_keyboard_zones" conn :zone (str zone) :name (-> effect effects second) :color (hsl->rgb color) :beg_color (hsl->rgb beg-color) :end_color (hsl->rgb end-color))))
+(defn set-effect! [conn [type name :as id] effect]
+  (call (type->colkey type) conn :name name :effect (-> effect effects second)))
 
+(defn set-color! [conn [type name :as id] color]
+  (call (type->colkey type) conn :name name :color color :effect (second (:color effects))))
+
+(defn set-beg-color! [conn [type name :as id] color]
+  (call (type->colkey type) conn :name name :beg_color color))
+
+(defn set-end-color! [conn [type name :as id] color]
+  (call (type->colkey type) conn :name name :end_color color))

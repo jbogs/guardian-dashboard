@@ -1,11 +1,12 @@
 (ns guardian.dashboard.visualizations
   (:require
-    [javelin.core    :refer [cell=]]
-    [hoplon.core     :refer [defelem for-tpl]]
-    [hoplon.svg      :refer [g line rect]]
-    [hoplon.ui       :refer [elem image svg]]
-    [hoplon.ui.attrs :refer [r rgb translate]]
-    [hoplon.ui.elems :refer [in]]))
+    [javelin.core         :refer [cell=]]
+    [hoplon.core          :refer [defelem for-tpl]]
+    [hoplon.svg           :refer [g line rect]]
+    [hoplon.ui            :refer [elem image svg t]]
+    [hoplon.ui.attrs      :refer [r rgb translate]]
+    [hoplon.ui.elems      :refer [in]]
+    [hoplon.ui.transforms :refer [cubic-in]]))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -27,14 +28,14 @@
 
 (defelem path [{:keys [data stroke] :as attrs}]
   (chart :p stroke
-    (path :d data (dissoc attrs stroke :data))))
+    (path :vector-effect "non-scaling-stroke" :d data (dissoc attrs stroke :data))))
 
 (defelem grid [{:keys [bh bv xticks yticks]}]
   (list
     (for-tpl [y (drop 1 yticks)]
-      (line :x1 0 :x2 bh :y1 y :y2 y :stroke "#161616" :stroke-width 1))
+      (line :x1 0 :x2 bh :y1 y :y2 y :vector-effect "non-scaling-stroke" :stroke "#161616" :stroke-width 1))
     (for-tpl [x (drop 1 xticks)]
-      (line :x1 x :x2 x :y1 0 :y2 bv :stroke "#161616" :stroke-width 1))))
+      (line :x1 x :x2 x :y1 0 :y2 bv :vector-effect "non-scaling-stroke" :stroke "#161616" :stroke-width 1))))
 
 ;;; charts ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -81,7 +82,7 @@
               (g :transform (cell= (translate (+ p (* i (/ b (count (:cores data))))) 0))
                 (for-tpl [[j {{load :value} :load name :name}] (cell= (map-indexed vector threads))]
                   (let [x (cell= (+ (* j (/ w (count threads))) (/ w 4)))]
-                    (line :x1 x :y1 (cell= (- b (* (/ load 100) (- b h)))) :x2 x :y2 b :stroke (cell= (cfn temp)) :stroke-width s :stroke-linecap "round"))))))))))
+                    (line :x1 x :y1 (t (cell= (- b (* (/ load 100) (- b h)))) 250 cubic-in) :x2 x :y2 b :stroke (cell= (cfn temp)) :stroke-width s :stroke-linecap "round"))))))))))
 
 (defelem gpu-capacity [{:keys [data cfn] :as attrs}]
   (elem :d :pile (dissoc attrs :data :cfn)
