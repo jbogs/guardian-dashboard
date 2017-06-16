@@ -104,10 +104,10 @@
   {:id        [type name]
    :name      name
    :type      type
-   :effect    (or (some (fn [[k [_ n]]] (when (= n name) k)) effects) :color)
+   :effect    (or (some (fn [[k [_ n]]] (when (= n effect) k)) effects) :color)
    :color     color
-   :beg_color beg_color
-   :end_color end_color})
+   :beg-color beg_color
+   :end-color end_color})
 
 (defn fan [{:keys [name auto pwm tach]}]
   {:id   [:fan name]
@@ -179,7 +179,7 @@
   (call (type->colkey type) conn :name name :effect (-> effect effects second)))
 
 (defn set-color! [conn [type name :as id] color]
-  (call (type->colkey type) conn :name name :color color :effect (second (:color effects))))
+  (call (type->colkey type) conn :name name :color color))
 
 (defn set-beg-color! [conn [type name :as id] color]
   (call (type->colkey type) conn :name name :beg_color color))
