@@ -118,16 +118,16 @@
 
 (defelem sslider [{:keys [sh sv s src] :as attrs} elems]
   (let [len (cell= (or sv s))
-        pos (cell= (* (* src 100) len) #(reset! src (int (* (/ % @len) .01))))
+        pos (cell= (* src len) #(reset! src (/ % @len)))
         col (cell= (hsl src (r 1 1) (r 1 2)))
-        lgr (apply lgr 0 (map #(hsl 0 (r % 100) (r 1 2)) (range 0 100)))]
+        lgr (apply lgr 180 (map #(hsl 0 (r % 100) (r 1 2)) (range 0 100)))]
     (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
       (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
       elems)))
 
 (defelem lslider [{:keys [sh sv s src] :as attrs} elems]
   (let [len (cell= (or sv s))
-        pos (cell= (* (* src 100) len) #(reset! src (int (* (/ % @len) .01))))
+        pos (cell= (* src len) #(reset! src (/ % @len)))
         col (cell= (hsl src (r 1 1) (r 1 2)))
         lgr (apply lgr 180 (map #(hsl 0 (r 1 1) (r % 100)) (range 0 100)))]
     (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
@@ -213,23 +213,24 @@
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
 (defn lighting-view []
-  (let [lightable (cell nil)
-        id        (cell= (:id     lightable))
-        effect    (cell= (:effect lightable))
-        [h s l]   @(cell= (:color  lightable))]
+  (let [id     (cell nil)
+        lights (cell= (:lights data))
+        light  (cell= (some #(when (= id (:id %)) %) lights))
+        effect    (cell= (:effect light))
+        color     (cell= (:color  light))]
     (list
       (elem :sh (r 1 1) :sv (r 1 4)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Devices")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph g-lg :gh g-lg :ah :mid :c grey-5 #_(lgr 180 grey-5 grey-5 black)
-          (for-tpl [{[type :as id] :id name* :name effect :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as lightable*} (cell= (:lights data))]
-            (let [selected? (cell= (= lightable lightable*))]
+          (for-tpl [{[type :as id*] :id name* :name effect :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
+            (let [selected? (cell= (= light light*))]
               (elem font-4 :sh (cell= (r 1 (count (:lights data)))) :sv (r 1 1) :pv g-lg :gv g-lg :ah :mid :bb 2
                 :bc (cell= (if selected? red grey-5)) :m :pointer
                 :tc (cell= (if selected? white grey-1))
-                :click #(reset! lightable @lightable*)
+                :click #(reset! id (if (= @id @id*) nil @id*))
                 (elem :sh (r 1 1) :sv (- (r 1 1) 16 34 (* g-lg 3)) :r 2 :a :mid :tx :capitalize
-                  :c (cell= (if (= effect :color) (hsl h (r 1 1) (r 1 2) (if selected? (r 1 1) (r 2 3))) (lgr 180 (hsl hb (r 1 1) (r 1 2)) (hsl he (r 1 1) (r 1 2)))))
+                  :c (cell= (if (= effect :color) (hsl h (r s 1) (r l 1) (if selected? (r 1 1) (r 2 3))) (lgr 180 (hsl hb (r 1 1) (r 1 2)) (hsl he (r 1 1) (r 1 2)))))
                   (cell= (name effect)))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
@@ -249,10 +250,12 @@
       (elem :sh (r 3 4) :sv (r 3 4) :c grey-5
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Colors")
-        (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
-          (hslider :sh 24 :sv 400 :r 12 :src (cell= h #(s/set-color! @conn @id [% 1 0.5])))
-          (sslider :sh 24 :sv 400 :r 12 :src (cell= s #(s/set-color! @conn @id [0 % 0.5])))
-          (lslider :sh 24 :sv 400 :r 12 :src (cell= l #(s/set-color! @conn @id [0 1 % ]))))))))
+        (cell-let [[h s l] color]
+          (cell= (prn :h  h :s s :l l))
+          (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
+            (hslider :sh 24 :sv 400 :r 12 :src (cell= h #(s/set-color! @conn @id [%1 @s @l])))
+            (sslider :sh 24 :sv 400 :r 12 :src (cell= s #(s/set-color! @conn @id [@h %1 @l])))
+            (lslider :sh 24 :sv 400 :r 12 :src (cell= l #(s/set-color! @conn @id [@h @s %1])))))))))
 
 (defn fan-view []
   (let [fan  (cell nil)
