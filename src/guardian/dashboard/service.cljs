@@ -7,7 +7,8 @@
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def effects
-  {:color    ["Fixed Color"     "static_color" "color"]
+  {:off      ["Off"             nil            "off"]
+   :color    ["Solid Color"     "static_color" "color"]
    :cpu-load ["CPU Load"        "cpu_load"     "cpu"]
    :cpu-temp ["CPU Temperature" "cpu_temp"     "cpu"]
    :gpu-load ["GPU Load"        "gpu_load"     "gpu"]
@@ -104,7 +105,7 @@
   {:id        [type name]
    :name      name
    :type      type
-   :effect    (or (some (fn [[k [_ n]]] (when (= n effect) k)) effects) :color)
+   :effect    (or (some (fn [[k [_ n]]] (when (= n effect) k)) effects) :off)
    :color     color
    :beg-color beg_color
    :end-color end_color})
