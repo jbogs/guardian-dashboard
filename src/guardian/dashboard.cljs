@@ -110,16 +110,14 @@
 (defelem hslider [{:keys [sh sv s src] :as attrs} elems]
   (let [len (cell= (or sv s))
         pos (cell= (- len (* (/ src 360) len)) #(reset! src (int (* (/ (- @len %) @len) 360))))
-        col (cell= (hsl src (r 1 1) (r 1 2)))
         lgr (apply lgr 0 (map #(hsl % (r 1 1) (r 1 2)) (range 0 360 10)))]
     (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
-      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
+      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer :draggable true)
       elems)))
 
 (defelem sslider [{:keys [sh sv s src] :as attrs} elems]
   (let [len (cell= (or sv s))
         pos (cell= (- len (* src len)) #(reset! src (/ (- @len %) @len)))
-        col (cell= (hsl src (r 1 1) (r 1 2)))
         lgr (apply lgr 0 (map #(hsl 0 (r % 100) (r 1 2)) (range 0 100)))]
     (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
       (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
@@ -128,8 +126,15 @@
 (defelem lslider [{:keys [sh sv s src] :as attrs} elems]
   (let [len (cell= (or sv s))
         pos (cell= (- len (* src len)) #(reset! src (/ (- @len %) @len)))
-        col (cell= (hsl src (r 1 1) (r 1 2)))
         lgr (apply lgr 0 (map #(hsl 0 (r 1 1) (r % 100)) (range 0 100)))]
+    (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
+      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
+      elems)))
+
+(defelem fslider [{:keys [sh sv s src] :as attrs} elems]
+  (let [len (cell= (or sv s))
+        pos (cell= (- len (* (/ src 100) len)) #(reset! src (* (/ (- @len %) @len) 100)))
+        lgr (apply lgr 0 (map #(hsl 0 (r % 100) (r 1 2)) (range 0 100)))]
     (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
       (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
       elems)))
@@ -276,11 +281,11 @@
                     (elem :gh (* 3 g-lg)
                       (when-tpl hb (hslider :sh 24 :sv 400 :r 12 :src (cell= hb #(s/set-beg-color! @conn @id [ % @sb @lb]))))
                       (when-tpl sb (sslider :sh 24 :sv 400 :r 12 :src (cell= sb #(s/set-beg-color! @conn @id [@hb %  @lb]))))
-                      (when-tpl lb (lslider :sh 24 :sv 400 :r 12 :src (cell= lb #(s/set-beg-color! @conn @id [@hb @sb % ])))))
+                      (when-tpl lb (lslider :sh 24 :sv 400 :r 12 :src (cell= lb #(s/set-beg-color! @conn @id [@hb @sb %])))))
                     (elem :gh (* 3 g-lg)
                       (when-tpl he (hslider :sh 24 :sv 400 :r 12 :src (cell= he #(s/set-end-color! @conn @id [ % @se @le]))))
                       (when-tpl se (sslider :sh 24 :sv 400 :r 12 :src (cell= se #(s/set-end-color! @conn @id [@he %  @le]))))
-                      (when-tpl le (lslider :sh 24 :sv 400 :r 12 :src (cell= le #(s/set-end-color! @conn @id [@he @se % ]))))))))))
+                      (when-tpl le (lslider :sh 24 :sv 400 :r 12 :src (cell= le #(s/set-end-color! @conn @id [@he @se %]))))))))))
           (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
             "no lights selected"))))))
 
@@ -288,6 +293,7 @@
   (let [id   (cell nil)
         fans (cell= (:fans data))
         fan  (cell= (some #(when (= id (:id %)) %) fans))
+        tach (cell= (:tach fan))
         pwm  (cell= (:pwm  fan))
         auto (cell= (:auto fan))]
     (list
@@ -295,7 +301,7 @@
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Fans")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph g-lg :gh g-lg :ah :mid :c grey-5
-          (for-tpl [{[type :as id*] :id name* :name auto :auto pwm :pwm tach :tach} fans]
+          (for-tpl [{[type :as id*] :id name* :name auto :auto pwm :pwm tach :tach :as fan*} fans]
             (let [selected? (cell= (= id id*))]
               (elem font-4 :sh (cell= (r 1 (count fans))) :sv (r 1 1) :pv g-lg :gv g-lg :ah :mid :bb 2
                 :bc (cell= (if selected? red grey-5))
@@ -303,18 +309,20 @@
                 :m  :pointer
                 :click #(reset! id (if (= @id @id*) nil @id*))
                 (elem :sh (r 1 1) :sv (- (r 1 1) 16 34 (* g-lg 3)) :r 2 :a :mid :c red :tx :capitalize
-                  tach)
+                  (cell= (str pwm "%  " tach "%")))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg")))))))))
       (elem :sh (r 1 1) :sv (r 3 4) :g l
         (if-tpl id
           (elem :s (r 1 1) :c grey-5
-              (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-                "Speeds")
-              #_(cell-let [[h s l] color]
-                  (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
-                    (hslider :sh 24 :sv 400 :r 12 :src (cell= h #(s/set-color! @conn @id [%1 @s @l]))))))
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Speeds")
+            (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
+              (elem font-4 :sv 40 :ph g-lg :pv g-sm :a :mid :r 4 :c red :m :pointer :click #(s/set-fan-auto! @conn @id true)
+                "Set Auto")
+              (fslider :sh 24 :sv 400 :r 12 :src (cell= pwm  #(s/set-fan-pwm!  @conn @id %)))
+              (fslider :sh 24 :sv 400 :r 12 :src (cell= tach #(s/set-fan-tach! @conn @id %)))))
           (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
             "no fans selected"))))))
 

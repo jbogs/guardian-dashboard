@@ -187,3 +187,12 @@
 
 (defn set-end-color! [conn [type name :as id] color]
   (call (type->colkey type) conn :name name :end_color color))
+
+(defn set-fan-pwm! [conn [type :name :as id] pwm]
+  (call (type->colkey type) conn :name name :pwm pwm))
+
+(defn set-fan-tach! [conn [type :name :as id] tach]
+  (call (type->colkey type) conn :name name :tach tach))
+
+(defn set-fan-auto! [conn [type :name :as id] auto]
+  (call (type->colkey type) conn :name name :auto auto))
