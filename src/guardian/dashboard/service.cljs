@@ -7,12 +7,12 @@
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def effects
-  {:off      ["Off"             nil            "off"]
-   :color    ["Solid Color"     "static_color" "color"]
-   :cpu-load ["CPU Load"        "cpu_load"     "cpu"]
-   :cpu-temp ["CPU Temperature" "cpu_temp"     "cpu"]
-   :gpu-load ["GPU Load"        "gpu_load"     "gpu"]
-   :gpu-temp ["GPU Temperature" "gpu_temp"     "gpu"]})
+  {:off      ["Off"         nil            "off"]
+   :color    ["Solid Color" "static_color" "color"]
+   :cpu-load ["CPU Load"    "cpu_load"     "cpu"]
+   :cpu-temp ["CPU Temp"    "cpu_temp"     "cpu"]
+   :gpu-load ["GPU Load"    "gpu_load"     "gpu"]
+   :gpu-temp ["GPU Temp" "gpu_temp"     "gpu"]})
 
 (def sensors
   {:cpu-power         "Package"
@@ -110,12 +110,12 @@
    :beg-color beg_color
    :end-color end_color})
 
-(defn fan [{:keys [name auto pwm tach]}]
+(defn fan [{:keys [name auto tach temp]}]
   {:id   [:fan name]
    :name name
    :auto auto
-   :pwm  pwm
-   :tach tach})
+   :tach tach
+   :temp temp})
 
 (defn memory [{:keys [name free total] :as memory}]
   {:name  name
@@ -188,11 +188,11 @@
 (defn set-end-color! [conn [type name :as id] color]
   (call (type->colkey type) conn :name name :end_color color))
 
-(defn set-fan-pwm! [conn [type :name :as id] pwm]
-  (call (type->colkey type) conn :name name :pwm pwm))
-
 (defn set-fan-tach! [conn [type :name :as id] tach]
   (call (type->colkey type) conn :name name :tach tach))
+
+(defn set-fan-temp! [conn [type :name :as id] temp]
+  (call (type->colkey type) conn :name name :temp temp))
 
 (defn set-fan-auto! [conn [type :name :as id] auto]
   (call (type->colkey type) conn :name name :auto auto))
