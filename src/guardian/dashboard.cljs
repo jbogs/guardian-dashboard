@@ -5,13 +5,13 @@
     [adzerk.env                         :as e]
     [guardian.dashboard.visualizations  :as v]
     [guardian.dashboard.service         :as s]
-    [cljs.pprint          :refer [pprint]]
-    [javelin.core         :refer [cell= cell cell-let]]
-    [hoplon.core          :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
-    [hoplon.ui            :refer [window elem image b]]
-    [hoplon.ui.attrs      :refer [- r font rgb hsl lgr]]
-    [hoplon.ui.utils      :refer [name]]
-    [hoplon.ui.transforms :refer [linear]]))
+    [cljs.pprint             :refer [pprint]]
+    [javelin.core            :refer [alts! lens? cell= cell cell-let dosync]]
+    [hoplon.core             :refer [defelem if-tpl when-tpl for-tpl case-tpl]]
+    [hoplon.ui               :refer [window elem image b t]]
+    [hoplon.ui.attrs         :refer [- r font rgb hsl lgr sdw]]
+    [hoplon.ui.utils         :refer [name clamp loc x y debounce]]
+    [hoplon.ui.interpolators :refer [linear quadratic-out]]))
 
 ;;; environment ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -22,13 +22,26 @@
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ->GB [bytes] (when bytes (str (.toFixed (/ bytes 1000000000) 2) "GB")))
-(defn ->% [num]    (when num (str (.toFixed num) "%")))
-
-(defn rect    [e] (.getBoundingClientRect (.-currentTarget e)))
-(defn mouse-x [e] (- (.-pageX e) (.-left (rect e))))
-(defn mouse-y [e] (- (.-pageY e) (.-top  (rect e))))
+(defn ->%  [num]   (when num (str (.toFixed num) "%")))
 
 (defn path= [c path] (cell= (get-in c path) (partial swap! c assoc-in path)))
+
+(defn deb= [c f & [ms]]
+  "debouncing transaction lens"
+  (let [val (cell nil)
+        set #(dosync (when (not= % @c) (f %)) (reset! val nil))
+        deb (debounce (or ms 1000) set)
+        deb #(do (deb %) (reset! val %))]
+    (cell= (or val c) #(if (= % ::tx) (set val) (deb %)))))
+
+(defn commit! [cell]
+  (reset! cell ::tx))
+
+(defn cache [c]
+  (let [v (cell nil)
+        a (alts! c v)]
+    (cell= (first a) #(if (lens? c) (reset! c %) (reset! v %)))))
+
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -105,39 +118,81 @@
 (def font-label {:t 14 :tf lato-semibold   :tc black})
 (def font-body  {:t 12 :tf lato-medium     :tc black})
 
+;-- attributes ----------------------------------------------------------------;
+
+
 ;;; components ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem hslider [{:keys [sh sv s src] :as attrs} elems]
-  (let [len (cell= (or sv s))
-        pos (cell= (- len (* (/ src 360) len)) #(reset! src (int (* (/ (- @len %) @len) 360))))
-        lgr (apply lgr 0 (map #(hsl % (r 1 1) (r 1 2)) (range 0 360 10)))]
-    (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
-      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer :draggable true)
-      elems)))
+(defelem slider [{:keys [sh sv s src] r* :r :as attrs}]
+  ;- change sizes to body after api refactoring where border becomes stroke
+  ;- substract border from sizes / add border to body bh bv b
+  ;- support different types of transitions
+  ;- consider passing the knob as a child, how to proxy values to knob
+  ;- switch from grab to grabbing mouse cursors during drag
+  ;- consider tool tip with values
+  ;- consider passing curried interpolator function
+  ;- handle overflowing margins without overflow: none due to perf problem. new
+  ;  box model may fix.
+  (let [src    (cache src)
+        w      (cell= (or sh s))
+        h      (cell= (or sv s))
+        kd     (cell= (min 32 w h))
+        kr     (cell= (/ kd 2))
+        dx->rx (cell= (linear [0       100] [0  (- w kd)]))
+        dy->ry (cell= (linear [0       100] [(- h kd)  0]))
+        rx->dx (cell= (linear [kr (- w kr)] [0       100]))
+        ry->dy (cell= (linear [(- h kr) kr] [0       100]))
+        pos    (cell= [(dx->rx (clamp (x src) 0 100)) (dy->ry (clamp (y src) 0 100))] #(reset! src [(clamp (@rx->dx (x %)) 0 100) (clamp (@ry->dy (y %)) 0 100)]))
+        sdw    (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0)]
+    (elem :d (sdw :inset true) :r r* :m :pointer
+      :pl   (t (cell= (x pos)) 300 quadratic-out)
+      :pt   (t (cell= (y pos)) 300 quadratic-out)
+      :down #(reset! pos (loc %))
+      :move #(when (= (.-which %) 1) (reset! pos (loc %)))
+      (dissoc attrs :src)
+      (elem :s kd :r (cell= (or r* 16)) :c red :b 2 :bc (white :a 0.6) :d sdw :m :grab))))
 
-(defelem sslider [{:keys [sh sv s src] :as attrs} elems]
-  (let [len (cell= (or sv s))
-        pos (cell= (- len (* src len)) #(reset! src (/ (- @len %) @len)))
-        lgr (apply lgr 0 (map #(hsl 0 (r % 100) (r 1 2)) (range 0 100)))]
-    (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
-      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
-      elems)))
+(defelem hslider [{:keys [src] :as attrs}]
+  (slider :src (cell= (vector src 0) #(reset! src (x %))) (dissoc attrs :src)))
 
-(defelem lslider [{:keys [sh sv s src] :as attrs} elems]
-  (let [len (cell= (or sv s))
-        pos (cell= (- len (* src len)) #(reset! src (/ (- @len %) @len)))
-        lgr (apply lgr 0 (map #(hsl 0 (r 1 1) (r % 100)) (range 0 100)))]
-    (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
-      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
-      elems)))
+(defelem vslider [{:keys [src] :as attrs}]
+  (slider :src (cell= (vector 0 src) #(reset! src (y %))) (dissoc attrs :src)))
 
-(defelem fslider [{:keys [sh sv s src] :as attrs} elems]
-  (let [len (cell= (or sv s))
-        pos (cell= (- len (* (/ src 100) len)) #(reset! src (* (/ (- @len %) @len) 100)))
-        lgr (apply lgr 0 (map #(hsl 0 (r % 100) (r 1 2)) (range 0 100)))]
-    (elem :pt (cell= (- pos (* (/ pos len) sh))) :r (/ sh 2) :c lgr :click #(reset! pos (mouse-y %)) :m :pointer (dissoc attrs :dir :src)
-      (elem :s sh :r (cell= (/ sh 2)) :c red :b 2 :bc (white :a 0.6) :m :pointer)
-      elems)))
+(defelem hswitch [{:keys [sh sv s src] r* :r :as attrs}]
+   (cell= (prn :src src))
+  (let [src (cache src)
+        w   (cell= (or sh s))
+        sw  (cell= (/ w 2))
+        sdw (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0)]
+    (elem :d (sdw :inset true) :r 2 :m :pointer
+      :pl   (t (cell= (if-not src 0 sw)) 300 quadratic-out)
+      :down #(swap! src not)
+      (dissoc attrs :src)
+      (elem :sh sw :sv (r 1 1) :c red :r 2 :b 2 :bc (white :a 0.6) :d sdw))))
+
+(defn h-grd [s l]
+  (let [s (* (or s 1)   100)
+        l (* (or l 0.5) 100)]
+    (apply lgr 0 (map #(hsl % (r s 100) (r l 100)) (range 0 360 10)))))
+
+(defn s-grd [h l]
+  (let [h (or h 0)
+        l (* (or l 0.5) 100)]
+   (apply lgr 0 (map #(hsl h (r % 100) (r l 100)) (range 0 100)))))
+
+(defn l-grd [h s]
+  (let [s (if h (* (or s 1) 100) 0) ;; uv sliders
+        h (or h 0)]
+   (apply lgr 0 (map #(hsl h (r s 100) (r % 100)) (range 0 100)))))
+
+;(defelem color [{:keys [src]}]
+;  (for-tpl [[h s l] src]
+;    (let [h (or h 0)
+;          s (or)]
+;      (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(reset! src [(* (/ % 100) 360) @s        @l])))))
+;  (when-tpl h (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(reset! src [(* (/ % 100) 360) @s        @l]))))
+;  (when-tpl s (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(reset! src [@h                (/ % 100) @l]))))
+;  (when-tpl l (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(reset! src [@h                @s        (/ % 100)])))))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -227,34 +282,34 @@
         beg-color (cell= (:beg-color light))
         end-color (cell= (:end-color light))]
     (list
-      (elem :sh (r 1 1) :sv (r 1 4)
+      (elem :sh (r 1 1) :sv (r 1 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Lights")
-        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph g-lg :gh g-lg :ah :mid :c grey-5
+        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5 :gh 6 :ah :mid
           (for-tpl [{[type :as id*] :id name* :name effect :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
             (let [selected? (cell= (= light light*))
-                  o         (cell= (if selected? (r 1 1) (r 2 3)))
+                  o         (cell= (if selected? (r 1 1) (r 1 4)))
                   solid?    (cell= (= effect :color))]
-              (elem font-4 :sh (cell= (r 1 (count lights))) :sv (r 1 1) :pv g-lg :gv g-lg :ah :mid :bb 2
-                :bc (cell= (if selected? red grey-5)) :m :pointer
+              (elem font-4 :sh (>sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv g-lg :gv g-lg :a :mid :m :pointer
+               ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :click #(reset! id (if (= @id @id*) nil @id*))
-                (elem :sh (r 1 1) :sv (- (r 1 1) 16 34 (* g-lg 3)) :r 2 :a :mid :tx :capitalize
-                  :c (cell= (case effect
-                              :off   (hsl 0 (r 1 1) (r 0 1))
-                              :color (hsl (or h 0) (r (or s 1) 1) (r (or l 0.5) 1) o)
-                                     (lgr 0 (hsl (or hb 0) (r (or sb 1) 1) (r (or lb 0.5) 1) o) (hsl (or he 0) (r (or se 1) 1) (r (or le 0.5) 1) o))))
-                  (cell= (first (s/effects effect))))
+                :c (cell= (case effect
+                            :off   (hsl 0 (r 1 1) (r 0 1))
+                            :color (hsl (or h 0) (r (or (if h s 0) 1) 1) (r (or l 0.5) 1) o)
+                                   (lgr 180 (hsl (or hb 0) (r (or (if hb sb 0) 1) 1) (r (or lb 0.5) 1) o) (hsl (or he 0) (r (or (if he se 0) 1) 1) (r (or le 0.5) 1) o))))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
-                (image :s 34 :src (cell= (when type (str (name type) "-icon.svg")))))))))
-      (elem :sh (r 1 1) :sv (r 3 4) :g l
+                (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
+                (elem :sh (r 1 1) :ah :mid
+                  (cell= (first (s/effects effect)))))))))
+      (elem :sh (r 1 1) :sv (r 4 5) :g l
         (if-tpl id
           (list
-            (elem :sh (r 1 4) :sv (r 1 1)
+            (elem :sh (>sm (r 1 4)) :sv (r 1 1)
               (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
                 "Effects")
-              (elem :sh (r 1 1) :sv (r 1 1) :c grey-5
+              (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
                  (for [[effect* [name* _ icon]] s/effects]
                     (let [selected (cell= (= effect effect*))]
                       (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
@@ -263,7 +318,7 @@
                          ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @id %)
                         (image :s 26 :src (cell= (str icon "-icon.svg")))
                         (elem name*))))))
-            (elem :sh (r 3 4) :sv (r 1 1) :c grey-5
+            (elem :sh (>sm (r 3 4)) :sv (- (r 1 1) 64) :c grey-5
               (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
                 "Colors")
               (case-tpl effect
@@ -273,20 +328,20 @@
                 :color
                 (cell-let [[h s l] color]
                   (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
-                    (when-tpl h (hslider :sh 24 :sv 400 :r 12 :src (cell= h #(s/set-color! @conn @id [%1 @s @l]))))
-                    (when-tpl s (sslider :sh 24 :sv 400 :r 12 :src (cell= s #(s/set-color! @conn @id [@h %1 @l]))))
-                    (when-tpl l (lslider :sh 24 :sv 400 :r 12 :src (cell= l #(s/set-color! @conn @id [@h @s %1]))))))
+                    (when-tpl h (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l]))))
+                    (when-tpl s (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(s/set-color! @conn @id [@h                (/ % 100) @l]))))
+                    (when-tpl l (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(s/set-color! @conn @id [@h                @s        (/ % 100)]))))))
                 (cell-let [[hb sb lb] beg-color [he se le] end-color]
                   (elem :s (r 1 1) :p g-lg :gh (* 9 g-lg) :a :mid
                     (elem :gh (* 3 g-lg)
-                      (when-tpl hb (hslider :sh 24 :sv 400 :r 12 :src (cell= hb #(s/set-beg-color! @conn @id [ % @sb @lb]))))
-                      (when-tpl sb (sslider :sh 24 :sv 400 :r 12 :src (cell= sb #(s/set-beg-color! @conn @id [@hb %  @lb]))))
-                      (when-tpl lb (lslider :sh 24 :sv 400 :r 12 :src (cell= lb #(s/set-beg-color! @conn @id [@hb @sb %])))))
+                      (when-tpl hb (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd sb lb)) :src (cell= (* (/ hb 360) 100) #(s/set-beg-color! @conn @id [(* (/ % 100) 360) @sb       @lb]))))
+                      (when-tpl sb (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd hb lb)) :src (cell= (* sb 100)         #(s/set-beg-color! @conn @id [@hb               (/ % 100) @lb]))))
+                      (when-tpl lb (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd hb sb)) :src (cell= (* lb 100)         #(s/set-beg-color! @conn @id [@hb               @sb       (/ % 100)])))))
                     (elem :gh (* 3 g-lg)
-                      (when-tpl he (hslider :sh 24 :sv 400 :r 12 :src (cell= he #(s/set-end-color! @conn @id [ % @se @le]))))
-                      (when-tpl se (sslider :sh 24 :sv 400 :r 12 :src (cell= se #(s/set-end-color! @conn @id [@he %  @le]))))
-                      (when-tpl le (lslider :sh 24 :sv 400 :r 12 :src (cell= le #(s/set-end-color! @conn @id [@he @se %]))))))))))
-          (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                      (when-tpl he (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd se le)) :src (cell= (* (/ he 360) 100) #(s/set-end-color! @conn @id [(* (/ % 100) 360) @se       @le]))))
+                      (when-tpl se (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd he le)) :src (cell= (* se 100)         #(s/set-end-color! @conn @id [@he               (/ % 100) @le]))))
+                      (when-tpl le (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd he se)) :src (cell= (* le 100)         #(s/set-end-color! @conn @id [@he               @se       (/ % 100)]))))))))))
+          (elem font-2 :s (r 1 1) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
             "no lights selected"))))))
 
 (defn fans-view []
@@ -294,37 +349,42 @@
         fans (cell= (:fans data))
         fan  (cell= (some #(when (= id (:id %)) %) fans))
         tach (cell= (:tach fan))
-        pwm  (cell= (:pwm  fan))
-        auto (cell= (:auto fan))]
+        temp (cell= (:temp fan))
+        auto (cell= (:auto fan))
+        t->c (temp->color 20 80)
+        r->t (linear [0 100] [20 80])
+        t->r (linear [20 80] [0 100])]
     (list
-      (elem :sh (r 1 1) :sv (r 1 4)
+      (elem :sh (r 1 1) :sv (r 3 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Fans")
-        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph g-lg :gh g-lg :ah :mid :c grey-5
-          (for-tpl [{[type :as id*] :id name* :name auto :auto pwm :pwm tach :tach :as fan*} fans]
+        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph (* g-lg 3) :gh (* g-lg 3) :ah :mid :c grey-5
+          (for-tpl [{[type :as id*] :id name* :name auto :auto tach :tach temp :temp :as fan*} fans]
             (let [selected? (cell= (= id id*))]
-              (elem font-4 :sh (cell= (r 1 (count fans))) :sv (r 1 1) :pv g-lg :gv g-lg :ah :mid :bb 2
-                :bc (cell= (if selected? red grey-5))
+              (elem font-4 :sh (>sm (cell= (r 1 (count fans)))) :sv (r 1 1) :ah :mid :av :beg
+               ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :m  :pointer
                 :click #(reset! id (if (= @id @id*) nil @id*))
-                (elem :sh (r 1 1) :sv (- (r 1 1) 16 34 (* g-lg 3)) :r 2 :a :mid :c red :tx :capitalize
-                  (cell= (str pwm "%  " tach "%")))
-                (elem :sh (r 1 1) :ah :mid
+                (elem :sh (r 1 1) :sv (cell= (r (- 100 tach) 112) g-lg) :pv g-lg :ah :mid
                   name*)
-                (image :s 34 :src (cell= (when type (str (name type) "-icon.svg")))))))))
-      (elem :sh (r 1 1) :sv (r 3 4) :g l
-        (if-tpl id
-          (elem :s (r 1 1) :c grey-5
-            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-              "Speeds")
-            (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
-              (elem font-4 :sv 40 :ph g-lg :pv g-sm :a :mid :r 4 :c red :m :pointer :click #(s/set-fan-auto! @conn @id true)
-                "Set Auto")
-              (fslider :sh 24 :sv 400 :r 12 :src (cell= pwm  #(s/set-fan-pwm!  @conn @id %)))
-              (fslider :sh 24 :sv 400 :r 12 :src (cell= tach #(s/set-fan-tach! @conn @id %)))))
-          (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
-            "no fans selected"))))))
+                (elem :sh (r 1 1) :sv (r 1 1) :pv g-lg :rt 2 :ah :mid :c (cell= (t->c temp)) :tx :capitalize
+                  (elem :sh (r 1 1) :sv (- (r 1 1) 100) :ah :mid
+                    (cell= (str tach "%")))))))))
+      (elem :sh (r 1 1) :sv (r 2 5) :g l
+        (elem :s (r 1 1) :c grey-5
+          (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+            "Speeds")
+          (if-tpl id
+            (elem font-2 :s (- (r 1 1) 64) :p g-lg :g (* g-lg 2) :a :mid
+              (elem font-2 :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
+                "Tach"
+                (hswitch :sh 70 :sv 28 :c black :src (cell= auto #(s/set-fan-auto! @conn @id %)))
+                "Temp")
+              (hslider :sh (b 300 sm 600) :sv 28 :r 14 :c black
+                :src (cell= (if auto (t->r temp) tach) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-tach! @conn @id (int %))))))
+            (elem font-2 :s (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+              "no fans selected")))))))
 
 (window :g 2 :c grey-4 :scroll (b true sm false) :src route :title "Xotic"
   (elem :sh (r 1 1) :ah :mid :c black

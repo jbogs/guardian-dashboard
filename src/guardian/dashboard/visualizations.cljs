@@ -1,12 +1,12 @@
 (ns guardian.dashboard.visualizations
   (:require
-    [javelin.core         :refer [cell=]]
-    [hoplon.core          :refer [defelem for-tpl]]
-    [hoplon.svg           :refer [g line rect]]
-    [hoplon.ui            :refer [elem image svg t]]
-    [hoplon.ui.attrs      :refer [r rgb translate]]
-    [hoplon.ui.elems      :refer [in]]
-    [hoplon.ui.transforms :refer [cubic-in]]))
+    [javelin.core            :refer [cell=]]
+    [hoplon.core             :refer [defelem for-tpl]]
+    [hoplon.svg              :refer [g line rect]]
+    [hoplon.ui               :refer [elem image svg t]]
+    [hoplon.ui.attrs         :refer [r rgb translate]]
+    [hoplon.ui.elems         :refer [in]]
+    [hoplon.ui.interpolators :refer [cubic-in]]))
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -55,9 +55,9 @@
             (line :x1 x :y1 (cell= (- bv value)) :x2 x :y2 bv :stroke color :stroke-width s :stroke-linecap "round")))
         (grid :bh bh :bv bv :xticks (range 0 bh (* 10 s)) :yticks (range 0 bv (* 5 s))))
       #_(elem :sh (r 1 1) :p 10 :av :mid
-        (image :s 14 :url icon)
-        (elem :sh (- (r 1 1) 24 10) :p 8
-          name)))))
+         (image :s 14 :url icon)
+         (elem :sh (- (r 1 1) 24 10) :p 8
+           name)))))
 
 (defelem gauge [{:keys [data cfn] :as attrs}]
   (elem :d :pile (dissoc attrs :data :cfn)
@@ -95,4 +95,3 @@
              freq)
            (for-tpl [{{load :value} :load name :name} threads]
              (elem :sh 4 :sv (cell= (+ (* load 2) 6)) :r 6 :c (cell= (cfn temp)))))))))
-
