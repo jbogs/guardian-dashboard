@@ -113,7 +113,7 @@
 (defn fan [{:keys [name auto tach temp]}]
   {:id   [:fan name]
    :name name
-   :auto auto
+   :auto (if (= auto 0) false true)
    :tach tach
    :temp temp})
 
@@ -195,4 +195,4 @@
   (call (type->colkey type) conn :name name :temp temp))
 
 (defn set-fan-auto! [conn [type :name :as id] auto]
-  (call (type->colkey type) conn :name name :auto auto))
+  (call (type->colkey type) conn :name name :auto (if auto 1 0)))
