@@ -187,8 +187,8 @@
    (apply lgr 0 (map #(hsl h (r % 100) (r l 100)) (range 0 100)))))
 
 (defn l-grd [h s]
-  (let [s (if h (* (or s 1) 100) 0) ;; uv sliders
-        h (or h 0)]
+  (let [s (if h (or s 1) 100) ;; uv sliders
+        h (or h 290)]
    (apply lgr 0 (map #(hsl h (r s 100) (r % 100)) (range 0 100)))))
 
 (defelem color-picker [{:keys [src] :as attrs}]
@@ -308,8 +308,8 @@
                 :click #(reset! id (if (= @id @id*) nil @id*))
                 :c (cell= (case effect
                             :off   (hsl 0 (r 1 1) (r 0 1))
-                            :color (hsl (or h 0) (r (or (if h s 0) 1) 1) (r (or l 0.5) 1) o)
-                                   (lgr 180 (hsl (or hb 0) (r (or (if hb sb 0) 1) 1) (r (or lb 0.5) 1) o) (hsl (or he 0) (r (or (if he se 0) 1) 1) (r (or le 0.5) 1) o))))
+                            :color (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) o)
+                                   (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) o) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) o))))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
@@ -344,19 +344,19 @@
                   :color
                   (cell-let [[h s l] color]
                     (elem font-2 :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
-                      (when-tpl h (elem :sh 28 :gv g-xl "Hue" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l])))))
-                      (when-tpl s (elem :sh 28 :gv g-xl "Sat" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(s/set-color! @conn @id [@h                (/ % 100) @l])))))
-                      (when-tpl l (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(s/set-color! @conn @id [@h                @s        (/ % 100)])))))))
+                      (when-tpl h (elem :sh 28 :gv g-xl :ah :mid "Hue" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l])))))
+                      (when-tpl s (elem :sh 28 :gv g-xl :ah :mid "Sat" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(s/set-color! @conn @id [@h                (/ % 100) @l])))))
+                      (when-tpl l (elem :sh 28 :gv g-xl :ah :mid "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(s/set-color! @conn @id [@h                @s        (/ % 100)])))))))
                   (cell-let [[hb sb lb] beg-color [he se le] end-color]
-                    (elem :s (r 1 1) :p g-lg :gh (* 9 g-lg) :a :mid
+                    (elem font-2 :s (r 1 1) :p g-lg :gh (* 9 g-lg) :a :mid
                       (elem :gh (* 3 g-lg)
-                        (when-tpl hb (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd sb lb)) :src (cell= (* (/ hb 360) 100) #(s/set-beg-color! @conn @id [(* (/ % 100) 360) @sb       @lb])))))
-                        (when-tpl sb (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd hb lb)) :src (cell= (* sb 100)         #(s/set-beg-color! @conn @id [@hb               (/ % 100) @lb])))))
-                        (when-tpl lb (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd hb sb)) :src (cell= (* lb 100)         #(s/set-beg-color! @conn @id [@hb               @sb       (/ % 100)]))))))
+                        (when-tpl hb (elem :sh 28 :gv g-xl "Hue" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd sb lb)) :src (cell= (* (/ hb 360) 100) #(s/set-beg-color! @conn @id [(* (/ % 100) 360) @sb       @lb])))))
+                        (when-tpl sb (elem :sh 28 :gv g-xl "Sat" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd hb lb)) :src (cell= (* sb 100)         #(s/set-beg-color! @conn @id [@hb               (/ % 100) @lb])))))
+                        (when-tpl lb (elem :sh 28 :gv g-xl "Lum" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd hb sb)) :src (cell= (* lb 100)         #(s/set-beg-color! @conn @id [@hb               @sb       (/ % 100)]))))))
                       (elem :gh (* 3 g-lg)
-                        (when-tpl he (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd se le)) :src (cell= (* (/ he 360) 100) #(s/set-end-color! @conn @id [(* (/ % 100) 360) @se       @le])))))
-                        (when-tpl se (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd he le)) :src (cell= (* se 100)         #(s/set-end-color! @conn @id [@he               (/ % 100) @le])))))
-                        (when-tpl le (elem :sh 28 :gv g-xl "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd he se)) :src (cell= (* le 100)         #(s/set-end-color! @conn @id [@he               @se       (/ % 100)]))))))))))
+                        (when-tpl he (elem :sh 28 :gv g-xl "Hue" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd se le)) :src (cell= (* (/ he 360) 100) #(s/set-end-color! @conn @id [(* (/ % 100) 360) @se       @le])))))
+                        (when-tpl se (elem :sh 28 :gv g-xl "Sat" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd he le)) :src (cell= (* se 100)         #(s/set-end-color! @conn @id [@he               (/ % 100) @le])))))
+                        (when-tpl le (elem :sh 28 :gv g-xl "Lum" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd he se)) :src (cell= (* le 100)         #(s/set-end-color! @conn @id [@he               @se       (/ % 100)]))))))))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no lights selected"))))))))
 
@@ -385,7 +385,7 @@
                 (elem :sh (r 1 1) :sv (cell= (r (- 100 tach) 108) g-lg) :pv g-lg :ah :mid
                   name*)
                 (elem :sh (r 1 1) :sv (cell= (r (+ tach 8))) :pv g-lg :rt 2 :ah :mid :c (cell= (t->c temp)) :tx :capitalize
-                  (cell= (str tach "%"))))))))
+                  (cell= (str tach " RPM"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
         (elem :s (r 1 1) :c grey-5
           (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
@@ -393,11 +393,11 @@
           (if-tpl id
             (elem font-2 :s (- (r 1 1) 64) :p g-lg :gv (* 3 g-lg) :a :mid
               (elem font-2 :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
-                "Tach"
+                "PWM"
                 (hswitch :sh 70 :sv 28 :c black :src (cell= auto #(s/set-fan-auto! @conn @id %)))
                 "Temp")
               (hslider :sh (b 300 sm 600) :sv 28 :r 14 :c black
-                :src (cell= (if auto (t->r temp) tach) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-tach! @conn @id (int %))))))
+                :src (cell= (if auto (t->r temp) tach) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-pwm! @conn @id (int %))))))
             (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
               "no fans selected")))))))
 
