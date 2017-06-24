@@ -45,6 +45,11 @@
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(def main-menu-items
+  [{:view :system :label "System Monitor"}
+   {:view :lights :label "Light Settings"}
+   {:view :fans   :label "Fan Settings"}])
+
 (def footer-menu-items
   [["facebook-icon.svg"  "https://www.facebook.com/xoticpc/"]
    ["instagram-icon.svg" "https://www.instagram.com/xoticpc/"]
@@ -123,7 +128,7 @@
 
 ;;; components ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem slider [{:keys [sh sv s src] r* :r :as attrs}]
+(defelem slider [{:keys [sh sv s src commit] r* :r :as attrs}]
   ;- change sizes to body after api refactoring where border becomes stroke
   ;- substract border from sizes / add border to body bh bv b
   ;- support different types of transitions
@@ -185,14 +190,21 @@
         h (or h 0)]
    (apply lgr 0 (map #(hsl h (r s 100) (r % 100)) (range 0 100)))))
 
-;(defelem color [{:keys [src]}]
-;  (for-tpl [[h s l] src]
-;    (let [h (or h 0)
-;          s (or)]
-;      (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(reset! src [(* (/ % 100) 360) @s        @l])))))
-;  (when-tpl h (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(reset! src [(* (/ % 100) 360) @s        @l]))))
-;  (when-tpl s (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(reset! src [@h                (/ % 100) @l]))))
-;  (when-tpl l (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(reset! src [@h                @s        (/ % 100)])))))
+(defelem color-picker [{:keys [src] :as attrs}]
+  (let [h   (cell= (:h src))
+        s   (cell= (:s src))
+        l   (cell= (:l src))
+        -s- {:sh 28 :sv 400 :r 14}]
+    (elem font-2 (dissoc attrs :src)
+      (elem
+        "Hue"
+        (vslider -s- :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(reset! src [(* (/ % 100) 360) @s        @l]))))
+      (elem
+        "Sat"
+        (vslider -s- :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(reset! src [@h                (/ % 100) @l]))))
+      (elem
+        "Lum"
+        (vslider -s- :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(reset! src [@h                @s        (/ % 100)])))))))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -285,13 +297,12 @@
       (elem :sh (r 1 1) :sv (r 1 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Lights")
-        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5 :gh 6 :ah :mid
+        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5 :gh l :gv (b l sm nil) :ah :mid
           (for-tpl [{[type :as id*] :id name* :name effect :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
             (let [selected? (cell= (= light light*))
                   o         (cell= (if selected? (r 1 1) (r 1 4)))
                   solid?    (cell= (= effect :color))]
               (elem font-4 :sh (>sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv g-lg :gv g-lg :a :mid :m :pointer
-               ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :click #(reset! id (if (= @id @id*) nil @id*))
                 :c (cell= (case effect
@@ -304,45 +315,49 @@
                 (elem :sh (r 1 1) :ah :mid
                   (cell= (first (s/effects effect)))))))))
       (elem :sh (r 1 1) :sv (r 4 5) :g l
-        (if-tpl id
-          (list
-            (elem :sh (>sm (r 1 4)) :sv (r 1 1)
-              (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-                "Effects")
+        (list
+          (elem :sh (>sm (r 1 4)) :sv (r 1 1)
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Effects")
+            (if-tpl id
               (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
-                 (for [[effect* [name* _ icon]] s/effects]
-                    (let [selected (cell= (= effect effect*))]
-                      (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
-                         :c (cell= (when selected grey-4))
-                         :click #(s/set-effect! @conn @id effect*)
-                         ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @id %)
-                        (image :s 26 :src (cell= (str icon "-icon.svg")))
-                        (elem name*))))))
-            (elem :sh (>sm (r 3 4)) :sv (- (r 1 1) 64) :c grey-5
-              (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-                "Colors")
-              (case-tpl effect
-                :off
-                (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
-                  "no effects enabled")
-                :color
-                (cell-let [[h s l] color]
-                  (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
-                    (when-tpl h (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l]))))
-                    (when-tpl s (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(s/set-color! @conn @id [@h                (/ % 100) @l]))))
-                    (when-tpl l (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(s/set-color! @conn @id [@h                @s        (/ % 100)]))))))
-                (cell-let [[hb sb lb] beg-color [he se le] end-color]
-                  (elem :s (r 1 1) :p g-lg :gh (* 9 g-lg) :a :mid
-                    (elem :gh (* 3 g-lg)
-                      (when-tpl hb (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd sb lb)) :src (cell= (* (/ hb 360) 100) #(s/set-beg-color! @conn @id [(* (/ % 100) 360) @sb       @lb]))))
-                      (when-tpl sb (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd hb lb)) :src (cell= (* sb 100)         #(s/set-beg-color! @conn @id [@hb               (/ % 100) @lb]))))
-                      (when-tpl lb (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd hb sb)) :src (cell= (* lb 100)         #(s/set-beg-color! @conn @id [@hb               @sb       (/ % 100)])))))
-                    (elem :gh (* 3 g-lg)
-                      (when-tpl he (vslider :sh 28 :sv 400 :r 14 :c (cell= (h-grd se le)) :src (cell= (* (/ he 360) 100) #(s/set-end-color! @conn @id [(* (/ % 100) 360) @se       @le]))))
-                      (when-tpl se (vslider :sh 28 :sv 400 :r 14 :c (cell= (s-grd he le)) :src (cell= (* se 100)         #(s/set-end-color! @conn @id [@he               (/ % 100) @le]))))
-                      (when-tpl le (vslider :sh 28 :sv 400 :r 14 :c (cell= (l-grd he se)) :src (cell= (* le 100)         #(s/set-end-color! @conn @id [@he               @se       (/ % 100)]))))))))))
-          (elem font-2 :s (r 1 1) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-            "no lights selected"))))))
+                (for [[effect* [name* _ icon]] s/effects]
+                  (let [selected (cell= (= effect effect*))]
+                    (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
+                       :c (cell= (when selected grey-4))
+                       :click #(s/set-effect! @conn @id effect*)
+                       ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @id %)
+                      (image :s 26 :src (cell= (str icon "-icon.svg")))
+                      (elem name*)))))
+              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+                "no lights selected")))
+          (elem :sh (>sm (r 3 4)) :sv (r 1 1) :c grey-5
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Colors")
+            (if-tpl id
+              (elem :s (r 1 1) :sv (- (r 1 1) 64)
+                (case-tpl effect
+                  :off
+                  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                    "no effects enabled")
+                  :color
+                  (cell-let [[h s l] color]
+                    (elem :s (r 1 1) :p g-lg :gh (* 3 g-lg) :a :mid
+                      (when-tpl h (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l]))))
+                      (when-tpl s (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(s/set-color! @conn @id [@h                (/ % 100) @l]))))
+                      (when-tpl l (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(s/set-color! @conn @id [@h                @s        (/ % 100)]))))))
+                  (cell-let [[hb sb lb] beg-color [he se le] end-color]
+                    (elem :s (r 1 1) :p g-lg :gh (* 9 g-lg) :a :mid
+                      (elem :gh (* 3 g-lg)
+                        (when-tpl hb (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd sb lb)) :src (cell= (* (/ hb 360) 100) #(s/set-beg-color! @conn @id [(* (/ % 100) 360) @sb       @lb]))))
+                        (when-tpl sb (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd hb lb)) :src (cell= (* sb 100)         #(s/set-beg-color! @conn @id [@hb               (/ % 100) @lb]))))
+                        (when-tpl lb (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd hb sb)) :src (cell= (* lb 100)         #(s/set-beg-color! @conn @id [@hb               @sb       (/ % 100)])))))
+                      (elem :gh (* 3 g-lg)
+                        (when-tpl he (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd se le)) :src (cell= (* (/ he 360) 100) #(s/set-end-color! @conn @id [(* (/ % 100) 360) @se       @le]))))
+                        (when-tpl se (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd he le)) :src (cell= (* se 100)         #(s/set-end-color! @conn @id [@he               (/ % 100) @le]))))
+                        (when-tpl le (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd he se)) :src (cell= (* le 100)         #(s/set-end-color! @conn @id [@he               @se       (/ % 100)])))))))))
+              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+                "no lights selected"))))))))
 
 (defn fans-view []
   (let [id   (cell nil)
@@ -358,35 +373,34 @@
       (elem :sh (r 1 1) :sv (r 3 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Fans")
-        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph (* g-lg 3) :gh (* g-lg 3) :ah :mid :c grey-5
+        (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph (b 0 sm (* g-lg 3)) :gh (b 0 sm (* g-lg 3)) :ah :mid :c grey-5
           (for-tpl [{[type :as id*] :id name* :name auto :auto tach :tach temp :temp :as fan*} fans]
             (let [selected? (cell= (= id id*))]
-              (elem font-4 :sh (>sm (cell= (r 1 (count fans)))) :sv (r 1 1) :ah :mid :av :beg
+              (elem font-4 :sh (cell= (r 1 (count fans))) :sv (b 800 sm (r 1 1)) :ah :mid :av :beg
                ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :m  :pointer
                 :click #(reset! id (if (= @id @id*) nil @id*))
-                (elem :sh (r 1 1) :sv (cell= (r (- 100 tach) 112) g-lg) :pv g-lg :ah :mid
+                (elem :sh (r 1 1) :sv (cell= (r (- 100 tach) 108) g-lg) :pv g-lg :ah :mid
                   name*)
-                (elem :sh (r 1 1) :sv (r 1 1) :pv g-lg :rt 2 :ah :mid :c (cell= (t->c temp)) :tx :capitalize
-                  (elem :sh (r 1 1) :sv (- (r 1 1) 100) :ah :mid
-                    (cell= (str tach "%")))))))))
+                (elem :sh (r 1 1) :sv (cell= (r (+ tach 8))) :pv g-lg :rt 2 :ah :mid :c (cell= (t->c temp)) :tx :capitalize
+                  (cell= (str tach "%"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
         (elem :s (r 1 1) :c grey-5
           (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
             "Speeds")
           (if-tpl id
-            (elem font-2 :s (- (r 1 1) 64) :p g-lg :g (* g-lg 2) :a :mid
+            (elem font-2 :s (- (r 1 1) 64) :p g-lg :gv (* 3 g-lg) :a :mid
               (elem font-2 :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
                 "Tach"
                 (hswitch :sh 70 :sv 28 :c black :src (cell= auto #(s/set-fan-auto! @conn @id %)))
                 "Temp")
               (hslider :sh (b 300 sm 600) :sv 28 :r 14 :c black
                 :src (cell= (if auto (t->r temp) tach) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-tach! @conn @id (int %))))))
-            (elem font-2 :s (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+            (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
               "no fans selected")))))))
 
-(window :g 2 :c grey-4 :scroll (b true sm false) :src route :title "Xotic"
+(window :g l :c grey-4 :scroll (b true sm false) :src route :title "Xotic"
   (elem :sh (r 1 1) :ah :mid :c black
     (elem :sh (r 1 1) :ah (b :mid sm :beg) :av (b :beg sm :mid) :p g-lg :gv g-lg
       (image :sh 200 :src "xotic-pc-logo.svg" :m :pointer :click #(.open js/window "https://www.xoticpc.com"))
@@ -394,23 +408,23 @@
         (for [[logo link] footer-menu-items]
           (image :m :pointer :src logo :click #(.open js/window link))))))
   (if-tpl (cell= (not data))
-    (elem :s (r 1 1) :pb 200 :a :mid :c black
+    (elem :sh (r 1 1) :sv (- (r 1 1) (- 78 l)) :pb 100 :a :mid :c black
       (elem :s 100 :g 10 :ah :mid
         (image :src "loading-icon.png")
         (elem :sh (r 1 1) :ah :mid font-2 :tc (white :a 0.9)
           "connecting")))
     (let [sh-close 80 sh-open 240]
-      (elem :sh (r 1 1) :sv (- (r 1 1) 62 l) :g l
-        (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 3 5)) :gv l
-          (for-tpl [{label :label v :view} (cell= [{:view :system :label "System Monitor"} {:view :lights :label "Light Settings"} {:view :fans :label "Fan Settings"}])]
+      (elem :sh (r 1 1) :sv (b nil sm (- (r 1 1) (- 78 l))) :g l
+        (elem :sh (>sm sh-close md sh-open) :sv (b nil sm (r 1 1)) :gv l
+          (for [{label :label v :view} main-menu-items]
             (let [selected (cell= (= state v))]
-              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :tc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(reset! state @v)
-                (image :s 34 :a :mid :src (cell= (when v (str (name v) "-icon.svg"))))
+              (elem font-4 :sh (r 1 1) :s sh-close :ph g-lg :gh g-lg :ah (b :mid md :beg) :av :mid :c (cell= (if selected grey-4 grey-5)) :tc (cell= (if selected white grey-1)) :bl 2 :bc (cell= (if selected red grey-5)) :m :pointer :click #(reset! state v)
+                (image :s 34 :a :mid :src (when v (str (name v) "-icon.svg")))
                 (when-tpl (b true sm false md true)
                   (elem :sh (b 120 sm (- (r 1 1) 34 g-lg))
                     label)))))
-          (b nil sm (elem :sh (>sm sh-close md sh-open) :sv (r 2 1) :c grey-6)))
-        (elem :sh (>sm (- (r 1 1) sh-close l) md (- (r 1 1) sh-open l)) :sv (b nil sm (r 1 1)) :g l
+          (b nil sm (elem :sh (>sm sh-close md sh-open) :sv (- (r 1 1) (- (* (count main-menu-items) (+ 80 l)) l)) :c grey-6)))
+        (elem :sh (>sm (- (r 1 1) sh-close l) md (- (r 1 1) sh-open l)) :sv (b nil sm (r 101)) :g l
           (case-tpl state
             :system (system-view)
             :fans   (fans-view)
