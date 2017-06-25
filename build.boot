@@ -63,7 +63,7 @@
   (assert environment "Missing required environment argument.")
   (let [b (buckets       environment)
         d (distributions environment)]
-    (comp (build :optimizations optimizations :service service) (spew :bucket b) (burst :distribution d))))
+    (comp (build :optimizations optimizations :service service) (spew :bucket b) #_(burst :distribution d))))
 
 (deftask package
   "Build the application with advanced optimizations then dump it into the tgt folder."
