@@ -29,7 +29,7 @@
 (defn deb= [c f & [ms]]
   "debouncing transaction lens"
   (let [val (cell nil)
-        set #(dosync (when (not= % @c) (f %)) (reset! val nil))
+        set #(dosync (when (not= % @c) (f %)) #_(reset! val nil))
         deb (debounce (or ms 1000) set)
         deb #(do (deb %) (reset! val %))]
     (cell= (or val c) #(if (= % ::tx) (set val) (deb %)))))
@@ -41,7 +41,6 @@
   (let [v (cell nil)
         a (alts! c v)]
     (cell= (first a) #(if (lens? c) (reset! c %) (reset! v %)))))
-
 
 ;;; content ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -114,23 +113,14 @@
 ;-- typography ----------------------------------------------------------------;
 
 (def magistralc-bold (font :system ["MagistralC Bold"] :opentype "magistralc-bold.otf"))
-(def lato-semibold   (font :system ["Lato Semibold"]   :truetype "lato-semibold.ttf"))
-(def lato-medium     (font :system ["Lato Medium"]     :truetype "lato-medium.ttf"))
 
-(def font-1     {:t 21 :tf magistralc-bold :tc white})
-(def font-2     {:t 18 :tf magistralc-bold :tc white})
-(def font-3     {:t 16 :tf magistralc-bold :tc white})
-(def font-4     {:t 14 :tf magistralc-bold :tc white})
-(def font-5     {:t 12 :tf magistralc-bold :tc white})
-(def font-label {:t 14 :tf lato-semibold   :tc black})
-(def font-body  {:t 12 :tf lato-medium     :tc black})
-
-;-- attributes ----------------------------------------------------------------;
-
+(def font-2 {:t 18 :tf magistralc-bold :tc white})
+(def font-4 {:t 14 :tf magistralc-bold :tc white})
+(def font-5 {:t 12 :tf magistralc-bold :tc white})
 
 ;;; components ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defelem slider [{:keys [sh sv s src commit] r* :r :as attrs}]
+(defelem slider [{:keys [sh sv s src] r* :r :as attrs}]
   ;- change sizes to body after api refactoring where border becomes stroke
   ;- substract border from sizes / add border to body bh bv b
   ;- support different types of transitions
@@ -140,7 +130,7 @@
   ;- consider passing curried interpolator function
   ;- handle overflowing margins without overflow: none due to perf problem. new
   ;  box model may fix.
-  (let [src    (cache src)
+  (let [src    (deb= src #(reset! src %) 300)
         w      (cell= (or sh s))
         h      (cell= (or sv s))
         kd     (cell= (min 32 w h))
@@ -167,8 +157,7 @@
   (slider :src (cell= (vector 0 src) #(reset! src (y %))) (dissoc attrs :src)))
 
 (defelem hswitch [{:keys [sh sv s src] r* :r :as attrs}]
-   (cell= (prn :src src))
-  (let [src (cache src)
+  (let [src (deb= src #(reset! src %) 300)
         w   (cell= (or sh s))
         sw  (cell= (/ w 2))
         sdw (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0)]
@@ -193,22 +182,6 @@
         h (or h (if r? 0 290))
         s (* (or s 1) 100)]
    (apply lgr 0 (map #(hsl h (r s 100) (r % 100)) (range 0 (if uv? 100 50))))))
-
-(defelem color-picker [{:keys [src] :as attrs}]
-  (let [h   (cell= (:h src))
-        s   (cell= (:s src))
-        l   (cell= (:l src))
-        -s- {:sh 28 :sv 400 :r 14}]
-    (elem font-2 (dissoc attrs :src)
-      (elem
-        "Hue"
-        (vslider -s- :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100) #(reset! src [(* (/ % 100) 360) @s        @l]))))
-      (elem
-        "Sat"
-        (vslider -s- :c (cell= (s-grd h l)) :src (cell= (* s 100)         #(reset! src [@h                (/ % 100) @l]))))
-      (elem
-        "Lum"
-        (vslider -s- :c (cell= (l-grd h s)) :src (cell= (* l 100)         #(reset! src [@h                @s        (/ % 100)])))))))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
