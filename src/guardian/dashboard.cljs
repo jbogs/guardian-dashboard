@@ -29,10 +29,11 @@
 (defn deb= [c f & [ms]]
   "debouncing transaction lens"
   (let [val (cell nil)
-        set #(dosync (when (not= % @c) (f %)) #_(reset! val nil))
+        set #(when (not= % @c) (f %))
         deb (debounce (or ms 1000) set)
-        deb #(do (deb %) (reset! val %))]
-    (cell= (or val c) #(if (= % ::tx) (set val) (deb %)))))
+        deb #(do (deb %) (reset! val %))
+        src (alts! val c)]
+    (cell= (first src) #(if (= % ::tx) (set val) (deb %)))))
 
 (defn commit! [cell]
   (reset! cell ::tx))
