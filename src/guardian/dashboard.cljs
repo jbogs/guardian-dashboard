@@ -131,7 +131,7 @@
   ;- consider passing curried interpolator function
   ;- handle overflowing margins without overflow: none due to perf problem. new
   ;  box model may fix.
-  (let [src    (deb= src #(reset! src %) 300)
+  (let [src    (deb= src #(reset! src %) 500)
         w      (cell= (or sh s))
         h      (cell= (or sv s))
         kd     (cell= (min 32 w h))
@@ -143,8 +143,8 @@
         pos    (cell= [(dx->rx (clamp (x src) 0 100)) (dy->ry (clamp (y src) 0 100))] #(reset! src [(clamp (@rx->dx (x %)) 0 100) (clamp (@ry->dy (y %)) 0 100)]))
         sdw    (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0)]
     (elem :d (sdw :inset true) :r r* :m :pointer
-      :pl   (t (cell= (x pos)) 300 quadratic-out)
-      :pt   (t (cell= (y pos)) 300 quadratic-out)
+      :pl   (t (cell= (x pos)) 500 quadratic-out)
+      :pt   (t (cell= (y pos)) 500 quadratic-out)
       :overflowv :hidden
       :up   #(reset! pos (loc %))
       :move #(when (= (.-which %) 1) (reset! pos (loc %)))
@@ -158,12 +158,12 @@
   (slider :src (cell= (vector 0 src) #(reset! src (y %))) (dissoc attrs :src)))
 
 (defelem hswitch [{:keys [sh sv s src] r* :r :as attrs}]
-  (let [src (deb= src #(reset! src %) 300)
+  (let [src (deb= src #(reset! src %) 500)
         w   (cell= (or sh s))
         sw  (cell= (/ w 2))
         sdw (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0)]
     (elem :d (sdw :inset true) :r 4 :m :pointer
-      :pl   (t (cell= (if-not src 0 sw)) 300 quadratic-out)
+      :pl   (t (cell= (if-not src 0 sw)) 500 quadratic-out)
       :down #(swap! src not)
       (dissoc attrs :src)
       (elem :sh sw :sv (r 1 1) :c red :r 4 :b 2 :bc (white :a 0.6) :d sdw))))
