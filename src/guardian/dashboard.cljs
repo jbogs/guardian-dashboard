@@ -341,6 +341,7 @@
   (let [id   (cell nil)
         fans (cell= (:fans data))
         fan  (cell= (some #(when (= id (:id %)) %) fans))
+        pwm  (cell= (:pwm  fan))
         tach (cell= (:tach fan))
         temp (cell= (:temp fan))
         auto (cell= (:auto fan))
@@ -360,9 +361,9 @@
                 :tc (cell= (if selected? white grey-1))
                 :m  :pointer
                 :click #(reset! id (if (= @id @id*) nil @id*))
-                (elem :sh (r 1 1) :sv (cell= (r (- 100 tach) 108) g-lg) :pv g-lg :ah :mid
+                (elem :sh (r 1 1) :sv (cell= (r (- 5000 tach) 5008) g-lg) :pv g-lg :ah :mid
                   name*)
-                (elem :sh (r 1 1) :sv (cell= (r (+ tach 8))) :pv g-lg :rt 2 :ah :mid :c (cell= (if auto ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
+                (elem :sh (r 1 1) :sv (cell= (r (+ tach 8) 5000)) :pv g-lg :rt 2 :ah :mid :c (cell= (if auto ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
                   (cell= (str tach " RPM"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
         (elem :s (r 1 1) :c grey-5
@@ -377,7 +378,7 @@
               (elem :sh (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
                 (if-tpl auto "20°" "0%")
                 (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
-                  :src (cell= (if auto (t->r temp) tach) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-pwm! @conn @id (int %)))))
+                  :src (cell= (if auto (t->r temp) pwm) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-pwm! @conn @id (int %)))))
                 (if-tpl auto "80°" "100%")))
             (elem font-2 :sh (r 1 1) :sv (b 152 sm (- (r 1 1) 64)) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
               "no fans selected")))))))

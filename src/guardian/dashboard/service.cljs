@@ -110,10 +110,11 @@
    :beg-color beg_color
    :end-color end_color})
 
-(defn fan [{:keys [name auto tach temp]}]
+(defn fan [{:keys [name auto pwm tach temp]}]
   {:id   [:fan name]
    :name name
    :auto (if (= auto 0) false true)
+   :pwm  pwm
    :tach tach
    :temp temp})
 
