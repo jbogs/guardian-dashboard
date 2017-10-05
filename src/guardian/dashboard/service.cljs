@@ -9,10 +9,12 @@
 (def effects
   {:off      ["Off"         nil            "off"]
    :color    ["Solid Color" "static_color" "color"]
+   :rainbow  ["Rainbow"     "rainbow"      "color"]
+   :police   ["Police"      "police"       "color"]
    :cpu-load ["CPU Load"    "cpu_load"     "cpu"]
    :cpu-temp ["CPU Temp"    "cpu_temp"     "cpu"]
    :gpu-load ["GPU Load"    "gpu_load"     "gpu"]
-   :gpu-temp ["GPU Temp" "gpu_temp"     "gpu"]})
+   :gpu-temp ["GPU Temp"    "gpu_temp"     "gpu"]})
 
 (def sensors
   {:cpu-power         "Package"
@@ -170,7 +172,7 @@
   (let [cljs #(js->clj % :keywordize-keys true)
         parse #(-> % .-data js/JSON.parse cljs)]
     (with-let [_ conn]
-      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (reset! state (data (:data d))))))))
+      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (prn :data (data (:data d))) (reset! state (data (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
       (call "get_sensors" conn))))
 
