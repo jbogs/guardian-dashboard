@@ -1,50 +1,238 @@
-{:mb {:name "Micro-Star International Co., Ltd. MS-16H8"
-          :fans []
-          :temps [{:name "THRM", :value 38}
-                  {:name "TZ00", :value 27.8}
-                  {:name "TZ01", :value 29.8}]
-          :volts []}
-     :cpus [{:name "Intel Core i7 6700HQ"
-             :loads [{:name "UC", :value 2.73}
-                     {:name "CPU #0", :value 15.38}
-                     {:name "CPU #1", :value 0}
-                     {:name "CPU #2", :value 0}
-                     {:name "CPU #3", :value 0}
-                     {:name "CPU #4", :value 1.54}
-                     {:name "CPU #5", :value 0}
-                     {:name "CPU #6", :value 0}
-                     {:name "CPU #7", :value 0}]
-             :temps [{:name "Core #0", :value 33}
-                     {:name "Core #1", :value 35}
-                     {:name "Core #2", :value 33}
-                     {:name "Core #3", :value 34}
-                     {:name "Package", :value 35}]
-             :volts [{:name "VID", :value 0.84}
-                     {:name "IA Offset", :value 0}
-                     {:name "GT Offset", :value 0}
-                     {:name "LLC/Ring Offset", :value 0}
-                     {:name "System Agent Offset", :value 0}]}]
-     :hdds [{:name "HGST HTS721010A9E630"
-             :loads [{:name "Space (e:)", :value 0.02}]
-             :temps [{:name "Assembly", :value 29}]}
-            {:name "SAMSUNG MZVPV128HDGM-00000"
-             :loads [{:name "Space (c:)", :value 18.84}]
-             :temps [{:name "Assembly", :value 35}]}]
-     :gpus [{:name "Intel(R) HD Graphics 530"
-             :fans []
-             :loads []
-             :temps []}
-            {:name "NVIDIA GeForce GTX 965M"
-             :fans []
-             :loads [{:name "Memory", :value 1.42}
-                     {:name "GPU", :value 0}
-                     {:name "Frame Buffer", :value 0}
-                     {:name "Video Engine", :value 0}
-                     {:name "Bus Interface", :value 0}]
-             :temps [{:name "TMPIN0", :value 37}]}]
-     :memory {:free 5788790784, :total 8496087040}
-     :led_keyboard {:1 {:name "static_color", :zone "1", :color [0 0 0]}
-                    :2 {:name "static_color", :zone "2", :color [0 0 0]}
-                    :3 {:name "static_color", :zone "3", :color [0 0 0]}
-                    :all {:name "off", :zone "all", :color [0 0 0]}}}
-
+{:name           "Micro-Star International Co., Ltd. MS-16H8"
+ :type           :mb
+ :zone-1         {:name "CPU Thermal Zone"
+                  :desc "Located next to the CPU core on Intel boards"
+                  :temp {:value 0}}
+ :zone-2         {:name "North Bridge Thermal Zone"
+                  :desc "Located next to the CPU socket on Intel boards"
+                  :temp {:value 0}}
+ :zone-3         {:name "South Bridge Thermal Zone"
+                  :desc "Located next to the memory slots on Intel boards"
+                  :temp {:value 0}}
+ :memory         {:name  "Samsung DDR4-2132"
+                  :type  :memory
+                  :used  {:value 3580039168}
+                  :total {:value 8496087040}}
+ :cpus           [{:name  "Intel Core i7 6700HQ"
+                   :type  :cpu
+                   :temp  {:value 65, :sensor "Package"}
+                   :load  {:value 31, :sensor "UC"}
+                   :cores [{:name    "Core #0"                     ;; human readable label associated with each core
+                            :temp    {:value 64 :sensor "Core #0"} ;; in theory, each reading carries its value and the identifier of the sensor it originated from
+                            :freq    {:value 3090 :sensor "Core #0"}
+                            :threads ({:name "UC"
+                                       :load {:value 31 :sensor "UC"}}
+                                      {:name "CPU #0"
+                                       :load {:value 15 :sensor "CPU #0"}})}
+                           {:name    "Core #1"
+                            :temp    {:value 59 :sensor "Core #1"}
+                            :freq    {:value 3090 :sensor "Core #1"}
+                            :threads ({:name "CPU #1"
+                                       :load {:value 100 :sensor "CPU #1"}}
+                                      {:name "CPU #2"
+                                       :load {:value 3 :sensor "CPU #2"}})}
+                           {:name    "Core #2"
+                            :temp    {:value 55, :sensor "Core #2"}
+                            :freq    {:value 3090, :sensor "Core #2"}
+                            :threads ({:name "CPU #3"
+                                       :load {:value 43 :sensor "CPU #3"}}
+                                      {:name "CPU #4"
+                                       :load {:value 12 :sensor "CPU #4"}})}
+                           {:name    "Core #3"
+                            :temp    {:value 56 :sensor "Core #3"}
+                            :freq    {:value 3090 :sensor "Core #3"}
+                            :threads ({:name "CPU #5"
+                                       :load {:value 1 :sensor "CPU #5"}}
+                                      {:name "CPU #6"
+                                       :load {:value 6 :sensor "CPU #6"}})}]}]
+ :graphics-cards [{:name          "NVIDIA GeForce GTX 965M"
+                   :type          :graphics-card
+                   :integrated?   false
+                   :gpu           {:name "GPU"
+                                   :temp {:value 56 :sensor "GPU"}
+                                   :load {:value 84 :sensor "GPU"}}
+                   :memory        {:name "Memory"
+                                   :load {:value 2 :sensor "Memory"}}
+                   :frame-buffer  {:name "Frame Buffer"
+                                   :load {:value 4 :sensor "Frame Buffer"}}
+                   :video-engine  {:name "Video Engine"
+                                   :temp {:value 0,  :sensor "Video Engine"}}
+                   :bus-interface {:name "Bus Interface"
+                                   :temp {:value 31, :sensor "Bus Interface"}}}
+                  {:name          "Intel(R) HD Graphics 530"
+                   :type          :graphics-card
+                   :integrated?   true
+                   :gpu           {:name "Intel(R) HD Graphics 530"}}]
+ :hard-drives    [{:name    "SAMSUNG MZVPV128HDGM-00000"
+                   :type    :hard-drive
+                   :temp    {:value 42}
+                   :load    {:value 45.79}
+                   :volumes [{:load {:value 45 :sensor "C:"}
+                              :temp {:value 42 :sensor "Assembly"}
+                              :name "C:"}]}
+                  {:name    "HGST HTS721010A9E630"
+                   :type    :hard-drive
+                   :temp    {:value 30}
+                   :load    {:value 0.02}
+                   :volumes [{:load {:value 0 :sensor "E:"}
+                              :temp {:value 30 :sensor "Assembly"}
+                              :name "E:"}]}]
+ ;; all devices that have user-controllable lights on them appear here
+ :lights         [{:id        [:fan "Fan 1"]                                    ;; each entity modified by the client needs a discrete machine readable identifier so the client can write to the server.  a uuid or something similar would be ideal here.
+                   :name      "Fan 1"                                           ;; each entity has a human readable name that can appear to identify it to the user in the client
+                   :type      :fan                                              ;; the concrete type of the device
+                   :effect    :cpu-temp                                         ;; the type of the effect, based on the source it is linked to, determines the icon that appears next to it
+                   :color     [183.30039082268473 nil nil]
+                   :beg-color [358.5425101214575 nil nil]
+                   :end-color [0 nil nil]}
+                  {:id        [:fan "Fan 2"]
+                   :name      "Fan 2"
+                   :type      :fan
+                   :effect    :cpu-load
+                   :color     [0 nil nil]
+                   :beg-color [69.61618029636892 nil nil]
+                   :end-color [259.08986450689525 nil nil]}
+                  {:id        [:fan "Fan 3"]
+                   :name      "Fan 3"
+                   :type      :fan
+                   :effect    :cpu-temp
+                   :color     [0 nil nil]
+                   :beg-color [331.96435843402077 nil nil]
+                   :end-color [73.98864993199646 nil nil]}
+                  {:id        [:fan "Fan 4"]
+                   :name      "Fan 4"
+                   :type      :fan
+                   :effect    :gpu-load
+                   :color     [0 nil nil]
+                   :beg-color [240 nil nil]
+                   :end-color [0 nil nil]}
+                  {:id        [:fan "Fan 5"]
+                   :name      "Fan 5"
+                   :type      :fan
+                   :effect    :off
+                   :color     [0 nil nil]
+                   :beg-color [240 nil nil]
+                   :end-color [0 nil nil]}
+                  {:id        [:fan "Fan 6"]
+                   :name      "Fan 6"
+                   :type      :fan
+                   :effect    :cpu-temp
+                   :color     [0 nil nil]
+                   :beg-color [240 nil nil]
+                   :end-color [0 nil nil]}
+                  {:id        [:fan "Fan 7"]
+                   :name      "Fan 7"
+                   :type      :fan
+                   :effect    :off
+                   :color     [0 nil nil]
+                   :beg-color [240 nil nil]
+                   :end-color [0 nil nil]}
+                  {:id        [:strip "Strip 1"]
+                   :name      "Strip 1"
+                   :type      :strip
+                   :effect    :cpu-load
+                   :color     [0 1 0.5]
+                   :beg-color [78.36111956762399 1 0.24196127455244182]
+                   :end-color [315.9319697700531 1 0.5]}
+                  {:id        [:strip "Strip 2"]
+                   :name      "Strip 2"
+                   :type      :strip
+                   :effect    :cpu-load
+                   :color     [0 1 0.5]
+                   :beg-color [237.57085020242914 1 1]
+                   :end-color [300.2429149797571 1 0.5]}
+                  {:id        [:strip "Strip 3"]
+                   :name      "Strip 3"
+                   :type      :strip
+                   :effect    :off
+                   :color     [0 1 0.5]
+                   :beg-color [240 1 0.5]
+                   :end-color [0 1 0.5]}
+                  {:id        [:strip "Strip 4"]
+                   :name      "Strip 4"
+                   :type      :strip
+                   :effect    :off
+                   :color     [0 1 0.5]
+                   :beg-color [240 1 0.5]
+                   :end-color [0 1 0.5]}
+                  {:id        [:uv-strip "UV Strip 1"]
+                   :name      "UV Strip 1"
+                   :type      :uv-strip
+                   :effect    :color
+                   :color     [nil nil 0.5]
+                   :beg-color [nil nil 0.5]
+                   :end-color [nil nil 0.5]}
+                  {:id        [:uv-strip "UV Strip 2"]
+                   :name      "UV Strip 2"
+                   :type      :uv-strip
+                   :effect    :cpu-load
+                   :color     [nil nil 0.5]
+                   :beg-color [nil nil 0.5]
+                   :end-color [nil nil 0.04405756035314398]}]
+ ;; all coolind devices appear here
+ :fans           [{:id   [:fan "Fan 1"]
+                   :name "Fan 1"
+                   :auto true
+                   :pwm  55
+                   :tach 0
+                   :temp 40}
+                  {:id   [:fan "Fan 2"]
+                   :name "Fan 2"
+                   :auto true
+                   :pwm  0
+                   :tach 0
+                   :temp 64}
+                  {:id   [:fan "Fan 3"]
+                   :name "Fan 3"
+                   :auto true
+                   :pwm  51
+                   :tach 0
+                   :temp 64}
+                  {:id   [:fan "Fan 4"]
+                   :name "Fan 4"
+                   :auto true
+                   :pwm  0
+                   :tach 0
+                   :temp 0}
+                  {:id   [:fan "Fan 5"]
+                   :name "Fan 5"
+                   :auto false
+                   :pwm  0
+                   :tach 0
+                   :temp 0}
+                  {:id   [:fan "Fan 6"]
+                   :name "Fan 6"
+                   :auto false
+                   :pwm  0
+                   :tach 0
+                   :temp 0}
+                  {:id   [:fan "Fan 7"]
+                   :name "Fan 7"
+                   :auto false
+                   :pwm  0
+                   :tach 0
+                   :temp 0}]
+ :effects [{:id     "uid" ;; effect format
+            :name   "Off"
+            :type   :off}
+           {:id     "uid"
+            :name   "Solid Color"
+            :type   :color}
+           {:id     "uid"
+            :name   "Rainbow"
+            :type   :color}
+           {:id     "uid"
+            :name   "Police"
+            :type   :color}
+           {:id     "uid"
+            :name   "CPU Load"
+            :type   :cpu}
+           {:id     "uid"
+            :name   "CPU Temp"
+            :type   :cpu}
+           {:id     "uid"
+            :name   "GPU Load"
+            :type   :gup}
+           {:id     "uid"
+            :name   "GPU Temp"
+            :type   :gpu}]}
