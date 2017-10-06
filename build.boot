@@ -20,7 +20,7 @@
   '[tailrecursion.boot-front  :refer [burst]]
   '[tailrecursion.boot-static :refer [serve]])
 
-(def +version+ "3.0.0-alpha2")
+(def +version+ "3.0.0-alpha3")
 
 (def buckets
   {:guardian "guardiangui"
