@@ -9,6 +9,7 @@
 (def effects
   {:off      ["Off"         nil            "off"]
    :color    ["Solid Color" "static_color" "color"]
+   :morph    ["Morph"       "morph"        "color"]
    :rainbow  ["Rainbow"     "rainbow"      "color"]
    :police   ["Police"      "police"       "color"]
    :cpu-load ["CPU Load"    "cpu_load"     "cpu"]
