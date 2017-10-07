@@ -6,16 +6,43 @@
 
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def effects
-  {:off      ["Off"         nil            "off"]
-   :color    ["Solid Color" "static_color" "color"]
-   :morph    ["Morph"       "morph"        "color"]
-   :rainbow  ["Rainbow"     "rainbow"      "color"]
-   :police   ["Police"      "police"       "color"]
-   :cpu-load ["CPU Load"    "cpu_load"     "cpu"]
-   :cpu-temp ["CPU Temp"    "cpu_temp"     "cpu"]
-   :gpu-load ["GPU Load"    "gpu_load"     "gpu"]
-   :gpu-temp ["GPU Temp"    "gpu_temp"     "gpu"]})
+(def effects*
+  [{:id     "none"  ;; unique id used to set the effect on the server
+    :name   "Off"   ;; label viewed by the user
+    :type   :none   ;; determines the semantic
+    :source "none"} ;; determines the icon
+   {:id     "static_color"
+    :name   "Solid Color"
+    :type   :solid
+    :source "color"}
+   {:id     "morph"
+    :name   "Morph"
+    :type   :solid
+    :source "color"}
+   {:id     "rainbow"
+    :name   "Rainbow"
+    :type   :solid
+    :source "color"}
+   {:id     "police"
+    :name   "Police"
+    :type   :solid
+    :source "color"}
+   {:id     "cpu_load"
+    :name   "CPU Load"
+    :type   :gradient
+    :source "cpu"}
+   {:id     "cpu_temp"
+    :name   "CPU Temp"
+    :type   :gradient
+    :source "cpu"}
+   {:id     "gpu_load"
+    :name   "GPU Load"
+    :type   :gradient
+    :source "gpu"}
+   {:id     "gpu_temp"
+    :name   "GPU Temp"
+    :type   :gradient
+    :source "gpu"}])
 
 (def sensors
   {:cpu-power         "Package"
@@ -93,7 +120,7 @@
   (let [zone #(hash-map
                 :id        (->> % :zone js/parseInt)
                 :name      (->> % :zone (str "Zone "))
-                :effect    (some (fn [[k [_ n]]] (when (= n (:name %)) k)) effects)
+                :effect    (:name %)
                 :color     (-> % :color)
                 :beg-color (-> % :beg_color)
                 :end-color (-> % :end_color))
@@ -108,7 +135,7 @@
   {:id        [type name]
    :name      name
    :type      type
-   :effect    (or (some (fn [[k [_ n]]] (when (= n effect) k)) effects) :off)
+   :effect    (or effect "none")
    :color     color
    :beg-color beg_color
    :end-color end_color})
@@ -127,7 +154,7 @@
    :used  {:value (- total free)}
    :total {:value total}})
 
-(defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips]}]
+(defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips effects]}]
   {:name           name
    :type           :mb
    :zone-1         {:name "CPU Thermal Zone"
@@ -145,7 +172,8 @@
    :fans           (mapv fan fans)
    :cpus           (mapv cpu cpus)
    :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
-   :hard-drives    (into [] (sort-by (comp :name first :volumes) (mapv hard-drive hdds)))})
+   :hard-drives    (into [] (sort-by (comp :name first :volumes) (mapv hard-drive hdds)))
+   :effects        (or effects effects*)})
 
 (defn device-data [data]
   data)
@@ -166,6 +194,7 @@
         (js/Promise.))))
 
 (defn- call [tag conn & kwargs]
+  (prn :tag tag :conn conn :kwargs kwargs)
   (let [data (apply hash-map kwargs)]
     (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send @conn))))
 
@@ -173,7 +202,7 @@
   (let [cljs #(js->clj % :keywordize-keys true)
         parse #(-> % .-data js/JSON.parse cljs)]
     (with-let [_ conn]
-      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") (prn :data (data (:data d))) (reset! state (data (:data d))))))))
+      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") #_(prn :data (data (:data d))) (reset! state (data (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
       (call "get_sensors" conn))))
 
@@ -181,7 +210,7 @@
   (device-data (call "get_devices" conn)))
 
 (defn set-effect! [conn [type name :as id] effect]
-  (call (type->colkey type) conn :name name :effect (-> effect effects second)))
+  (call (type->colkey type) conn :name name :effect effect))
 
 (defn set-color! [conn [type name :as id] color]
   (call (type->colkey type) conn :name name :color color))

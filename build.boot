@@ -9,6 +9,7 @@
                   [tailrecursion/boot-static "0.0.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-bucket "0.2.1-SNAPSHOT" :scope "test"]
                   [tailrecursion/boot-front  "0.1.0-SNAPSHOT" :scope "test"]
+                  [io.djy/boot-github        "0.1.3"          :scope "test"]
                   [hoplon/ui                 "0.2.1-SNAPSHOT"]])
 
 (require
@@ -18,9 +19,10 @@
   '[hoplon.boot-hoplon        :refer [hoplon]]
   '[tailrecursion.boot-bucket :refer [spew]]
   '[tailrecursion.boot-front  :refer [burst]]
-  '[tailrecursion.boot-static :refer [serve]])
+  '[tailrecursion.boot-static :refer [serve]]
+  '[io.djy.boot-github        :refer [create-release]])
 
-(def +version+ "3.0.0-alpha3")
+(def +version+ "3.1.0-alpha1")
 
 (def buckets
   {:guardian "guardiangui"
@@ -78,7 +80,8 @@
   (comp (build :optimizations optimizations :service service)
         (zip :file (str "guardian-dashboard-" +version+  ".zip"))
         (sift :include #{#"guardian-dashboard-*."} :invert false)
-        (target :dir #{"dst"})))
+        (target :dir #{"dst"})
+        #_(create-release #{"dst"})))
 
 (task-options!
   serve {:port 7000}

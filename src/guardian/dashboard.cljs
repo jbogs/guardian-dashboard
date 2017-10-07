@@ -264,6 +264,7 @@
 
 (defn lights-view []
   (let [id        (cell nil)
+        effects   (cell= (:effects data))
         lights    (cell= (:lights data))
         light     (cell= (some #(when (= id (:id %)) %) lights))
         effect    (cell= (:effect light))
@@ -271,6 +272,7 @@
         color     (cell= (:color     light))
         beg-color (cell= (:beg-color light))
         end-color (cell= (:end-color light))]
+    (cell= (prn :effect effect))
     (list
       (elem :sh (r 1 1) :sv (r 1 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
@@ -284,14 +286,14 @@
                 :tc    (cell= (if selected? white grey-1))
                 :click #(reset! id (if (= @id @id*) nil @id*))
                 :c (cell= (case effect
-                            :off   (hsl 0 (r 1 1) (r 0 1))
-                            :color (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
-                                   (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
+                            "none"  (hsl 0 (r 1 1) (r 0 1))
+                            "color" (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
+                                    (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
                 (elem :sh (r 1 1) :ah :mid
-                  (cell= (first (s/effects effect)))))))))
+                  (cell= (some #(when (= effect (:id %)) (:name %)) effects))))))))
       (elem :sh (r 1 1) :sv (r 4 5) :g l
         (list
           (elem :sh (>sm (r 1 4)) :sv (r 1 1)
@@ -299,14 +301,14 @@
               "Effects")
             (if-tpl id
               (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
-                (for [[effect* [name* _ icon]] s/effects]
-                  (let [selected (cell= (= effect effect*))]
+                (for-tpl [{eid :id ename :name etype :type esource :source} effects]
+                  (let [selected (cell= (= effect eid))]
                     (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
-                       :c (cell= (when selected grey-4))
-                       :click #(s/set-effect! @conn @id effect*)
+                       :c     (cell= (when selected grey-4))
+                       :click #(s/set-effect! @conn @id @eid)
                        ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @id %)
-                      (image :s 26 :src (cell= (str icon "-icon.svg")))
-                      (elem name*)))))
+                      (image :s 26 :src (cell= (str esource "-icon.svg")))
+                      (elem ename)))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no lights selected")))
           (elem :sh (>sm (r 3 4)) :sv (r 1 1) :c grey-5
@@ -315,10 +317,10 @@
             (if-tpl id
               (elem :s (r 1 1) :sv (- (r 1 1) 64)
                 (case-tpl effect
-                  :off
+                  "none"
                   (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
                     "no effects enabled")
-                  :color
+                  "color"
                   (cell-let [[h s l] color]
                     (elem font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid
                       (when-tpl h (elem :sh 28 :gv g-xl :ah :mid "Hue" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100)            #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l])))))
