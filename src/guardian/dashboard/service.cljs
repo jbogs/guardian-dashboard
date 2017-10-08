@@ -10,39 +10,39 @@
   [{:id     "none"  ;; unique id used to set the effect on the server
     :name   "Off"   ;; label viewed by the user
     :type   :none   ;; determines the semantic
-    :source "none"} ;; determines the icon
+    :source :none} ;; determines the icon
    {:id     "static_color"
     :name   "Solid Color"
     :type   :solid
-    :source "color"}
+    :source :color}
    {:id     "morph"
     :name   "Morph"
     :type   :solid
-    :source "color"}
+    :source :color}
    {:id     "rainbow"
     :name   "Rainbow"
     :type   :solid
-    :source "color"}
+    :source :color}
    {:id     "police"
     :name   "Police"
     :type   :solid
-    :source "color"}
+    :source :color}
    {:id     "cpu_load"
     :name   "CPU Load"
     :type   :gradient
-    :source "cpu"}
+    :source :cpu}
    {:id     "cpu_temp"
     :name   "CPU Temp"
     :type   :gradient
-    :source "cpu"}
+    :source :cpu}
    {:id     "gpu_load"
     :name   "GPU Load"
     :type   :gradient
-    :source "gpu"}
+    :source :gpu}
    {:id     "gpu_temp"
     :name   "GPU Temp"
     :type   :gradient
-    :source "gpu"}])
+    :source :gpu}])
 
 (def sensors
   {:cpu-power         "Package"
@@ -154,6 +154,12 @@
    :used  {:value (- total free)}
    :total {:value total}})
 
+(defn effect [{:keys [id name source type]}]
+   {:id     id
+    :name   name
+    :source (keyword source)
+    :type   (keyword type)})
+
 (defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips effects]}]
   {:name           name
    :type           :mb
@@ -173,7 +179,7 @@
    :cpus           (mapv cpu cpus)
    :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
    :hard-drives    (into [] (sort-by (comp :name first :volumes) (mapv hard-drive hdds)))
-   :effects        (or effects effects*)})
+   :effects        (mapv effect (or effects effects*))})
 
 (defn device-data [data]
   data)
