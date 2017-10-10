@@ -271,27 +271,29 @@
         color     (cell= (:color     light))
         beg-color (cell= (:beg-color light))
         end-color (cell= (:end-color light))]
-    (cell= (prn :effect effect))
+    #_(cell= (prn :type (:type effect)))
     (list
       (elem :sh (r 1 1) :sv (r 1 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Lights")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5 :gh l :gv (b l sm nil) :ah (b :beg sm :mid)
-          (for-tpl [{[type :as id*] :id name* :name effect :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
+          (for-tpl [{[type :as id*] :id name* :name effect-id :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
             (let [selected? (cell= (= light light*))
-                  alpha     (cell= (if selected? (r 1 1) (r 1 3)))]
+                  alpha     (cell= (if selected? (r 1 1) (r 1 3)))
+                  effect    (cell= (some #(when (= effect-id (:id %)) %) effects))]
+              (cell= (prn :type (:type effect)))
               (elem font-4 :sh (b (r 1 3) sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv (b g-lg sm g-md) :gv (b g-lg sm g-md) :a :mid :m :pointer
                 :tc    (cell= (if selected? white grey-1))
                 :click #(reset! id (if (= @id @id*) nil @id*))
-                :c (cell= (case    (cell= (:type effect))
+                :c (cell= (case    (:type effect)
                             :none  (hsl 0 (r 1 1) (r 0 1))
                             :solid (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
-                                    (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
+                                   (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
                 (elem :sh (r 1 1) :ah :mid
-                  (cell= (some #(when (= effect (:id %)) (:name %)) effects))))))))
+                  (cell= (:name effect))))))))
       (elem :sh (r 1 1) :sv (r 4 5) :g l
         (list
           (elem :sh (>sm (r 1 4)) :sv (r 1 1)

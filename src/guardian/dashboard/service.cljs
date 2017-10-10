@@ -8,8 +8,8 @@
 
 (def effects*
   [{:id     "none"  ;; unique id used to set the effect on the server
-    :name   "Off"   ;; label viewed by the user
-    :type   :none   ;; determines the semantic
+    :name   "Off"  ;; label viewed by the user
+    :type   :none  ;; determines the semantic
     :source :none} ;; determines the icon
    {:id     "static_color"
     :name   "Solid Color"
