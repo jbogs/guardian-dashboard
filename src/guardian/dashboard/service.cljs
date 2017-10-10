@@ -13,7 +13,7 @@
     :source :none} ;; determines the icon
    {:id     "static_color"
     :name   "Solid Color"
-    :type   :solid
+    :type   "solid"
     :source :color}
    {:id     "morph"
     :name   "Morph"
@@ -154,11 +154,11 @@
    :used  {:value (- total free)}
    :total {:value total}})
 
-(defn effect [{:keys [id name source type]}]
+(defn effect [{:keys [id name source] type* :type :as e}]
    {:id     id
     :name   name
     :source (keyword source)
-    :type   (keyword type)})
+    :type   (keyword type*)})
 
 (defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips effects]}]
   {:name           name
@@ -186,7 +186,7 @@
 
 (defn data [data]
   (->> data
-      (mapcat (fn [[k v]] [k (if (sequential? v) (mapv #(assoc % :type (colkey->type k)) v) v)]))
+      (mapcat (fn [[k v]] [k (if (and (sequential? v) (not= k :effects)) (mapv #(assoc % :type (colkey->type k)) v) v)]))
       (motherboard)))
 
 ;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -200,7 +200,6 @@
         (js/Promise.))))
 
 (defn- call [tag conn & kwargs]
-  (prn :tag tag :conn conn :kwargs kwargs)
   (let [data (apply hash-map kwargs)]
     (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send @conn))))
 
@@ -208,7 +207,7 @@
   (let [cljs #(js->clj % :keywordize-keys true)
         parse #(-> % .-data js/JSON.parse cljs)]
     (with-let [_ conn]
-      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") #_(prn :data (data (:data d))) (reset! state (data (:data d))))))))
+      (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") #_(prn :data (:data d)) (reset! state (data (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
       (call "get_sensors" conn))))
 

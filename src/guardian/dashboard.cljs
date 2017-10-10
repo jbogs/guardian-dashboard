@@ -271,7 +271,6 @@
         color     (cell= (:color     light))
         beg-color (cell= (:beg-color light))
         end-color (cell= (:end-color light))]
-    #_(cell= (prn :type (:type effect)))
     (list
       (elem :sh (r 1 1) :sv (r 1 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
@@ -281,7 +280,6 @@
             (let [selected? (cell= (= light light*))
                   alpha     (cell= (if selected? (r 1 1) (r 1 3)))
                   effect    (cell= (some #(when (= effect-id (:id %)) %) effects))]
-              (cell= (prn :type (:type effect)))
               (elem font-4 :sh (b (r 1 3) sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv (b g-lg sm g-md) :gv (b g-lg sm g-md) :a :mid :m :pointer
                 :tc    (cell= (if selected? white grey-1))
                 :click #(reset! id (if (= @id @id*) nil @id*))
