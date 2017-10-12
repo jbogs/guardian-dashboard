@@ -184,6 +184,13 @@
         s (* (or s 1) 100)]
    (apply lgr 0 (map #(hsl h (r s 100) (r % 100)) (range 0 (if uv? 100 50))))))
 
+(defelem hsl-picker [{:keys [src] :as attrs}]
+  (cell-let [[h s l] src]
+    (elem (dissoc attrs :src)
+      (when-tpl h (elem :sh 28 :gv g-xl :ah :mid "Hue" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100)            #(reset! src [(* (/ % 100) 360) @s        @l])))))
+      (when-tpl s (elem :sh 28 :gv g-xl :ah :mid "Sat" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)                    #(reset! src [@h                (/ % 100) @l])))))
+      (when-tpl l (elem :sh 28 :gv g-xl :ah :mid "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd h s)) :src (cell= (* l (if (and h s) 100 200)) #(reset! src [@h                @s        (if (and @h @s) (/ % 100) (/ % 200))]))))))))
+
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defelem panel [{:keys [items selected-index name-fn value-fn] :as attrs} elems]
@@ -262,6 +269,19 @@
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
+(defn none-effect []
+  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+    "no effects enabled"))
+
+(defn solid-effect [id color]
+  (hsl-picker font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid :src (cell= color (partial s/set-color! @conn @id))))
+
+(defn gradient-effect [id beg-color end-color]
+   (cell-let [[hb sb lb] beg-color [he se le] end-color]
+     (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
+       (hsl-picker :gh g-xl :src (cell= beg-color (partial s/set-beg-color! @conn @id)))
+       (hsl-picker :gh g-xl :src (cell= end-color (partial s/set-end-color! @conn @id))))))
+
 (defn lights-view []
   (let [id        (cell nil)
         lights    (cell= (:lights data))
@@ -315,27 +335,11 @@
             (if-tpl id
               (elem :s (r 1 1) :sv (- (r 1 1) 64)
                 (case-tpl (cell= (:type effect))
-                  :none
-                  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
-                    "no effects enabled")
-                  :solid
-                  (cell-let [[h s l] color]
-                    (elem font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid
-                      (when-tpl h (elem :sh 28 :gv g-xl :ah :mid "Hue" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100)            #(s/set-color! @conn @id [(* (/ % 100) 360) @s        @l])))))
-                      (when-tpl s (elem :sh 28 :gv g-xl :ah :mid "Sat" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)                    #(s/set-color! @conn @id [@h                (/ % 100) @l])))))
-                      (when-tpl l (elem :sh 28 :gv g-xl :ah :mid "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd h s)) :src (cell= (* l (if (and h s) 100 200)) #(s/set-color! @conn @id [@h                @s        (if (and @h @s) (/ % 100) (/ % 200))])))))))
-                  (cell-let [[hb sb lb] beg-color [he se le] end-color]
-                    (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
-                      (elem :gh g-xl
-                        (when-tpl hb (elem :sh 28 :gv g-xl "Hue" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd sb lb)) :src (cell= (* (/ hb 360) 100)              #(s/set-beg-color! @conn @id [(* (/ % 100) 360) @sb       @lb])))))
-                        (when-tpl sb (elem :sh 28 :gv g-xl "Sat" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd hb lb)) :src (cell= (* sb 100)                      #(s/set-beg-color! @conn @id [@hb               (/ % 100) @lb])))))
-                        (when-tpl lb (elem :sh 28 :gv g-xl "Lum" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd hb sb)) :src (cell= (* lb (if (and hb sb) 100 200)) #(s/set-beg-color! @conn @id [@hb                @sb      (if (and @hb @sb) (/ % 100) (/ % 200))]))))))
-                      (elem :gh g-xl
-                        (when-tpl he (elem :sh 28 :gv g-xl "Hue" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd se le)) :src (cell= (* (/ he 360) 100)              #(s/set-end-color! @conn @id [(* (/ % 100) 360) @se       @le])))))
-                        (when-tpl se (elem :sh 28 :gv g-xl "Sat" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd he le)) :src (cell= (* se 100)                      #(s/set-end-color! @conn @id [@he               (/ % 100) @le])))))
-                        (when-tpl le (elem :sh 28 :gv g-xl "Lum" :ah :mid (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd he se)) :src (cell= (* le (if (and he se) 100 200)) #(s/set-end-color! @conn @id [@he               @se       (if (and @he @se) (/ % 100) (/ % 200))]))))))))))
+                  :none     (none-effect) 
+                   :solid   (solid-effect id color)
+                  :gradient (gradient-effect id beg-color end-color))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-                "no lights selected"))))))))
+                "no lights selected")))))))))
 
 (defn fans-view []
   (let [id   (cell nil)
