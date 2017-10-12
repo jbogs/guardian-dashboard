@@ -269,24 +269,20 @@
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
-(defn solid-effect [id color]
-  (hsl-picker font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid :src (cell= color (partial s/set-color! @conn @id))))
+(defn solid-effect [e]
+  (hsl-picker font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid :src (cell= (:color e) (partial s/set-color! @conn (:id @e)))))
 
-(defn gradient-effect [id beg-color end-color]
-   (cell-let [[hb sb lb] beg-color [he se le] end-color]
-     (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
-       (hsl-picker :gh g-xl :src (cell= beg-color (partial s/set-beg-color! @conn @id)))
-       (hsl-picker :gh g-xl :src (cell= end-color (partial s/set-end-color! @conn @id))))))
+(defn gradient-effect [e]
+  (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
+    (hsl-picker :gh g-xl :src (cell= (:beg-color e) (partial s/set-beg-color! @conn (:id @e))))
+    (hsl-picker :gh g-xl :src (cell= (:end-color e) (partial s/set-end-color! @conn (:id @e))))))
 
 (defn lights-view []
-  (let [id        (cell nil)
-        lights    (cell= (:lights data))
-        light     (cell= (some #(when (= id (:id %)) %) lights))
-        effects   (cell= (:effects data))
-        effect    (cell= (some #(when (= (:effect light) (:id %)) %) effects))
-        color     (cell= (:color     light))
-        beg-color (cell= (:beg-color light))
-        end-color (cell= (:end-color light))]
+  (let [light-id (cell nil)
+        lights   (cell= (:lights data))
+        light    (cell= (some #(when (= light-id (:id %)) %) lights))
+        effects  (cell= (:effects data))
+        effect   (cell= (some #(when (= (:effect light) (:id %)) %) effects))]
     (list
       (elem :sh (r 1 1) :sv (r 1 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
@@ -298,11 +294,11 @@
                   effect    (cell= (some #(when (= effect-id (:id %)) %) effects))]
               (elem font-4 :sh (b (r 1 3) sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv (b g-lg sm g-md) :gv (b g-lg sm g-md) :a :mid :m :pointer
                 :tc    (cell= (if selected? white grey-1))
-                :click #(reset! id (if (= @id @id*) nil @id*))
-                :c (cell= (case    (:type effect)
-                            :none  (hsl 0 (r 1 1) (r 0 1))
-                            :solid (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
-                                   (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
+                :click #(reset! light-id (if (= @light-id @id*) nil @id*))
+                :c     (cell= (case    (:type effect)
+                                :none     (hsl 0 (r 1 1) (r 0 1))
+                                :solid    (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
+                                :gradient (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
@@ -313,14 +309,14 @@
           (elem :sh (>sm (r 1 4)) :sv (r 1 1)
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
               "Effects")
-            (if-tpl id
+            (if-tpl light-id
               (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
                 (for-tpl [{eid :id ename :name etype :type esource :source :as effect*} effects]
                   (let [selected (cell= (= effect effect*))]
                     (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
                        :c     (cell= (when selected grey-4))
-                       :click #(s/set-effect! @conn @id @eid)
-                       ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @id %)
+                       :click #(s/set-effect! @conn @light-id @eid)
+                       ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @light-id %)
                       (image :s 26 :src (cell= (str (name esource) "-icon.svg")))
                       (elem ename)))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
@@ -328,40 +324,40 @@
           (elem :sh (>sm (r 3 4)) :sv (r 1 1) :c grey-5
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
               "Colors")
-            (if-tpl id
+            (if-tpl light-id
               (elem :s (r 1 1) :sv (- (r 1 1) 64)
                 (case-tpl (cell= (:type effect))
-                  :solid    (solid-effect id color)
-                  :gradient (gradient-effect id beg-color end-color)
+                  :solid    (solid-effect    light)
+                  :gradient (gradient-effect light)
                             (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
                               "no effects enabled"))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no lights selected")))))))))
 
 (defn fans-view []
-  (let [id   (cell nil)
-        fans (cell= (:fans data))
-        fan  (cell= (some #(when (= id (:id %)) %) fans))
-        pwm  (cell= (:pwm  fan))
-        tach (cell= (:tach fan))
-        temp (cell= (:temp fan))
-        auto (cell= (:auto fan))
-        t->c (temp->color 20 80)
-        r->t (linear [0 100] [20 80])
-        t->r (linear [20 80] [0 100])]
+  (let [fan-id (cell nil)
+        fans   (cell= (:fans data))
+        fan    (cell= (some #(when (= fan-id (:id %)) %) fans))
+        pwm    (cell= (:pwm  fan))
+        tach   (cell= (:tach fan))
+        temp   (cell= (:temp fan))
+        auto   (cell= (:auto fan))
+        t->c   (temp->color 20 80)
+        r->t   (linear [0 100] [20 80])
+        t->r   (linear [20 80] [0 100])]
     (list
       (elem :sh (r 1 1) :sv (r 3 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Fans")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph (b 0 sm (* g-lg 3)) :gh (b l sm (* g-lg 3)) :ah :mid :c grey-5
           (for-tpl [{[type :as id*] :id name* :name auto :auto tach :tach temp :temp :as fan*} fans]
-            (let [selected? (cell= (= id id*))
+            (let [selected? (cell= (= fan-id id*))
                   alpha   (cell= (if selected? (r 1 1) (r 1 3)))]
               (elem font-4 :sh (cell= (r 1 (count fans))) :sv (b 500 sm (r 1 1)) :ah :mid :av :beg
                ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :m  :pointer
-                :click #(reset! id (if (= @id @id*) nil @id*))
+                :click #(reset! fan-id (if (= @fan-id @id*) nil @id*))
                 (elem :sh (r 1 1) :sv (cell= (r (- 5000 tach) 5008) g-lg) :pv g-lg :ah :mid
                   name*)
                 (elem :sh (r 1 1) :sv (cell= (r (+ tach 8) 5000)) :pv g-lg :rt 2 :ah :mid :c (cell= (if auto ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
@@ -370,16 +366,16 @@
         (elem :s (r 1 1) :c grey-5
           (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
             "Temperature & Speed")
-          (if-tpl id
+          (if-tpl fan-id
             (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-xl :gv g-xl :a :mid
               (elem :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
                 "PWM"
-                (hswitch :sh 70 :sv 28 :c black :src (cell= auto #(s/set-fan-auto! @conn @id %)))
+                (hswitch :sh 70 :sv 28 :c black :src (cell= auto #(s/set-fan-auto! @conn @fan-id %)))
                 "Temp")
               (elem :sh (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
                 (if-tpl auto "20°" "0%")
                 (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
-                  :src (cell= (if auto (t->r temp) pwm) #(if @auto (s/set-fan-temp! @conn @id (int (r->t %))) (s/set-fan-pwm! @conn @id (int %)))))
+                  :src (cell= (if auto (t->r temp) pwm) #(if @auto (s/set-fan-temp! @conn @fan-id (int (r->t %))) (s/set-fan-pwm! @conn @fan-id (int %)))))
                 (if-tpl auto "80°" "100%")))
             (elem font-2 :sh (r 1 1) :sv (b 152 sm (- (r 1 1) 64)) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
               "no fans selected")))))))
