@@ -269,10 +269,6 @@
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
-(defn none-effect []
-  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
-    "no effects enabled"))
-
 (defn solid-effect [id color]
   (hsl-picker font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid :src (cell= color (partial s/set-color! @conn @id))))
 
@@ -335,9 +331,10 @@
             (if-tpl id
               (elem :s (r 1 1) :sv (- (r 1 1) 64)
                 (case-tpl (cell= (:type effect))
-                  :none     (none-effect) 
-                   :solid   (solid-effect id color)
-                  :gradient (gradient-effect id beg-color end-color))
+                  :solid    (solid-effect id color)
+                  :gradient (gradient-effect id beg-color end-color)
+                            (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                              "no effects enabled"))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no lights selected")))))))))
 
