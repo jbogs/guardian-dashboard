@@ -184,12 +184,17 @@
         s (* (or s 1) 100)]
    (apply lgr 0 (map #(hsl h (r s 100) (r % 100)) (range 0 (if uv? 100 50))))))
 
+(defelem vslider-group [{:keys [label color src] :as attrs}]
+  (elem :sh 28 :gv g-xl :ah :mid (dissoc attrs :c :label :src)
+    label
+   (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (or color grey-6)) :src src)))
+
 (defelem hsl-picker [{:keys [src] :as attrs}]
   (cell-let [[h s l] src]
     (elem (dissoc attrs :src)
-      (when-tpl h (elem :sh 28 :gv g-xl :ah :mid "Hue" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100)            #(reset! src [(* (/ % 100) 360) @s        @l])))))
-      (when-tpl s (elem :sh 28 :gv g-xl :ah :mid "Sat" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (s-grd h l)) :src (cell= (* s 100)                    #(reset! src [@h                (/ % 100) @l])))))
-      (when-tpl l (elem :sh 28 :gv g-xl :ah :mid "Lum" (vslider :sh 28 :sv (b :v 275 850 400) :r 14 :c (cell= (l-grd h s)) :src (cell= (* l (if (and h s) 100 200)) #(reset! src [@h                @s        (if (and @h @s) (/ % 100) (/ % 200))]))))))))
+      (when-tpl h (vslider-group :label "Hue" :color (cell= (h-grd s l)) :src (cell= (* (/ h 360) 100)            #(reset! src [(* (/ % 100) 360) @s        @l]))))
+      (when-tpl s (vslider-group :label "Sat" :color (cell= (s-grd h l)) :src (cell= (* s 100)                    #(reset! src [@h                (/ % 100) @l]))))
+      (when-tpl l (vslider-group :label "Lum" :color (cell= (l-grd h s)) :src (cell= (* l (if (and h s) 100 200)) #(reset! src [@h                @s        (if (and @h @s) (/ % 100) (/ % 200))])))))))
 
 ;;; views ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -269,14 +274,6 @@
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
-(defn hsl-control [e]
-  )
-
-;(defn gradient-effect [e]
-;  (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
-;    (hsl-picker :gh g-xl :src (cell= (:beg-color e) (partial s/set-beg-color! @conn (:id @e))))
-;    (hsl-picker :gh g-xl :src (cell= (:end-color e) (partial s/set-end-color! @conn (:id @e))))))
-
 (defn lights-view []
   (let [light-id (cell nil)
         lights   (cell= (:lights data))
@@ -295,10 +292,10 @@
               (elem font-4 :sh (b (r 1 3) sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv (b g-lg sm g-md) :gv (b g-lg sm g-md) :a :mid :m :pointer
                 :tc    (cell= (if selected? white grey-1))
                 :click #(reset! light-id (if (= @light-id @id*) nil @id*))
-               ;  :c     (cell= (case  (:types effect)
-               ;                  [:hsl]      (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
-               ;                  [:hsl :hsl] (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha)
-               ;                              (hsl 0 (r 1 1) (r 0 1)))))
+                :c     (cell= (case (first (:types effect))
+                                 :color      (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
+                                 :beg-color  (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))
+                                             grey-6))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
@@ -325,12 +322,19 @@
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
               "Colors")
             (if-tpl light-id
-              (elem font-2 :s (r 1 1) :sv (- (r 1 1) 64) :gh (* 2 g-xl) :a :mid
+              (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 3 g-xl) 400 (* 2 g-xl) 500 (* 3 g-xl) sm g-xl 940 (* 2 g-xl) md (* 6 g-lg) lg (* 5 g-xl)) :gv g-xl :a :mid
                 (for-tpl [type (cell= (:types effect))]
                   (elem
                     (case-tpl type
-                      :hsl (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-color! @conn (:id @light))))
-                           (elem "no such effect")))
+                      :color     (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-color!     @conn (:id @light))))
+                      :beg-color (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-beg-color! @conn (:id @light))))
+                      :end-color (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-end-color! @conn (:id @light))))
+                      :speed     (vslider-group :label "Speed"  :src (cell= (:speed light)  (partial s/set-speed!  @conn (:id @light))))
+                      :scale     (vslider-group :label "Scale"  :src (cell= (:scale light)  (partial s/set-scale!  @conn (:id @light))))
+                      :drift     (vslider-group :label "Drift"  :src (cell= (:drift light)  (partial s/set-drift!  @conn (:id @light))))
+                      :random    (vslider-group :label "Random" :src (cell= (:random light) (partial s/set-random! @conn (:id @light))))
+                      :smooth    (vslider-group :label "Smooth" :src (cell= (:smooth light) (partial s/set-smooth! @conn (:id @light))))
+                                 (elem "no such effect")))
                   #_(elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
                     "no effects enabled")))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)

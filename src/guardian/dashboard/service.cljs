@@ -13,35 +13,43 @@
     :source :none} ;; determines the icon
    {:id     "static_color"
     :name   "Solid Color"
-    :types   [:hsl]
+    :types   [:color]
     :source :color}
    {:id     "morph"
     :name   "Morph"
-    :types   [:hsl]
+    :types   [:color]
     :source :color}
    {:id     "rainbow"
     :name   "Rainbow"
-    :types   [:hsl]
+    :types   [:speed :smooth]
+    :source :color}
+   {:id     "roll"
+    :name   "Roll"
+    :types   [:beg-color :end-color :speed]
+    :source :color}
+   {:id     "random"
+    :name   "Random"
+    :types   [:speed :random]
     :source :color}
    {:id     "police"
     :name   "Police"
-    :types   [:hsl]
+    :types   [:beg-color :end-color :scale :drift]
     :source :color}
    {:id     "cpu_load"
     :name   "CPU Load"
-    :types  [:hsl :hsl]
+    :types  [:beg-color :end-color]
     :source :cpu}
    {:id     "cpu_temp"
     :name   "CPU Temp"
-    :types  [:hsl :hsl]
+    :types  [:beg-color :end-color]
     :source :cpu}
    {:id     "gpu_load"
     :name   "GPU Load"
-    :types  [:hsl :hsl]
+    :types  [:beg-color :end-color]
     :source :gpu}
    {:id     "gpu_temp"
     :name   "GPU Temp"
-    :types  [:hsl :hsl]
+    :types  [:beg-color :end-color]
     :source :gpu}])
 
 (def sensors
@@ -225,6 +233,21 @@
 
 (defn set-end-color! [conn [type name :as id] color]
   (call (type->colkey type) conn :name name :end_color color))
+
+(defn set-speed! [conn [type name :as id] percent]
+  (call (type->colkey type) conn :name name :speed percent))
+
+(defn set-scale! [conn [type name :as id] percent]
+  (call (type->colkey type) conn :name name :scale percent))
+
+(defn set-drift! [conn [type name :as id] percent]
+  (call (type->colkey type) conn :name name :drift percent))
+
+(defn set-random! [conn [type name :as id] percent]
+  (call (type->colkey type) conn :name name :random percent))
+
+(defn set-smooth! [conn [type name :as id] percent]
+  (call (type->colkey type) conn :name name :smooth percent))
 
 (defn set-fan-pwm! [conn [type :name :as id] pwm]
   (call (type->colkey type) conn :name name :pwm pwm))
