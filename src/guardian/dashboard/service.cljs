@@ -7,50 +7,39 @@
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def effects*
-  [{:id     "none" ;; unique id used to set the effect on the server
-    :name   "Off"  ;; label viewed by the user
-    :types  []     ;; determines the semantic
-    :source :none} ;; determines the icon
+  [{:id     "none"
+    :name   "Off"  
+    :types  []}
    {:id     "static_color"
     :name   "Solid Color"
-    :types   [:color]
-    :source :color}
+    :types   [:color]}
    {:id     "morph"
     :name   "Morph"
-    :types   [:color]
-    :source :color}
+    :types   [:color]}
    {:id     "rainbow"
     :name   "Rainbow"
-    :types   [:speed :smooth]
-    :source :color}
+    :types   [:speed :smooth]}
    {:id     "roll"
     :name   "Roll"
-    :types   [:beg-color :end-color :speed]
-    :source :color}
+    :types   [:beg-color :end-color :speed]}
    {:id     "random"
     :name   "Random"
-    :types   [:speed :random]
-    :source :color}
+    :types   [:speed :random]}
    {:id     "police"
     :name   "Police"
-    :types   [:beg-color :end-color :scale :drift]
-    :source :color}
+    :types   [:beg-color :end-color :scale :drift]}
    {:id     "cpu_load"
     :name   "CPU Load"
-    :types  [:beg-color :end-color]
-    :source :cpu}
+    :types  [:beg-color :end-color]}
    {:id     "cpu_temp"
     :name   "CPU Temp"
-    :types  [:beg-color :end-color]
-    :source :cpu}
+    :types  [:beg-color :end-color]}
    {:id     "gpu_load"
     :name   "GPU Load"
-    :types  [:beg-color :end-color]
-    :source :gpu}
+    :types  [:beg-color :end-color]}
    {:id     "gpu_temp"
     :name   "GPU Temp"
-    :types  [:beg-color :end-color]
-    :source :gpu}])
+    :types  [:beg-color :end-color]}])
 
 (def sensors
   {:cpu-power         "Package"

@@ -308,13 +308,13 @@
               "Effects")
             (if-tpl light-id
               (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
-                (for-tpl [{eid :id ename :name etype :type esource :source :as effect*} effects]
+                (for-tpl [{eid :id ename :name etype :type :as effect*} effects]
                   (let [selected (cell= (= effect effect*))]
                     (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
                        :c     (cell= (when selected grey-4))
                        :click #(s/set-effect! @conn @light-id @eid)
                        ;:tc #_(cell= (if (= effect effect*) white grey-1)) :click #(s/set-effect! @conn @light-id %)
-                      (image :s 26 :src (cell= (str (name esource) "-icon.svg")))
+                      (image :s 26 :src (cell= (str eid "-icon.svg")))
                       (elem ename)))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no lights selected")))
