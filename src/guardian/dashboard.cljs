@@ -269,13 +269,13 @@
           :icon "capacity-icon.svg"
           :data (cell= (mapv #(hash-map :value (-> % :load :value) :color (-> % :temp :value hdd-color)) hds-hist)))))))
 
-(defn solid-effect [e]
-  (hsl-picker font-2 :s (r 1 1) :p g-xl :gh g-xl :gv g-xl :a :mid :src (cell= (:color e) (partial s/set-color! @conn (:id @e)))))
+(defn hsl-control [e]
+  )
 
-(defn gradient-effect [e]
-  (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
-    (hsl-picker :gh g-xl :src (cell= (:beg-color e) (partial s/set-beg-color! @conn (:id @e))))
-    (hsl-picker :gh g-xl :src (cell= (:end-color e) (partial s/set-end-color! @conn (:id @e))))))
+;(defn gradient-effect [e]
+;  (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 2 g-xl) sm (* 4 g-xl) md (* 9 g-lg)) :gv g-xl :a :mid
+;    (hsl-picker :gh g-xl :src (cell= (:beg-color e) (partial s/set-beg-color! @conn (:id @e))))
+;    (hsl-picker :gh g-xl :src (cell= (:end-color e) (partial s/set-end-color! @conn (:id @e))))))
 
 (defn lights-view []
   (let [light-id (cell nil)
@@ -295,10 +295,10 @@
               (elem font-4 :sh (b (r 1 3) sm (cell= (r 1 (count lights)))) :sv (r 1 1) :pv (b g-lg sm g-md) :gv (b g-lg sm g-md) :a :mid :m :pointer
                 :tc    (cell= (if selected? white grey-1))
                 :click #(reset! light-id (if (= @light-id @id*) nil @id*))
-                :c     (cell= (case    (:type effect)
-                                :none     (hsl 0 (r 1 1) (r 0 1))
-                                :solid    (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
-                                :gradient (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha))))
+               ;  :c     (cell= (case  (:types effect)
+               ;                  [:hsl]      (hsl (or h 290) (r (or s 1) 1) (r (or l 0.5) 1) alpha)
+               ;                  [:hsl :hsl] (lgr 180 (hsl (or hb 290) (r (or sb 1) 1) (r (or lb 0.5) 1) alpha) (hsl (or he 290) (r (or se 1) 1) (r (or le 0.5) 1) alpha)
+               ;                              (hsl 0 (r 1 1) (r 0 1)))))
                 (elem :sh (r 1 1) :ah :mid
                   name*)
                 (image :s 34 :src (cell= (when type (str (name type) "-icon.svg"))))
@@ -325,14 +325,16 @@
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
               "Colors")
             (if-tpl light-id
-              (elem :s (r 1 1) :sv (- (r 1 1) 64)
-                (case-tpl (cell= (:type effect))
-                  :solid    (solid-effect    light)
-                  :gradient (gradient-effect light)
-                            (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
-                              "no effects enabled"))
+              (elem font-2 :s (r 1 1) :sv (- (r 1 1) 64) :gh (* 2 g-xl) :a :mid
+                (for-tpl [type (cell= (:types effect))]
+                  (elem
+                    (case-tpl type
+                      :hsl (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-color! @conn (:id @light))))
+                           (elem "no such effect")))
+                  #_(elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                    "no effects enabled")))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-                "no lights selected")))))))))
+                "no lights selected"))))))))
 
 (defn fans-view []
   (let [fan-id (cell nil)

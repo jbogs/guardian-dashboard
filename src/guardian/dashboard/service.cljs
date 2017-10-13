@@ -7,41 +7,41 @@
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (def effects*
-  [{:id     "none"  ;; unique id used to set the effect on the server
+  [{:id     "none" ;; unique id used to set the effect on the server
     :name   "Off"  ;; label viewed by the user
-    :type   :none  ;; determines the semantic
+    :types  []     ;; determines the semantic
     :source :none} ;; determines the icon
    {:id     "static_color"
     :name   "Solid Color"
-    :type   "solid"
+    :types   [:hsl]
     :source :color}
    {:id     "morph"
     :name   "Morph"
-    :type   :solid
+    :types   [:hsl]
     :source :color}
    {:id     "rainbow"
     :name   "Rainbow"
-    :type   :solid
+    :types   [:hsl]
     :source :color}
    {:id     "police"
     :name   "Police"
-    :type   :solid
+    :types   [:hsl]
     :source :color}
    {:id     "cpu_load"
     :name   "CPU Load"
-    :type   :gradient
+    :types  [:hsl :hsl]
     :source :cpu}
    {:id     "cpu_temp"
     :name   "CPU Temp"
-    :type   :gradient
+    :types  [:hsl :hsl]
     :source :cpu}
    {:id     "gpu_load"
     :name   "GPU Load"
-    :type   :gradient
+    :types  [:hsl :hsl]
     :source :gpu}
    {:id     "gpu_temp"
     :name   "GPU Temp"
-    :type   :gradient
+    :types  [:hsl :hsl]
     :source :gpu}])
 
 (def sensors
@@ -154,11 +154,11 @@
    :used  {:value (- total free)}
    :total {:value total}})
 
-(defn effect [{:keys [id name source] type* :type :as e}]
+(defn effect [{:keys [id name source types]}]
    {:id     id
     :name   name
     :source (keyword source)
-    :type   (keyword type*)})
+    :types  (mapv keyword types)})
 
 (defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips effects]}]
   {:name           name
