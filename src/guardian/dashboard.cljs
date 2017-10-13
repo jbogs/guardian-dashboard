@@ -326,14 +326,14 @@
                 (for-tpl [type (cell= (:types effect))]
                   (elem
                     (case-tpl type
-                      :color     (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-color!     @conn (:id @light))))
-                      :beg-color (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-beg-color! @conn (:id @light))))
-                      :end-color (hsl-picker :gh g-xl :src (cell= (:color light) (partial s/set-end-color! @conn (:id @light))))
-                      :speed     (vslider-group :label "Speed"  :src (cell= (:speed light)  (partial s/set-speed!  @conn (:id @light))))
-                      :scale     (vslider-group :label "Scale"  :src (cell= (:scale light)  (partial s/set-scale!  @conn (:id @light))))
-                      :drift     (vslider-group :label "Drift"  :src (cell= (:drift light)  (partial s/set-drift!  @conn (:id @light))))
-                      :random    (vslider-group :label "Random" :src (cell= (:random light) (partial s/set-random! @conn (:id @light))))
-                      :smooth    (vslider-group :label "Smooth" :src (cell= (:smooth light) (partial s/set-smooth! @conn (:id @light))))
+                      :color     (hsl-picker :gh g-xl           :src (cell= (:color     light) #(s/set-color!     @conn @light-id %)))
+                      :beg-color (hsl-picker :gh g-xl           :src (cell= (:beg-color light) #(s/set-beg-color! @conn @light-id %)))
+                      :end-color (hsl-picker :gh g-xl           :src (cell= (:end-color light) #(s/set-end-color! @conn @light-id %)))
+                      :speed     (vslider-group :label "Speed"  :src (cell= (:speed light)     #(s/set-speed!     @conn @light-id %)))
+                      :scale     (vslider-group :label "Scale"  :src (cell= (:scale light)     #(s/set-scale!     @conn @light-id %)))
+                      :drift     (vslider-group :label "Drift"  :src (cell= (:drift light)     #(s/set-drift!     @conn @light-id %)))
+                      :random    (vslider-group :label "Random" :src (cell= (:random light)    #(s/set-random!    @conn @light-id %)))
+                      :smooth    (vslider-group :label "Smooth" :src (cell= (:smooth light)    #(s/set-smooth!    @conn @light-id %)))
                                  (elem "no such effect")))
                   #_(elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
                     "no effects enabled")))
