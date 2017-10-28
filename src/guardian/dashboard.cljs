@@ -371,6 +371,21 @@
                   (cell= (str tach " RPM"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
         (list
+          (elem :sh (>sm (- (r 1 1) 300 l)) :sv (r 1 1) :c grey-5
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Temperature & Speed")
+            (if-tpl fan-id
+              (elem :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :a :mid
+                (if-tpl device
+                  (elem font-2 :s (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
+                    "0%"
+                    (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
+                       :src (cell= pwm #(s/set-fan-pwm! @conn @fan-id (int %))))
+                    "100%")
+                  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                    "no device selected")))
+              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+                "no fan selected")))
           (elem :sh (>sm 300) :sv (r 1 1)
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
               "Associated Device")
@@ -385,40 +400,7 @@
                       (elem name)))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no fan selected")))
-          (elem :sh (>sm (- (r 1 1) 300 l)) :sv (r 1 1) :c grey-5
-            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-              "Temperature & Speed")
-            (if-tpl fan-id
-              (elem :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :a :mid
-                (if-tpl device
-                  (elem font-2 :s (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
-                    (if-tpl (= (:type device) :pwm) "0%" "20°")
-                    (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
-                       :src (cell= (if device (t->r temp) pwm) #(if @device (s/set-fan-temp! @conn @fan-id (int (r->t %))) (s/set-fan-pwm! @conn @fan-id (int %)))))
-                    (if-tpl (= (:type device) :pwm) "100%" "80°"))
-                  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
-                    "no device selected")))
-              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-                "no fan selected"))))
-
-        #_(elem :s (r 1 1) :c grey-5
-          (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-            "Temperature & Speed")
-          (if-tpl fan-id
-            (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-xl :gv g-xl :a :mid
-              (for-tpl [{:keys [id name]} (cell= (cons {:id :manual :name "PWM"} devices))]
-                (elem
-                  (elem :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
-                    name)
-                  (elem :s 32 :r 18 :c (cell= (if (= id device) red grey-6)) :b 2 :bc grey-5 :d (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0 true) :m :pointer :click #(s/set-fan-device! @conn @fan-id %))))
-                #_(hswitch :sh 70 :sv 28 :c black :src (cell= device #(s/set-fan-mode! @conn @fan-id %)))
-              (elem :sh (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
-                (if-tpl device "20°" "0%")
-                (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
-                  :src (cell= (if device (t->r temp) pwm) #(if @device (s/set-fan-temp! @conn @fan-id (int (r->t %))) (s/set-fan-pwm! @conn @fan-id (int %)))))
-                (if-tpl device "80°" "100%")))
-            (elem font-2 :sh (r 1 1) :sv (b 152 sm (- (r 1 1) 64)) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-              "no fans selected")))))))
+          )))))
 
 (window :g l :c grey-4 :scroll (b true sm false) :src route :title "Xotic"
   (elem :sh (r 1 1) :ah :mid :c black
