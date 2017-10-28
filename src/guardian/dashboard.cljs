@@ -28,7 +28,7 @@
 
 (defn deb= [c f & [ms]]
   "debouncing transaction lens"
-  (let [val (cell nil)
+  (let [val (cell @c)
         set #(when (not= % @c) (f %))
         deb (debounce (or ms 1000) set)
         deb #(do (deb %) (reset! val %))
@@ -285,7 +285,7 @@
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Lights")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5 :gh l :gv (b l sm nil) :ah (b :beg sm :mid)
-          (for-tpl [{[type :as id*] :id name* :name effect-id :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
+          (for-tpl [{id* :id name* :name effect-id type :type :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
             (let [selected? (cell= (= light light*))
                   alpha     (cell= (if selected? (r 1 1) (r 1 3)))
                   effect    (cell= (some #(when (= effect-id (:id %)) %) effects))]
@@ -312,7 +312,7 @@
                   (let [selected (cell= (= effect effect*))]
                     (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
                        :c     (cell= (when selected grey-4))
-                       :click #(s/set-effect! @conn @light-id @eid)
+                       :click #(s/set-light-effect! @conn @light-id @eid)
                       (image :s 26 :src (cell= (str eid "-icon.svg")))
                       (elem ename)))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
@@ -327,62 +327,98 @@
                     (for-tpl [type (cell= (:types effect))]
                       (elem
                         (case-tpl type
-                          :color     (hsl-picker :gh g-xl           :src (cell= (:color     light) #(s/set-color!     @conn @light-id %)))
-                          :beg-color (hsl-picker :gh g-xl           :src (cell= (:beg-color light) #(s/set-beg-color! @conn @light-id %)))
-                          :end-color (hsl-picker :gh g-xl           :src (cell= (:end-color light) #(s/set-end-color! @conn @light-id %)))
-                          :speed     (vslider-group :label "Speed"  :src (cell= (:speed light)     #(s/set-speed!     @conn @light-id %)))
-                          :scale     (vslider-group :label "Scale"  :src (cell= (:scale light)     #(s/set-scale!     @conn @light-id %)))
-                          :drift     (vslider-group :label "Drift"  :src (cell= (:drift light)     #(s/set-drift!     @conn @light-id %)))
-                          :random    (vslider-group :label "Random" :src (cell= (:random light)    #(s/set-random!    @conn @light-id %)))
-                          :smooth    (vslider-group :label "Smooth" :src (cell= (:smooth light)    #(s/set-smooth!    @conn @light-id %)))))))
+                          :color     (hsl-picker :gh g-xl           :src (cell= (:color     light) #(s/set-light-color!     @conn @light-id %)))
+                          :beg-color (hsl-picker :gh g-xl           :src (cell= (:beg-color light) #(s/set-light-beg-color! @conn @light-id %)))
+                          :end-color (hsl-picker :gh g-xl           :src (cell= (:end-color light) #(s/set-light-end-color! @conn @light-id %)))
+                          :speed     (vslider-group :label "Speed"  :src (cell= (:speed     light) #(s/set-light-speed!     @conn @light-id %)))
+                          :scale     (vslider-group :label "Scale"  :src (cell= (:scale     light) #(s/set-light-scale!     @conn @light-id %)))
+                          :drift     (vslider-group :label "Drift"  :src (cell= (:drift     light) #(s/set-light-drift!     @conn @light-id %)))
+                          :random    (vslider-group :label "Random" :src (cell= (:random    light) #(s/set-light-random!    @conn @light-id %)))
+                          :smooth    (vslider-group :label "Smooth" :src (cell= (:smooth    light) #(s/set-light-smooth!    @conn @light-id %)))))))
                   (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
                     "no effect enabled")))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
                 "no lights selected"))))))))
 
 (defn fans-view []
-  (let [fan-id (cell nil)
-        fans   (cell= (:fans data))
-        fan    (cell= (some #(when (= fan-id (:id %)) %) fans))
-        pwm    (cell= (:pwm  fan))
-        tach   (cell= (:tach fan))
-        temp   (cell= (:temp fan))
-        auto   (cell= (:auto fan))
-        t->c   (temp->color 20 80)
-        r->t   (linear [0 100] [20 80])
-        t->r   (linear [20 80] [0 100])]
+  (let [fan-id  (cell nil)
+        fans    (cell= (:fans data))
+        fan     (cell= (some #(when (= fan-id (:id %)) %) fans))
+        pwm     (cell= (:pwm    fan))
+        tach    (cell= (:tach   fan))
+        temp    (cell= (:temp fan))
+        devices (cell= (apply concat ((juxt :cpus :graphics-cards :hard-drives) (update data :graphics-cards pop))))
+        device  (cell= (:device fan))
+        t->c    (temp->color 20 80)
+        r->t    (linear [0 100] [20 80])
+        t->r    (linear [20 80] [0 100])]
     (list
       (elem :sh (r 1 1) :sv (r 3 5)
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Fans")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph (b 0 sm (* g-lg 3)) :gh (b l sm (* g-lg 3)) :ah :mid :c grey-5
-          (for-tpl [{[type :as id*] :id name* :name auto :auto tach :tach temp :temp :as fan*} fans]
+          (for-tpl [{id* :id name* :name type :type device :device tach :tach temp :temp :as fan*} fans]
             (let [selected? (cell= (= fan-id id*))
                   alpha   (cell= (if selected? (r 1 1) (r 1 3)))]
+             (cell= (prn :fan-id id*))
               (elem font-4 :sh (cell= (r 1 (count fans))) :sv (b 500 sm (r 1 1)) :ah :mid :av :beg
                ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :m  :pointer
                 :click #(reset! fan-id (if (= @fan-id @id*) nil @id*))
-                (elem :sh (r 1 1) :sv (cell= (r (- 5000 tach) 5008) g-lg) :pv g-lg :ah :mid
+                (elem :sh (r 1 1) :sv (cell= (r (- 4590 tach) 5008)) :pv g-lg :ah :mid
                   name*)
-                (elem :sh (r 1 1) :sv (cell= (r (+ tach 8) 5000)) :pv g-lg :rt 2 :ah :mid :c (cell= (if auto ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
+                (elem :sh (r 1 1) :sv (cell= (r (+ tach 8) 5000)) :pv g-lg :rt 2 :ah :mid :c (cell= (if device ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
                   (cell= (str tach " RPM"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
-        (elem :s (r 1 1) :c grey-5
+        (list
+          (elem :sh (>sm 300) :sv (r 1 1)
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Mode & Device")
+            (if-tpl fan-id
+              (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
+                (for-tpl [{:keys [id name type]} (cell= (cons {:id :manual :name "PWM" :type :pwm} devices))]
+                  (let [selected (cell= (= id device))]
+                    (cell= (prn :device-type type :id id))
+                    (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
+                       :c     (cell= (when selected grey-4))
+                       :click #(s/set-fan-device! @conn @fan-id @id)
+                      (image :s 26 :src (cell= (str (hoplon.ui.utils/name type) "-icon.svg")))
+                      (elem name)))))
+              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+                "no fan selected")))
+          (elem :sh (>sm (- (r 1 1) 300 l)) :sv (r 1 1) :c grey-5
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Temperature & Speed")
+            (if-tpl fan-id
+              (elem :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :a :mid
+                (if-tpl device
+                  (elem font-2 :s (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
+                    (if-tpl (= (:type device) :pwm) "0%" "20°")
+                    (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
+                       :src (cell= (if device (t->r temp) pwm) #(if @device (s/set-fan-temp! @conn @fan-id (int (r->t %))) (s/set-fan-pwm! @conn @fan-id (int %)))))
+                    (if-tpl (= (:type device) :pwm) "100%" "80°"))
+                  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                    "no device selected")))
+              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+                "no fan selected"))))
+
+        #_(elem :s (r 1 1) :c grey-5
           (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
             "Temperature & Speed")
           (if-tpl fan-id
             (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-xl :gv g-xl :a :mid
-              (elem :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
-                "PWM"
-                (hswitch :sh 70 :sv 28 :c black :src (cell= auto #(s/set-fan-auto! @conn @fan-id %)))
-                "Temp")
+              (for-tpl [{:keys [id name]} (cell= (cons {:id :manual :name "PWM"} devices))]
+                (elem
+                  (elem :sh (r 1 1) :gh (* 2 g-lg) :a :mid :tc (white :a 0.9)
+                    name)
+                  (elem :s 32 :r 18 :c (cell= (if (= id device) red grey-6)) :b 2 :bc grey-5 :d (sdw 2 2 (rgb 0 0 0 (r 1 14)) 2 0 true) :m :pointer :click #(s/set-fan-device! @conn @fan-id %))))
+                #_(hswitch :sh 70 :sv 28 :c black :src (cell= device #(s/set-fan-mode! @conn @fan-id %)))
               (elem :sh (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
-                (if-tpl auto "20°" "0%")
+                (if-tpl device "20°" "0%")
                 (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
-                  :src (cell= (if auto (t->r temp) pwm) #(if @auto (s/set-fan-temp! @conn @fan-id (int (r->t %))) (s/set-fan-pwm! @conn @fan-id (int %)))))
-                (if-tpl auto "80°" "100%")))
+                  :src (cell= (if device (t->r temp) pwm) #(if @device (s/set-fan-temp! @conn @fan-id (int (r->t %))) (s/set-fan-pwm! @conn @fan-id (int %)))))
+                (if-tpl device "80°" "100%")))
             (elem font-2 :sh (r 1 1) :sv (b 152 sm (- (r 1 1) 64)) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
               "no fans selected")))))))
 

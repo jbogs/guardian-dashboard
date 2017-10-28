@@ -73,30 +73,33 @@
 
 ;;; xforms ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn cpu [{:keys [name clocks loads temps volts watts]}]
+(defn cpu [{:keys [id name clocks loads temps volts watts]}]
   (let [load    (get-sensor loads :cpu-load)
         temp    (get-sensor temps :cpu-temp)
         loads*  (remove (partial = load) loads)
         temps*  (remove (partial = temp) temps)
         threads (mapv #(hash-map :name (:name %) :load (name->sensor %1)) loads*)
         cores   (mapv #(hash-map :name (:name %) :freq (name->sensor %1) :temp (name->sensor %2)) clocks temps*)]
-    {:name  name
+    {:id    id
+     :name  name
      :type  :cpu
      :temp  temp
      :load  load
      :cores (mapv #(assoc % :threads %2) cores (partition 2 threads))}))
 
-(defn hard-drive [{:keys [name loads temps] :as hdd}]
-  {:name    name
+(defn hard-drive [{:keys [id name loads temps] :as hdd}]
+  {:id      id
+   :name    name
    :type    :hard-drive
    :temp    (hash-map :value (apply + (mapv :value temps)))
    :load    (hash-map :value (apply + (mapv :value loads)))
    :volumes (mapv #(hash-map :name (:name %1) :load (name->sensor %1) :temp (name->sensor %2)) loads temps)})
 
-(defn graphics-card [{:keys [name loads temps]}]
+(defn graphics-card [{:keys [id name loads temps]}]
   (let [card {:name name :type :graphics-card}]
     (if (seq loads)
       (assoc card
+        :id            id
         :name          name
         :type          :graphics-card
         :integrated?   false
@@ -128,8 +131,8 @@
      :type  :kb
      :zones zones}))
 
-(defn light [{:keys [name type effect color beg_color end_color]}]
-  {:id        [type name]
+(defn light [{:keys [id name type effect color beg_color end_color]}]
+  {:id        id
    :name      name
    :type      type
    :effect    (or effect "none")
@@ -137,13 +140,14 @@
    :beg-color beg_color
    :end-color end_color})
 
-(defn fan [{:keys [name auto pwm tach temp]}]
-  {:id   [:fan name]
-   :name name
-   :auto (if (= auto 0) false true)
-   :pwm  pwm
-   :tach tach
-   :temp temp})
+(defn fan [{:keys [id name device pwm tach temp]}]
+  (prn :id id)
+  {:id     id
+   :name   name
+   :device (keyword (or device :manual))
+   :pwm    pwm
+   :tach   tach
+   :temp   temp})
 
 (defn memory [{:keys [name free total] :as memory}]
   {:name  name
@@ -196,9 +200,10 @@
           (set! (.-onerror @conn) #(reject %)))
         (js/Promise.))))
 
-(defn- call [tag conn & kwargs]
-  (let [data (apply hash-map kwargs)]
-    (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send @conn))))
+(defn- mkremote [tag & keys]
+  (fn [conn & vals]
+    (let [data (zipmap keys vals)]
+      (->> {:tag tag :data data} (clj->js) (.stringify js/JSON) (.send @conn)))))
 
 (defn bind-sensors! [conn state error & [poll-freq hist-max]]
   (let [cljs #(js->clj % :keywordize-keys true)
@@ -206,43 +211,21 @@
     (with-let [_ conn]
       (cell= (set! (.-onmessage conn) ~(fn [e] (let [d (parse e)] (when (= (:tag d) "sensors") #_(prn :data (:data d)) (reset! state (data (:data d))))))))
       (cell= (set! (.-onerror   conn) ~(fn [e] (reset! error e))))
-      (call "get_sensors" conn))))
+      ((mkremote "get_sensors") conn))))
 
-(defn get-devices [conn]
-  (device-data (call "get_devices" conn)))
+(def get-devices          (mkremote "get_devices"))
 
-(defn set-effect! [conn [type name :as id] effect]
-  (call (type->colkey type) conn :name name :effect effect))
+(def set-lights!          (mkremote "set_lights" :id :on))
+(def set-light-effect!    (mkremote "set_light"  :id :effect))
+(def set-light-color!     (mkremote "set_light"  :id :color))
+(def set-light-beg-color! (mkremote "set_light"  :id :beg_color))
+(def set-light-end-color! (mkremote "set_light"  :id :end_color))
+(def set-light-speed!     (mkremote "set_light"  :id :speed))
+(def set-light-scale!     (mkremote "set_light"  :id :scale))
+(def set-light-drift!     (mkremote "set_light"  :id :drift))
+(def set-light-random!    (mkremote "set_light"  :id :random))
+(def set-light-smooth!    (mkremote "set_light"  :id :smooth))
 
-(defn set-color! [conn [type name :as id] color]
-  (call (type->colkey type) conn :name name :color color))
-
-(defn set-beg-color! [conn [type name :as id] color]
-  (call (type->colkey type) conn :name name :beg_color color))
-
-(defn set-end-color! [conn [type name :as id] color]
-  (call (type->colkey type) conn :name name :end_color color))
-
-(defn set-speed! [conn [type name :as id] percent]
-  (call (type->colkey type) conn :name name :speed percent))
-
-(defn set-scale! [conn [type name :as id] percent]
-  (call (type->colkey type) conn :name name :scale percent))
-
-(defn set-drift! [conn [type name :as id] percent]
-  (call (type->colkey type) conn :name name :drift percent))
-
-(defn set-random! [conn [type name :as id] percent]
-  (call (type->colkey type) conn :name name :random percent))
-
-(defn set-smooth! [conn [type name :as id] percent]
-  (call (type->colkey type) conn :name name :smooth percent))
-
-(defn set-fan-pwm! [conn [type :name :as id] pwm]
-  (call (type->colkey type) conn :name name :pwm pwm))
-
-(defn set-fan-temp! [conn [type :name :as id] temp]
-  (call (type->colkey type) conn :name name :temp temp))
-
-(defn set-fan-auto! [conn [type :name :as id] auto]
-  (call (type->colkey type) conn :name name :auto (if auto 1 0)))
+(def set-fan-pwm!         (mkremote "set_fan"    :id :pwm))
+(def set-fan-temp!        (mkremote "set_fan"    :id :temp))
+(def set-fan-device!      (mkremote "set_fan"    :id :device))
