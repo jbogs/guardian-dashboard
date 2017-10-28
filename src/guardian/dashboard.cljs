@@ -326,7 +326,7 @@
                   (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 3 g-xl) 400 (* 2 g-xl) 500 (* 3 g-xl) sm g-xl 940 (* 2 g-xl) md (* 6 g-lg) lg (* 5 g-xl)) :gv g-xl :a :mid 
                     (for-tpl [type (cell= (:types effect))]
                       (elem
-                        (cell= (prn :speed (:speed light)))
+                        (cell= (prn :speed light))
                         (case-tpl type
                           :color     (hsl-picker :gh g-xl           :src (cell= (:color     light) #(s/set-light-color!     @conn @light-id %)))
                           :beg-color (hsl-picker :gh g-xl           :src (cell= (:beg-color light) #(s/set-light-beg-color! @conn @light-id %)))
@@ -360,15 +360,16 @@
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :ph (b 0 sm (* g-lg 3)) :gh (b l sm (* g-lg 3)) :ah :mid :c grey-5
           (for-tpl [{id* :id name* :name type :type device :device tach :tach temp :temp :as fan*} fans]
             (let [selected? (cell= (= fan-id id*))
-                  alpha   (cell= (if selected? (r 1 1) (r 1 3)))]
+                  alpha   (cell= (if selected? (r 1 1) (r 1 3)))
+                  tach 2000]
               (elem font-4 :sh (cell= (r 1 (count fans))) :sv (b 500 sm (r 1 1)) :ah :mid :av :beg
                ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
                 :m  :pointer
                 :click #(reset! fan-id (if (= @fan-id @id*) nil @id*))
-                (elem :sh (r 1 1) :sv (cell= (r (- 4590 tach) 5008)) :pv g-lg :ah :mid
+                (elem :sh (r 1 1) :sv (cell= (r (- 4500 tach) 5008)) :pv g-lg :ah :mid
                   name*)
-                (elem :sh (r 1 1) :sv (cell= (r (+ tach 8) 5000)) :pv g-lg :rt 2 :ah :mid :c (cell= (if device ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
+                (elem :sh (r 1 1) :sv (cell= (r (+ tach 500) 5000)) :pv g-lg :rt 2 :ah :mid :c (cell= (if device ((t->c temp) :a alpha) (red :a alpha))) :tx :capitalize
                   (cell= (str tach " RPM"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
         (list

@@ -22,7 +22,7 @@
   '[tailrecursion.boot-static :refer [serve]]
   '[io.djy.boot-github        :refer [create-release]])
 
-(def +version+ "3.3.0-alpha1")
+(def +version+ "3.3.2")
 
 (def buckets
   {:guardian "guardiangui"

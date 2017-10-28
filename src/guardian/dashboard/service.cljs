@@ -22,9 +22,6 @@
 
 ;;; utils ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defn svckey->appkey [x]
-  (keyword (replace (apply str (name x)) #"_" "-")))
-
 (defn colkey->type [x]
   (keyword (replace (apply str (drop-last (name x))) #"_" "-")))
 
@@ -99,6 +96,20 @@
      :type  :kb
      :zones zones}))
 
+(defn light [{:keys [id name type effect color beg_color end_color speed scale drift random smooth]}]
+  {:id        id
+   :name      name
+   :type      type
+   :effect    (or effect "none")
+   :color     color
+   :beg-color beg_color
+   :end-color end_color
+   :speed     speed
+   :scale     scale
+   :drift     drift
+   :random    random
+   :smooth    smooth})
+
 (defn memory [{:keys [name free total] :as memory}]
   {:name  name
    :type  :memory
@@ -111,7 +122,7 @@
     :source (keyword source)
     :types  (mapv keyword types)})
 
-(defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led-keyboard :keys [cpus gpus hdds fans strips uv-strips effects]}]
+(defn motherboard [{{:keys [name temps]} :mb mem :memory kb :led_keyboard :keys [cpus gpus hdds fans strips uv_strips effects]}]
   {:name           name
    :type           :mb
    :zone-1         {:name "CPU Thermal Zone"
@@ -125,7 +136,7 @@
                     :temp (get-sensor temps :zone-3)}
    :gpu             {:name (-> gpus first :name)}
    :memory         (memory mem)
-   :lights         (concat fans strips uv-strips (:zones (keyboard kb))) 
+   :lights         (mapv light (concat fans strips uv_strips (:zones (keyboard kb))))
    :fans           fans
    :cpus           (mapv cpu cpus)
    :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
@@ -134,7 +145,7 @@
 
 (defn data [data]
   (->> data
-      (mapcat (fn [[k v]] [(svckey->appkey k) (if (and (sequential? v) (not= k :effects)) (mapv #(assoc % :type (colkey->type k)) v) v)]))
+      (mapcat (fn [[k v]] [k (if (and (sequential? v) (not= k :effects)) (mapv #(assoc % :type (colkey->type k)) v) v)]))
       (motherboard)))
 
 ;;; api ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
