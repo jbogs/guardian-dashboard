@@ -6,41 +6,6 @@
 
 ;;; config ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def effects*
-  [{:id     "none"
-    :name   "Off"  
-    :types  []}
-   {:id     "static_color"
-    :name   "Solid Color"
-    :types   [:color]}
-   {:id     "morph"
-    :name   "Morph"
-    :types   [:color]}
-   {:id     "rainbow"
-    :name   "Rainbow"
-    :types   [:speed :smooth]}
-   {:id     "roll"
-    :name   "Roll"
-    :types   [:beg-color :end-color :speed]}
-   {:id     "random"
-    :name   "Random"
-    :types   [:speed :random]}
-   {:id     "police"
-    :name   "Police"
-    :types   [:beg-color :end-color :scale :drift]}
-   {:id     "cpu_load"
-    :name   "CPU Load"
-    :types  [:beg-color :end-color]}
-   {:id     "cpu_temp"
-    :name   "CPU Temp"
-    :types  [:beg-color :end-color]}
-   {:id     "gpu_load"
-    :name   "GPU Load"
-    :types  [:beg-color :end-color]}
-   {:id     "gpu_temp"
-    :name   "GPU Temp"
-    :types  [:beg-color :end-color]}])
-
 (def sensors
   {:cpu-power         "Package"
    :cpu-temp          "Package"
@@ -179,7 +144,7 @@
    :cpus           (mapv cpu cpus)
    :graphics-cards (into [] (sort-by :integrated? (mapv graphics-card gpus)))
    :hard-drives    (into [] (sort-by (comp :name first :volumes) (mapv hard-drive hdds)))
-   :effects        (mapv effect (or effects effects*))})
+   :effects        (mapv effect effects)})
 
 (defn device-data [data]
   data)
