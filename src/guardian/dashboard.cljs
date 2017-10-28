@@ -371,23 +371,12 @@
                   (cell= (str tach " RPM"))))))))
       (elem :sh (r 1 1) :sv (r 2 5) :g l
         (list
-          (elem :sh (>sm (- (r 1 1) 300 l)) :sv (r 1 1) :c grey-5
-            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-              "Temperature & Speed")
-            (if-tpl fan-id
-              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :gh g-xl :a :mid :tc (white :a 0.9)
-                "0%"
-                (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
-                   :src (cell= pwm #(s/set-fan-pwm! @conn @fan-id (int %))))
-                "100%")
-              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-                "no fan selected")))
           (elem :sh (>sm 300) :sv (r 1 1)
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-              "Associated Device")
+              "Mode")
             (if-tpl fan-id
               (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
-                (for-tpl [{:keys [id name type] :as fan*} devices]
+                (for-tpl [{:keys [id name type] :as fan*} (cell= (cons {:id nil :name "Manual" :type :manual} devices))]
                   (let [selected (cell= (= id device))]
                     (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
                        :c     (cell= (when selected grey-4))
@@ -395,7 +384,22 @@
                       (image :s 26 :src (cell= (str (hoplon.ui.utils/name type) "-icon.svg")))
                       (elem name)))))
               (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
-                "no fan selected"))))))))
+                "no fan selected")))
+          (elem :sh (>sm (- (r 1 1) 300 l)) :sv (r 1 1) :c grey-5
+            (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
+              "Temperature & Speed")
+            (if-tpl fan-id
+              (elem :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :a :mid
+                (if-tpl device
+                  (elem font-2 :s (r 1 1) :c grey-5 :a :mid :tc (white :a 0.9)
+                    "auto")
+                  (elem font-2 :s (r 1 1) :gh g-xl :a :mid :tc (white :a 0.9)
+                    "0%"
+                    (hslider :sh (b 150 332 190 400 240 426 300 sm 450 md 600) :sv 28 :r 14 :c black
+                       :src (cell= pwm #(s/set-fan-pwm! @conn @fan-id (int %))))
+                    "100%"))))
+              (elem font-2 :sh (r 1 1) :sv (- (r 1 1) 64) :p g-lg :c grey-5 :a :mid :tc (white :a 0.9)
+                "no fan selected")))))))
 
 (window :g l :c grey-4 :scroll (b true sm false) :src route :title "Xotic"
   (elem :sh (r 1 1) :ah :mid :c black

@@ -191,5 +191,4 @@
 (def set-light-smooth!    (mkremote "set_light"  :id :smooth))
 
 (def set-fan-pwm!         (mkremote "set_fan"    :id :pwm))
-(def set-fan-temp!        (mkremote "set_fan"    :id :temp))
 (def set-fan-device!      (mkremote "set_fan"    :id :device))
