@@ -285,7 +285,7 @@
         (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
           "Lights")
         (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5 :gh l :gv (b l sm nil) :ah (b :beg sm :mid)
-          (for-tpl [{id* :id name* :name effect-id type :type :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
+          (for-tpl [{id* :id name* :name type :type effect-id :effect [h s l :as color] :color [hb sb lb :as beg-color] :beg-color [he se le :as end-color] :end-color :as light*} lights]
             (let [selected? (cell= (= light light*))
                   alpha     (cell= (if selected? (r 1 1) (r 1 3)))
                   effect    (cell= (some #(when (= effect-id (:id %)) %) effects))]
@@ -360,7 +360,6 @@
           (for-tpl [{id* :id name* :name type :type device :device tach :tach temp :temp :as fan*} fans]
             (let [selected? (cell= (= fan-id id*))
                   alpha   (cell= (if selected? (r 1 1) (r 1 3)))]
-             (cell= (prn :fan-id id*))
               (elem font-4 :sh (cell= (r 1 (count fans))) :sv (b 500 sm (r 1 1)) :ah :mid :av :beg
                ; :bc (cell= (if selected? red grey-5))
                 :tc (cell= (if selected? white grey-1))
@@ -374,12 +373,11 @@
         (list
           (elem :sh (>sm 300) :sv (r 1 1)
             (elem font-2 :sh (r 1 1) :sv 64 :ph g-lg :av :mid :c black
-              "Mode & Device")
+              "Associated Device")
             (if-tpl fan-id
               (elem :sh (r 1 1) :sv (- (r 1 1) 64) :c grey-5
-                (for-tpl [{:keys [id name type]} (cell= (cons {:id :manual :name "PWM" :type :pwm} devices))]
+                (for-tpl [{:keys [id name type] :as fan*} (cell= (cons {:id :manual :name "PWM" :type :pwm} devices))]
                   (let [selected (cell= (= id device))]
-                    (cell= (prn :device-type type :id id))
                     (elem font-5 :sh (r 1 1) :p g-lg :g g-lg :av :mid :m :pointer
                        :c     (cell= (when selected grey-4))
                        :click #(s/set-fan-device! @conn @fan-id @id)

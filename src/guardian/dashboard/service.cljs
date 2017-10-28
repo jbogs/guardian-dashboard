@@ -141,10 +141,9 @@
    :end-color end_color})
 
 (defn fan [{:keys [id name device pwm tach temp]}]
-  (prn :id id)
   {:id     id
    :name   name
-   :device (keyword (or device :manual))
+   :device device 
    :pwm    pwm
    :tach   tach
    :temp   temp})
