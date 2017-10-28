@@ -326,6 +326,7 @@
                   (elem font-2 :s (r 1 1) :pv g-xl :gh (b (* 3 g-xl) 400 (* 2 g-xl) 500 (* 3 g-xl) sm g-xl 940 (* 2 g-xl) md (* 6 g-lg) lg (* 5 g-xl)) :gv g-xl :a :mid 
                     (for-tpl [type (cell= (:types effect))]
                       (elem
+                        (cell= (prn :speed (:speed light)))
                         (case-tpl type
                           :color     (hsl-picker :gh g-xl           :src (cell= (:color     light) #(s/set-light-color!     @conn @light-id %)))
                           :beg-color (hsl-picker :gh g-xl           :src (cell= (:beg-color light) #(s/set-light-beg-color! @conn @light-id %)))
